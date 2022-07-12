@@ -13,7 +13,7 @@ async function argsInit() {
   return []
 }
 
-// npx hardhat run ./scripts/utils/deployFiat.js
+// npx hardhat run ./scripts/deployFiatContract.js
 async function main() {
   const fiat = await (await hre.ethers.getContractFactory(
     'contracts/FiatContract.sol:FiatContract',

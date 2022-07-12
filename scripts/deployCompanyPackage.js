@@ -16,13 +16,13 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployMarketSub.js
+// npx hardhat run ./scripts/deployCompanyPackage.js
 async function main() {
   const companyPackage = await (await hre.ethers.getContractFactory(
      'contracts/CompanyPackage.sol:CompanyPackage'
   )).deploy(...(await argsInit()))
 
-  writeEnv(marketSub.address)
+  writeEnv(companyPackage.address)
   console.log(`Address: ${addressPage(hre.network, companyPackage.address)}`)
 }
 

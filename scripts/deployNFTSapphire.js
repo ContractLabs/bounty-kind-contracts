@@ -12,7 +12,7 @@ function writeEnv(address) {
 async function argsInit() {
   const tokenAddress = process.env.TOKEN || hre.ethers.constants.AddressZero
   const taker = await hre.ethers.getSigner()
-  const minFee = hre.ethers.utils.parseUnits('40').toString(10)
+  const minFee = hre.ethers.utils.parseUnits('0').toString(10)
   return [
     'Bountykind Sapphire', // name
     'NFTSapphire', // symbol
@@ -23,7 +23,7 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployNFT.js
+// npx hardhat run ./scripts/deployNFTSapphire.js
 async function main() {
   const nft = await (await hre.ethers.getContractFactory(
     'contracts/MyNFT.sol:MyNFT'

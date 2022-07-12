@@ -26,7 +26,7 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployMarket.js
+// npx hardhat run ./scripts/deployMarket.js
 async function main() {
   const market = await (await hre.ethers.getContractFactory(
     'contracts/Market.sol:Market'

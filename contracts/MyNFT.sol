@@ -907,9 +907,9 @@ contract MinterRole {
         emit MinterRemoved(account);
     }
 
-    function addMinters(address[] memory minters) public onlyMinter {
-        for (uint256 i = 0; i < minters.length; i++) {
-            _addMinter(minters[i]);
+    function addMinters(address[] memory minters_) public onlyMinter {
+        for (uint256 i = 0; i < minters_.length; i++) {
+            _addMinter(minters_[i]);
         }
     }
 }
@@ -937,6 +937,7 @@ contract MyNFT is ChargeFee, ERC721Full, BusinessRole, MinterRole, Lockable {
         _changeTaker(taker_);
         _changeMinFee(minFee_);
         creator = creator_;
+        _addMinter(creator_);
     }
 
     function setFeeToken(IERC20 feeToken) public onlyManager {

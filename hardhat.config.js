@@ -5,10 +5,6 @@ require('./tasks')
 const accountsTestnet = require('./accounts/accounts.testnet.json')
 const privateKeysTestnet = accountsTestnet.map(acc => acc.privateKey)
 
-// // 100 Account 
-const accounts = require('./accounts/accounts.json')
-const privateKeys = accounts.map(acc => acc.privateKey)
-
 // // Account mainnet
 // const fs = require('fs')
 // const accountsMainnet = fs.existsSync('./accounts/accounts.mainnet.json')

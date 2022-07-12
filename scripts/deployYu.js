@@ -16,7 +16,7 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployToken.js
+// npx hardhat run ./scripts/deployYu.js
 async function main() {
   const token = await (await hre.ethers.getContractFactory(
     'contracts/MyERC20.sol:MyERC20'

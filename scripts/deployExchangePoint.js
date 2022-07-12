@@ -14,7 +14,7 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployExchangePoint.js
+// npx hardhat run ./scripts/deployExchangePoint.js
 async function main() {
   const nft = await (await hre.ethers.getContractFactory(
     'contracts/ExchangePoint.sol:ExchangePoint'

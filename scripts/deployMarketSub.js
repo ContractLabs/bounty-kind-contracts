@@ -16,7 +16,7 @@ async function argsInit() {
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployMarketSub.js
+// npx hardhat run ./scripts/deployMarketSub.js
 async function main() {
   const marketSub = await (await hre.ethers.getContractFactory(
      'contracts/MarketSub.sol:MarketSub'

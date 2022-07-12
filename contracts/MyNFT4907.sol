@@ -726,7 +726,7 @@ abstract contract ERC721Enumerable is
         address from,
         address to,
         uint256 tokenId
-    ) internal override virtual {
+    ) internal virtual override {
         super._transferFrom(from, to, tokenId);
 
         _removeTokenFromOwnerEnumeration(from, tokenId);
@@ -742,7 +742,7 @@ abstract contract ERC721Enumerable is
         _addTokenToAllTokensEnumeration(tokenId);
     }
 
-    function _burn(address owner, uint256 tokenId) internal override {
+    function _burn(address owner, uint256 tokenId) internal virtual override {
         super._burn(owner, tokenId);
 
         _removeTokenFromOwnerEnumeration(owner, tokenId);
@@ -907,34 +907,69 @@ contract MinterRole {
         emit MinterRemoved(account);
     }
 
-    function addMinters(address[] memory minters) public onlyMinter {
-        for (uint256 i = 0; i < minters.length; i++) {
-            _addMinter(minters[i]);
+    function addMinters(address[] memory minters_) public onlyMinter {
+        for (uint256 i = 0; i < minters_.length; i++) {
+            _addMinter(minters_[i]);
         }
     }
 }
 
-interface IERC4907 {
-    event UpdateUser(
-        uint256 indexed tokenId,
-        address indexed user,
-        uint256 expires
-    );
+contract Signer {
+    address public signer;
+    mapping(address => uint256) public currentSignedTime;
 
-    function setUser(uint256 tokenId, address user) external;
+    modifier onlySigner() {
+        require(signer == msg.sender, "Signer: caller is not the signer");
+        _;
+    }
 
-    function userOf(uint256 tokenId) external view returns (address);
+    modifier onlyValidMessageHash(
+        bytes32 messageHash,
+        uint256 timestamp,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) {
+        require(permit(messageHash, timestamp, v, r, s), "Signer: Invalid signal");
+        _;
+        setCurrentSignedTime(timestamp);
+    }
 
-    function userExpires(uint256 tokenId) external view returns (uint256);
+    function setSigner(address _signer) public onlySigner {
+        _setSigner(_signer);
+    }
+
+    function _setSigner(address _signer) internal {
+        signer = _signer;
+    }
+
+    function getSignedMessageHash(bytes32 messageHash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+    }
+
+    function permit(
+        bytes32 messageHash,
+        uint256 timestamp,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view returns (bool) {
+        require(currentSignedTime[msg.sender] < timestamp, "Signer: Invalid timestamp");
+        return ecrecover(getSignedMessageHash(messageHash), v, r, s) == signer;
+    }
+
+    function setCurrentSignedTime(uint256 timestamp) internal {
+        currentSignedTime[msg.sender] = timestamp;
+    }
 }
 
 contract MyNFT is
     ChargeFee,
     ERC721Full,
-    IERC4907,
     BusinessRole,
     MinterRole,
-    Lockable
+    Lockable,
+    Signer
 {
     using Counters for Counters.Counter;
     event Deposit(
@@ -942,6 +977,11 @@ contract MyNFT is
         uint256 duration,
         uint256 ratio,
         bool checkHash
+    );
+    event UpdateUser(
+        uint256 indexed tokenId,
+        address indexed user,
+        uint256 expires
     );
 
     struct meta {
@@ -974,6 +1014,29 @@ contract MyNFT is
         _changeTaker(taker_);
         _changeMinFee(minFee_);
         creator = creator_;
+        _addMinter(creator_);
+    }
+
+    function _transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override {
+        require(
+            _users[tokenId].expires < block.timestamp,
+            "NFT: tokenId was rented"
+        );
+        super._transferFrom(from, to, tokenId);
+        delete _users[tokenId];
+    }
+
+    function _burn(address owner, uint256 tokenId) internal override {
+        require(
+            _users[tokenId].expires < block.timestamp,
+            "NFT: tokenId was rented"
+        );
+        super._burn(owner, tokenId);
+        delete _users[tokenId];
     }
 
     function setFeeToken(IERC20 feeToken) public onlyManager {
@@ -998,7 +1061,7 @@ contract MyNFT is
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721Burnable: caller is not owner nor approved"
         );
-        super._burn(ownerOf(tokenId), tokenId);
+        _burn(ownerOf(tokenId), tokenId);
     }
 
     function mint(address to) public onlyMinter returns (uint256) {
@@ -1023,19 +1086,6 @@ contract MyNFT is
         for (uint256 i = 0; i < tos.length; i++) {
             multipleMint(tos[i], numItems[i]);
         }
-    }
-
-    function _transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal override {
-        require(
-            _users[tokenId].expires < block.timestamp,
-            "NFT: tokenId was rented"
-        );
-        super._transferFrom(from, to, tokenId);
-        delete _users[tokenId];
     }
 
     function transfer(address to, uint256 tokenId) public {
@@ -1112,15 +1162,23 @@ contract MyNFT is
         emit Deposit(tokenId, duration, ratio, checkHash);
     }
 
-    function setUser(uint256 tokenId, address user) public {
+    function getMessageHash(uint256 tokenId, uint256 timestamp) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(tokenId, timestamp));
+    }
+
+    function setUser(uint256 tokenId, uint256 timestamp, uint8 v, bytes32 r, bytes32 s) public {
         require(ownerOf(tokenId) != msg.sender, "NFT: caller is owner");
         require(_users[tokenId].duration > 0, "NFT: owner does not lend");
         require(_users[tokenId].user == address(0), "NFT: tokenId was rented");
 
         UserInfo storage info = _users[tokenId];
-        info.user = user;
+        if (info.checkHash) {
+            require(permit(getMessageHash(tokenId, timestamp), timestamp, v, r, s), "Signer: Invalid sign");
+            setCurrentSignedTime(timestamp);
+        }
+        info.user = msg.sender;
         info.expires = block.timestamp + info.duration;
-        emit UpdateUser(tokenId, user, info.expires);
+        emit UpdateUser(tokenId, msg.sender, info.expires);
     }
 
     function userOf(uint256 tokenId) public view returns (address) {
