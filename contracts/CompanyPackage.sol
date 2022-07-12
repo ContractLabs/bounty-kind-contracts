@@ -448,7 +448,6 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
 
     struct TypeNFT {
         uint256 price;
-        bool active;
     }
 
     struct PackageNFT {
@@ -458,8 +457,26 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
 
     mapping(address => PackageNFT) public packages;
 
-    constructor(address ceo_) {
+    constructor(
+        address ceo_,
+        address token_,
+        address taker_,
+        uint256 minFee_,
+        address fiatContract_
+    ) {
         _transferCeo(ceo_);
+        _changeFeeToken(IERC20(token_));
+        _changeMinFee(minFee_);
+        _changeTaker(taker_);
+        fiatContract = IFiatContract(fiatContract_);
+    }
+
+    function getTypeNFT(address _erc721, uint256 _typeNFT)
+        public
+        view
+        returns (TypeNFT memory)
+    {
+        return packages[_erc721].typeNFTs[_typeNFT];
     }
 
     function setPackage(
@@ -468,8 +485,8 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
         uint256 price
     ) public onlyManager {
         if (_typeNFT >= packages[_erc721]._typeIdCounter.current()) {
-          _typeNFT = packages[_erc721]._typeIdCounter.current();
-          packages[_erc721]._typeIdCounter.increment();
+            _typeNFT = packages[_erc721]._typeIdCounter.current();
+            packages[_erc721]._typeIdCounter.increment();
         }
 
         packages[_erc721].typeNFTs[_typeNFT].price = price;

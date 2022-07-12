@@ -13,7 +13,7 @@ function writeEnv(address) {
 async function argsInit() {
   const marketSubAddress = process.env.MARKET_SUB || hre.ethers.constants.AddressZero
   const fiatAddress = process.env.FIAT || hre.ethers.constants.AddressZero
-  const tokenAddress = process.env.TOKEN || hre.ethers.constants.AddressZero
+  const tokenAddress = process.env.YU || hre.ethers.constants.AddressZero
   const ceo = await hre.ethers.getSigner()
   const chainId = hre.network.config.chainId
 
