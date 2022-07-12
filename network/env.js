@@ -6,7 +6,7 @@ function readNetworkEnv(network) {
   dotenv.config({ path: `./network/.env.${networkName}` })
 }
 
-const KEYS = ['YU', 'FFE', 'BOUNTYKIND_PACKAGE', 'NFT_CHARACTER', 'NFT_ITEM', 'NFT_SAPPHIRE', 'MARKET', 'MARKET_SUB', 'GACHA', 'EXCHANGE', 'FIAT']
+const KEYS = ['YU', 'FFE', 'BOUNTYKIND_PACKAGE', 'NFT_CHARACTER', 'NFT_ITEM', 'NFT_SAPPHIRE', 'NFT_METABLOCK', 'MARKET', 'MARKET_SUB', 'GACHA', 'EXCHANGE', 'FIAT']
 
 function writeNetworkEnv(key, value, network) {
   try {

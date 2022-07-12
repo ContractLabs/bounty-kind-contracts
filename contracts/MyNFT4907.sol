@@ -726,7 +726,7 @@ abstract contract ERC721Enumerable is
         address from,
         address to,
         uint256 tokenId
-    ) internal override {
+    ) internal override virtual {
         super._transferFrom(from, to, tokenId);
 
         _removeTokenFromOwnerEnumeration(from, tokenId);
@@ -914,16 +914,53 @@ contract MinterRole {
     }
 }
 
-contract MyNFT is ChargeFee, ERC721Full, BusinessRole, MinterRole, Lockable {
+interface IERC4907 {
+    event UpdateUser(
+        uint256 indexed tokenId,
+        address indexed user,
+        uint256 expires
+    );
+
+    function setUser(uint256 tokenId, address user) external;
+
+    function userOf(uint256 tokenId) external view returns (address);
+
+    function userExpires(uint256 tokenId) external view returns (uint256);
+}
+
+contract MyNFT is
+    ChargeFee,
+    ERC721Full,
+    IERC4907,
+    BusinessRole,
+    MinterRole,
+    Lockable
+{
     using Counters for Counters.Counter;
+    event Deposit(
+        uint256 indexed tokenId,
+        uint256 duration,
+        uint256 ratio,
+        bool checkHash
+    );
 
     struct meta {
         address creator;
     }
 
+    struct UserInfo {
+        address user; // address of user role
+        uint256 expires; // unix timestamp, user expires
+        uint256 duration; // duration
+        uint256 ratio; // get ratio
+        bool checkHash; // check hash
+    }
+
     Counters.Counter private _tokenIdCounter;
     mapping(uint256 => meta) public metadata;
+    mapping(uint256 => UserInfo) internal _users;
     address public creator;
+    uint256 public Percent = 1000;
 
     constructor(
         string memory name_,
@@ -978,14 +1015,27 @@ contract MyNFT is ChargeFee, ERC721Full, BusinessRole, MinterRole, Lockable {
         }
     }
 
-    function multipleMintAccounts(address[] memory tos, uint256[] memory numItems)
-        public
-        onlyMinter
-    {
+    function multipleMintAccounts(
+        address[] memory tos,
+        uint256[] memory numItems
+    ) public onlyMinter {
         require(tos.length == numItems.length, "NFT: params is not match");
         for (uint256 i = 0; i < tos.length; i++) {
             multipleMint(tos[i], numItems[i]);
         }
+    }
+
+    function _transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override {
+        require(
+            _users[tokenId].expires < block.timestamp,
+            "NFT: tokenId was rented"
+        );
+        super._transferFrom(from, to, tokenId);
+        delete _users[tokenId];
     }
 
     function transfer(address to, uint256 tokenId) public {
@@ -1044,5 +1094,47 @@ contract MyNFT is ChargeFee, ERC721Full, BusinessRole, MinterRole, Lockable {
             "NFT: User is locked"
         );
         super.safeTransferFrom(from, to, tokenId, _data);
+    }
+
+    function setDeposit(
+        uint256 tokenId,
+        uint256 duration,
+        uint256 ratio,
+        bool checkHash
+    ) public {
+        require(ownerOf(tokenId) == msg.sender, "NFT: caller is not owner");
+        require(
+            _users[tokenId].expires < block.timestamp,
+            "NFT: tokenId was rented"
+        );
+
+        _users[tokenId] = UserInfo(address(0), 0, duration, ratio, checkHash);
+        emit Deposit(tokenId, duration, ratio, checkHash);
+    }
+
+    function setUser(uint256 tokenId, address user) public {
+        require(ownerOf(tokenId) != msg.sender, "NFT: caller is owner");
+        require(_users[tokenId].duration > 0, "NFT: owner does not lend");
+        require(_users[tokenId].user == address(0), "NFT: tokenId was rented");
+
+        UserInfo storage info = _users[tokenId];
+        info.user = user;
+        info.expires = block.timestamp + info.duration;
+        emit UpdateUser(tokenId, user, info.expires);
+    }
+
+    function userOf(uint256 tokenId) public view returns (address) {
+        require(_users[tokenId].duration > 0, "NFT: owner does not lend");
+        return _users[tokenId].user;
+    }
+
+    function userExpires(uint256 tokenId) public view returns (uint256) {
+        require(_users[tokenId].duration > 0, "NFT: owner does not lend");
+        return _users[tokenId].expires;
+    }
+
+    function getDeposit(uint256 tokenId) public view returns (UserInfo memory) {
+        require(_users[tokenId].duration > 0, "NFT: owner does not lend");
+        return _users[tokenId];
     }
 }

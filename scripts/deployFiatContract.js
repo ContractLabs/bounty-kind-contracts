@@ -16,9 +16,7 @@ async function argsInit() {
 // npx hardhat run ./scripts/utils/deployFiat.js
 async function main() {
   const fiat = await (await hre.ethers.getContractFactory(
-    isTomoChain(hre.network)
-      ? 'contracts/0.4.26/FiatContract.sol:FiatContract'
-      : 'contracts/0.8/FiatContract.sol:FiatContract',
+    'contracts/FiatContract.sol:FiatContract',
   )).deploy(...(await argsInit()))
 
   writeEnv(fiat.address)

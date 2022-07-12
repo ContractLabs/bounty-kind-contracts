@@ -5,7 +5,7 @@ const { addressPage, isTomoChain } = require('../../utils')
 readNetworkEnv(hre.network)
 
 function writeEnv(address) {
-  writeNetworkEnv('EXCHANGE_POINT', address, hre.network)
+  writeNetworkEnv('EXCHANGE', address, hre.network)
   readNetworkEnv(hre.network)
 }
 
@@ -17,9 +17,7 @@ async function argsInit() {
 // npx hardhat run ./scripts/utils/deployExchangePoint.js
 async function main() {
   const nft = await (await hre.ethers.getContractFactory(
-    isTomoChain(hre.network)
-      ? 'contracts/0.4.26/ExchangePoint.sol:ExchangePoint'
-      : 'contracts/0.8/ExchangePoint.sol:ExchangePoint'
+    'contracts/ExchangePoint.sol:ExchangePoint'
   )).deploy(...(await argsInit()))
 
 

@@ -371,7 +371,7 @@ contract PaymentProvider is Ownable {
     }
 }
 
-contract DrawGacha is PaymentProvider, Withdrawable {
+contract Gacha is PaymentProvider, Withdrawable {
     event BuyTicket(
         address _from,
         uint256 ticket,

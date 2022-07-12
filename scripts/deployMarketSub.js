@@ -19,9 +19,7 @@ async function argsInit() {
 // npx hardhat run ./scripts/utils/deployMarketSub.js
 async function main() {
   const marketSub = await (await hre.ethers.getContractFactory(
-    isTomoChain(hre.network)
-      ? 'contracts/0.4.26/MarketSub.sol:MarketSub'
-      : 'contracts/0.8/MarketSub.sol:MarketSub'
+     'contracts/MarketSub.sol:MarketSub'
   )).deploy(...(await argsInit()))
 
   writeEnv(marketSub.address)

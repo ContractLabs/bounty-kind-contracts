@@ -5,25 +5,25 @@ const { addressPage, isTomoChain } = require('../utils')
 readNetworkEnv(hre.network)
 
 function writeEnv(address) {
-  writeNetworkEnv('FFE', address, hre.network)
+  writeNetworkEnv('BOUNTYKIND_PACKAGE', address, hre.network)
   readNetworkEnv(hre.network)
 }
 
 async function argsInit() {
+  const taker = await hre.ethers.getSigner()
   return [
-    'Forbidden Fruit Energy',
-    'FFE',
+    taker.address,
   ]
 }
 
-// npx hardhat run ./scripts/utils/deployToken.js
+// npx hardhat run ./scripts/utils/deployMarketSub.js
 async function main() {
-  const token = await (await hre.ethers.getContractFactory(
-    'contracts/MyERC20.sol:MyERC20'
+  const companyPackage = await (await hre.ethers.getContractFactory(
+     'contracts/CompanyPackage.sol:CompanyPackage'
   )).deploy(...(await argsInit()))
 
-  writeEnv(token.address)
-  console.log(`Address: ${addressPage(hre.network, token.address)}`)
+  writeEnv(marketSub.address)
+  console.log(`Address: ${addressPage(hre.network, companyPackage.address)}`)
 }
 
 main().catch((error) => {

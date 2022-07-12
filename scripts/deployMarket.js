@@ -20,7 +20,7 @@ async function argsInit() {
   return [
     marketSubAddress, // market address
     fiatAddress, // fiat contract
-    [RPCs[chainId].nativeCurrency.symbol, 'TVH21'], // symbols coin/token
+    [RPCs[chainId].nativeCurrency.symbol, 'YU'], // symbols coin/token
     [hre.ethers.constants.AddressZero, tokenAddress], // set address(0) to use network coin
     ceo.address, // ceo address
   ]
@@ -29,9 +29,7 @@ async function argsInit() {
 // npx hardhat run ./scripts/utils/deployMarket.js
 async function main() {
   const market = await (await hre.ethers.getContractFactory(
-    isTomoChain(hre.network)
-      ? 'contracts/0.4.26/Market.sol:Market'
-      : 'contracts/0.8/Market.sol:Market'
+    'contracts/Market.sol:Market'
   )).deploy(...(await argsInit()))
 
   writeEnv(market.address)
