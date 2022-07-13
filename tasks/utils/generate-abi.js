@@ -2,7 +2,7 @@ const fs = require('fs')
 const fse = require('fs-extra')
 const path = require('path')
 
-const pathAbiTo = ['./frontend/src/abi/']
+const pathAbiTo = []
 const ArtifactsAbi = [
   './artifacts/contracts/0.8/FiatContract.sol/FiatContract.json',
   './artifacts/contracts/0.8/Market.sol/Market.json',

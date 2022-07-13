@@ -243,7 +243,7 @@ contract FiatProvider is Ownable {
     using SafeMath for uint256;
 
     event SetFiat(string[] _symbols, address[] _address, address _from);
-    event RemoveFiat(string[] _symbols, address[] _address, address _from);
+    event RemoveFiat(address[] _address, address _from);
 
     struct Token {
         string symbol;
@@ -288,12 +288,12 @@ contract FiatProvider is Ownable {
         return fiats;
     }
 
-    function getTokenFiat(address _fiat)
+    function getTokensFiat(address _fiat)
         public
         view
-        returns (string memory _symbol, bool _existed)
+        returns (string memory _symbol, bool _existed, uint256 index)
     {
-        return (tokensFiat[_fiat].symbol, tokensFiat[_fiat].existed);
+        return (tokensFiat[_fiat].symbol, tokensFiat[_fiat].existed, tokensFiat[_fiat].index);
     }
 
     function setTokensFiat(string[] memory _symbols, address[] memory addresses)
@@ -315,10 +315,8 @@ contract FiatProvider is Ownable {
         emit SetFiat(_symbols, addresses, msg.sender);
     }
 
-    function unsetTokenFiat(address[] memory _fiats) public onlyOwner {
-        string[] memory _symbols;
+    function unsetTokensFiat(address[] memory _fiats) public onlyOwner {
         for (uint256 i = 0; i < _fiats.length; i++) {
-            _symbols[i] = tokensFiat[_fiats[i]].symbol;
             if (tokensFiat[_fiats[i]].existed) {
                 uint256 indexRemove = tokensFiat[_fiats[i]].index;
                 fiats[indexRemove] = fiats[fiats.length - 1];
@@ -327,16 +325,14 @@ contract FiatProvider is Ownable {
                 delete tokensFiat[_fiats[i]];
             }
         }
-        emit RemoveFiat(_symbols, _fiats, msg.sender);
+        emit RemoveFiat(_fiats, msg.sender);
     }
 
-    function resetTokenFiat() public onlyOwner {
-        string[] memory _symbols;
+    function resetTokensFiat() public onlyOwner {
         for (uint256 i = 0; i < fiats.length; i++) {
-            _symbols[i] = tokensFiat[fiats[i]].symbol;
             delete tokensFiat[fiats[i]];
         }
-        emit RemoveFiat(_symbols, fiats, msg.sender);
+        emit RemoveFiat(fiats, msg.sender);
         delete fiats;
     }
 
