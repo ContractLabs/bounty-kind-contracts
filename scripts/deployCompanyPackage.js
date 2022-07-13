@@ -14,7 +14,6 @@ async function argsInit() {
   const FiatContract = process.env.FIAT || hre.ethers.constants.AddressZero
   return [
     owner.address,
-    owner.address,
     FiatContract
   ]
 }

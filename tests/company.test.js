@@ -9,7 +9,6 @@ describe('Test NFT4907', function () {
     const Contract = await ethers.getContractFactory('contracts/CompanyPackage.sol:CompanyPackage')
     contract = await Contract.deploy(
       owner.address,
-      owner.address,
       ethers.constants.AddressZero
     )
     console.log(contract.address)

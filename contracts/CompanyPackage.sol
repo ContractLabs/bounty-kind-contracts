@@ -100,48 +100,6 @@ contract Ownable {
     }
 }
 
-contract Lockable is Ownable {
-    bool private _lockedContract;
-    mapping(address => bool) private _userBlocks;
-
-    constructor() {
-        _lockedContract = false;
-    }
-
-    modifier onlyUnLocked(
-        address sender,
-        address from,
-        address to
-    ) {
-        require(!isLockedContract(), "Auth: Contract is locked");
-        bool isLocked = isLockedUser(sender) ||
-            isLockedUser(from) ||
-            isLockedUser(to);
-        require(!isLocked, "Auth: User is locked");
-        _;
-    }
-
-    function userBlocks(address account) public view returns (bool) {
-        return _userBlocks[account];
-    }
-
-    function isLockedUser(address account) public view returns (bool) {
-        return _userBlocks[account];
-    }
-
-    function isLockedContract() public view returns (bool) {
-        return _lockedContract;
-    }
-
-    function toggleLock() public onlyOwner {
-        _lockedContract = !_lockedContract;
-    }
-
-    function setBlockUser(address account, bool status) public onlyOwner {
-        _userBlocks[account] = status;
-    }
-}
-
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(
@@ -170,42 +128,12 @@ interface IERC20 {
     ) external returns (bool);
 }
 
-contract Ceo {
-    address public ceoAddress;
-
-    constructor() {
-        _transferCeo(msg.sender);
-    }
-
-    modifier onlyCeo() {
-        require(ceoAddress == msg.sender, "CEO: caller is not the ceo");
-        _;
-    }
-
-    function isCeo() public view returns (bool) {
-        return msg.sender == ceoAddress;
-    }
-
-    function transferCeo(address _address) public onlyCeo {
-        require(_address != address(0), "CEO: newAddress is the zero address");
-        _transferCeo(_address);
-    }
-
-    function renounceCeo() public onlyCeo {
-        _transferCeo(address(0));
-    }
-
-    function _transferCeo(address _address) internal {
-        ceoAddress = _address;
-    }
-}
-
-contract BusinessRole is Ownable, Ceo {
+contract BusinessRole is Ownable {
     address[] private _businesses;
 
     modifier onlyManager() {
         require(
-            isOwner() || isCeo() || isBusiness(),
+            isOwner() || isBusiness(),
             "BusinessRole: caller is not business"
         );
         _;
@@ -361,7 +289,7 @@ interface IERC721Minterable {
     ) external;
 }
 
-contract CompanyPackage is BusinessRole, Lockable, FiatProvider {
+contract CompanyPackage is FiatProvider, BusinessRole {
     using Counters for Counters.Counter;
 
     event Register(
@@ -384,11 +312,9 @@ contract CompanyPackage is BusinessRole, Lockable, FiatProvider {
     address public taker;
 
     constructor(
-        address ceo_,
         address taker_,
         address fiatContract_
     ) {
-        _transferCeo(ceo_);
         taker = taker_;
         fiatContract = IFiatContract(fiatContract_);
     }
