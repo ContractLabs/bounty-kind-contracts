@@ -323,7 +323,7 @@ contract FiatProvider is Ownable {
     }
 
     IFiatContract public fiatContract;
-    mapping(address => Token) public tokensFiat;
+    mapping(address => Token) private tokensFiat;
     address[] public fiats;
 
     modifier isValidFiat(address[] memory _fiats) {
@@ -355,11 +355,11 @@ contract FiatProvider is Ownable {
         return isValid;
     }
 
-    function getFiats() public view returns (address[] memory) {
+    function getTokensList() public view returns (address[] memory) {
         return fiats;
     }
 
-    function getTokensFiat(address _fiat)
+    function getTokenFiat(address _fiat)
         public
         view
         returns (string memory _symbol, bool _existed)
@@ -367,7 +367,7 @@ contract FiatProvider is Ownable {
         return (tokensFiat[_fiat].symbol, tokensFiat[_fiat].existed);
     }
 
-    function setFiat(string[] memory _symbols, address[] memory addresses)
+    function setTokensFiat(string[] memory _symbols, address[] memory addresses)
         public
         onlyOwner
     {
@@ -386,7 +386,7 @@ contract FiatProvider is Ownable {
         emit SetFiat(_symbols, addresses, msg.sender);
     }
 
-    function unsetFiat(address[] memory _fiats) public onlyOwner {
+    function unsetTokenFiat(address[] memory _fiats) public onlyOwner {
         string[] memory _symbols;
         for (uint256 i = 0; i < _fiats.length; i++) {
             _symbols[i] = tokensFiat[_fiats[i]].symbol;
@@ -401,7 +401,7 @@ contract FiatProvider is Ownable {
         emit RemoveFiat(_symbols, _fiats, msg.sender);
     }
 
-    function resetFiat() public onlyOwner {
+    function resetTokenFiat() public onlyOwner {
         string[] memory _symbols;
         for (uint256 i = 0; i < fiats.length; i++) {
             _symbols[i] = tokensFiat[fiats[i]].symbol;
@@ -469,6 +469,15 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
         _changeMinFee(minFee_);
         _changeTaker(taker_);
         fiatContract = IFiatContract(fiatContract_);
+    }
+
+    function setFeeToken(IERC20 feeToken) public onlyManager {
+        _changeFeeToken(feeToken);
+    }
+
+    function setFee(address _newTaker, uint256 _newFeeAmount) public onlyManager {
+        _changeTaker(_newTaker);
+        _changeMinFee(_newFeeAmount);
     }
 
     function getTypeNFT(address _erc721, uint256 _typeNFT)
