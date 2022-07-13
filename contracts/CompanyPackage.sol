@@ -304,7 +304,7 @@ contract Withdrawable is BusinessRole {
 }
 
 interface IFiatContract {
-    function getToken2Price(string memory _symbol)
+    function getToken2USD(string memory _symbol)
         external
         view
         returns (string memory _symbolToken, uint256 _token2Price);
@@ -416,7 +416,7 @@ contract FiatProvider is Ownable {
         view
         returns (uint256)
     {
-        (, uint256 weitoken) = fiatContract.getToken2Price(
+        (, uint256 weitoken) = fiatContract.getToken2USD(
             tokensFiat[_fiatBuy].symbol
         );
         return _price.mul(weitoken).div(1 ether);
