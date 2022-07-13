@@ -170,43 +170,6 @@ interface IERC20 {
     ) external returns (bool);
 }
 
-contract ChargeFee {
-    IERC20 private _feeToken;
-    uint256 private _minFee;
-    address private _taker;
-
-    function minFee() public view returns (uint256) {
-        return _minFee;
-    }
-
-    function feeToken() public view returns (IERC20) {
-        return _feeToken;
-    }
-
-    function taker() public view returns (address) {
-        return _taker;
-    }
-
-    function _changeMinFee(uint256 feeAmount) internal {
-        _minFee = feeAmount;
-    }
-
-    function _changeFeeToken(IERC20 feeToken_) internal {
-        _feeToken = feeToken_;
-    }
-
-    function _changeTaker(address _newTaker) internal {
-        _taker = _newTaker;
-    }
-
-    function chargeFee(address account) internal returns (bool) {
-        if (_minFee > 0) {
-            return _feeToken.transferFrom(account, _taker, _minFee);
-        }
-        return true;
-    }
-}
-
 contract Ceo {
     address public ceoAddress;
 
@@ -266,40 +229,6 @@ contract BusinessRole is Ownable, Ceo {
         onlyOwner
     {
         _businesses = businessAddresses;
-    }
-}
-
-contract Withdrawable is BusinessRole {
-    function _withdraw(uint256 amount) internal {
-        require(
-            address(this).balance >= amount,
-            "Withdrawable: Insufficent balance to withdraw (coin)"
-        );
-        if (amount > 0) {
-            payable(ceoAddress).transfer(amount);
-        }
-    }
-
-    function _withdrawToken(IERC20 erc20, uint256 amount) internal {
-        require(
-            erc20.balanceOf(address(this)) >= amount,
-            "Withdrawable: Insufficent balance to withdraw (token)"
-        );
-
-        if (amount > 0) {
-            erc20.transfer(ceoAddress, amount);
-        }
-    }
-
-    function withdraw(
-        uint256 amount,
-        address[] memory erc21s,
-        uint256[] memory amountErc21s
-    ) public onlyOwner {
-        _withdraw(amount);
-        for (uint256 i = 0; i < erc21s.length; i++) {
-            _withdrawToken(IERC20(erc21s[i]), amountErc21s[i]);
-        }
     }
 }
 
@@ -436,7 +365,7 @@ interface IERC721Minterable {
     ) external;
 }
 
-contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
+contract CompanyPackage is BusinessRole, Lockable, FiatProvider {
     using Counters for Counters.Counter;
 
     event Register(
@@ -456,28 +385,21 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
     }
 
     mapping(address => PackageNFT) public packages;
+    address public taker;
 
     constructor(
         address ceo_,
-        address token_,
         address taker_,
-        uint256 minFee_,
         address fiatContract_
     ) {
         _transferCeo(ceo_);
-        _changeFeeToken(IERC20(token_));
-        _changeMinFee(minFee_);
-        _changeTaker(taker_);
+        taker = taker_;
         fiatContract = IFiatContract(fiatContract_);
     }
 
-    function setFeeToken(IERC20 feeToken) public onlyManager {
-        _changeFeeToken(feeToken);
-    }
 
-    function setFee(address _newTaker, uint256 _newFeeAmount) public onlyManager {
-        _changeTaker(_newTaker);
-        _changeMinFee(_newFeeAmount);
+    function setTaker(address _newTaker) public onlyManager {
+        taker = _newTaker;
     }
 
     function getTypeNFT(address _erc721, uint256 _typeNFT)
@@ -522,13 +444,13 @@ contract CompanyPackage is ChargeFee, Withdrawable, Lockable, FiatProvider {
                 amountTotal <= msg.value,
                 "Package: transfer amount exceeds balance"
             );
-            payable(taker()).transfer(amountTotal);
+            payable(taker).transfer(amountTotal);
             if (msg.value > amountTotal) {
                 payable(msg.sender).transfer(msg.value - amountTotal);
             }
         } else {
             require(
-                IERC20(_fiat).transferFrom(msg.sender, taker(), amountTotal),
+                IERC20(_fiat).transferFrom(msg.sender, taker, amountTotal),
                 "NFTPackage: transfer is error"
             );
         }

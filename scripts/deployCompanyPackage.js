@@ -11,13 +11,10 @@ function writeEnv(address) {
 
 async function argsInit() {
   const owner = await hre.ethers.getSigner()
-  const YU = process.env.YU || hre.ethers.constants.AddressZero
   const FiatContract = process.env.FIAT || hre.ethers.constants.AddressZero
   return [
     owner.address,
-    YU,
     owner.address,
-    '0',
     FiatContract
   ]
 }
