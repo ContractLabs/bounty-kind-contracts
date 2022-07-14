@@ -914,7 +914,7 @@ contract MinterRole {
     }
 }
 
-contract Signer {
+contract Signer is Ownable {
     address public signer;
     mapping(address => uint256) public currentSignedTime;
 
@@ -935,7 +935,7 @@ contract Signer {
         setCurrentSignedTime(timestamp);
     }
 
-    function setSigner(address _signer) public onlySigner {
+    function setSigner(address _signer) public onlyOwner {
         _setSigner(_signer);
     }
 
@@ -1007,14 +1007,14 @@ contract MyNFT is
         string memory symbol_,
         address token_,
         address taker_,
-        uint256 minFee_,
-        address creator_
+        address creator_,
+        address signer_
     ) ERC721Full(name_, symbol_) {
         _changeFeeToken(IERC20(token_));
         _changeTaker(taker_);
-        _changeMinFee(minFee_);
         creator = creator_;
         _addMinter(creator_);
+        _setSigner(signer_);
     }
 
     function _transferFrom(

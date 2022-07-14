@@ -930,12 +930,10 @@ contract MyNFT is ChargeFee, ERC721Full, BusinessRole, MinterRole, Lockable {
         string memory symbol_,
         address token_,
         address taker_,
-        uint256 minFee_,
         address creator_
     ) ERC721Full(name_, symbol_) {
         _changeFeeToken(IERC20(token_));
         _changeTaker(taker_);
-        _changeMinFee(minFee_);
         creator = creator_;
         _addMinter(creator_);
     }

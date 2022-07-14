@@ -10,7 +10,7 @@ function writeEnv(address) {
 }
 
 async function argsInit() {
-  const tokenAddress = process.env.TOKEN || hre.ethers.constants.AddressZero
+  const tokenAddress = process.env.YU || hre.ethers.constants.AddressZero
   const taker = await hre.ethers.getSigner()
   const minFee = hre.ethers.utils.parseUnits('0').toString(10)
   return [
@@ -18,7 +18,6 @@ async function argsInit() {
     'NFTItem', // symbol
     tokenAddress, // token
     taker.address, // taker address
-    minFee, // min fee
     taker.address // creator
   ]
 }
