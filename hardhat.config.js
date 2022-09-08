@@ -1,9 +1,11 @@
-require('@nomiclabs/hardhat-waffle')
-require('@nomiclabs/hardhat-web3')
-require('./tasks')
+// require("@nomiclabs/hardhat-waffle");
+// require("@nomiclabs/hardhat-web3");
+require("@nomicfoundation/hardhat-toolbox");
+require("./tasks");
+require("hardhat-contract-sizer");
 // // Account testnet
-const accountsTestnet = require('./accounts/accounts.testnet.json')
-const privateKeysTestnet = accountsTestnet.map(acc => acc.privateKey)
+const accountsTestnet = require("./accounts/accounts.testnet.json");
+const privateKeysTestnet = accountsTestnet.map((acc) => acc.privateKey);
 
 // // Account mainnet
 // const fs = require('fs')
@@ -12,8 +14,6 @@ const privateKeysTestnet = accountsTestnet.map(acc => acc.privateKey)
 //   : []
 // const privateKeysMainnet = accountsMainnet.map(acc => acc.privateKey)
 
-
-
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
@@ -21,14 +21,14 @@ const privateKeysTestnet = accountsTestnet.map(acc => acc.privateKey)
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: 'bsc', // default hardhat
+  defaultNetwork: "bsc", // default hardhat
   networks: {
     hardhat: {
       // chainId: 31337,
     },
     // tomochain testnet
     tomo: {
-      url: 'https://rpc.testnet.tomochain.com',
+      url: "https://rpc.testnet.tomochain.com",
       chainId: 89,
       accounts: privateKeysTestnet,
       gasPrice: 250000000,
@@ -36,7 +36,7 @@ module.exports = {
     },
     // mumbai polygon testnet
     mumbai: {
-      url: 'https://rpc-mumbai.matic.today',
+      url: "https://rpc-mumbai.matic.today",
       chainId: 80001,
       accounts: privateKeysTestnet,
       gasPrice: 1999999997,
@@ -44,7 +44,7 @@ module.exports = {
     },
     // bsc testnet
     bsc: {
-      url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       accounts: privateKeysTestnet,
       // accounts: privateKeys,
@@ -53,7 +53,7 @@ module.exports = {
     },
     // eth testnet
     rinkeby: {
-      url: 'https://rinkey.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      url: "https://rinkey.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       chainId: 4,
       accounts: privateKeysTestnet,
       gasPrice: 8000000000,
@@ -95,7 +95,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: '0.4.26',
+        version: "0.4.26",
         settings: {
           optimizer: {
             enabled: true,
@@ -104,7 +104,7 @@ module.exports = {
         },
       },
       {
-        version: '0.8.15',
+        version: "0.8.15",
         settings: {
           optimizer: {
             enabled: true,
@@ -120,6 +120,17 @@ module.exports = {
     // sources: './contracts',
     // cache: './cache',
     // artifacts: './artifacts',
-    tests: './tests', // default './test'
-  }
-}
+    tests: "./tests", // default './test'
+  },
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
+  },
+  gasReporter: {
+    currency: "USD",
+    enabled: true,
+    excludeContracts: [],
+    src: "./contracts",
+  },
+};
