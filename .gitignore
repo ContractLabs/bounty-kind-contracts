@@ -51,4 +51,9 @@ Thumbs.db
 *.wmv
 
 tmp
+.vscode
+.openzeppelin
 
+abi
+accounts
+typechain-types
