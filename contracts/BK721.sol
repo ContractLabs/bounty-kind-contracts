@@ -33,21 +33,15 @@ abstract contract BK721Upgradeable is
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     ///@dev value is equal to keccak256("Swap(address user,uint256[] fromIds,uint256 toId,uint256 deadline,uint256 nonce)")
-    bytes32 private constant _SWAP_TYPE_HASH =
+    bytes32 private constant __MERGE_TYPE_HASH =
         0x3763ec6725b0aae11be7380c0fa9b2ac1c7658553079ea4adfb386f6d1245e13;
     ///@dev value is equal to keccak256("Withdraw(uint256 tokenId,uint256 pointFee,uint256 deadline,uint256 nonce)")
-    bytes32 private constant _WITHDRAW_TYPE_HASH =
+    bytes32 private constant __WITHDRAW_TYPE_HASH =
         0x29ed224349fce3aa6691d0ebaa0401e6397c11160fc1571d8de406ee323cb0de;
 
     bytes32 public version;
     bytes32 private _baseTokenURIPtr;
-    BitMapsUpgradeable.BitMap private _lockedTokens;
     mapping(uint256 => uint256) public typeIdTrackers;
-
-    modifier notLocked(uint256 tokenId_) {
-        __checkLock(tokenId_);
-        _;
-    }
 
     function setBaseURI(string calldata baseURI_)
         external
@@ -56,7 +50,7 @@ abstract contract BK721Upgradeable is
         _setBaseURI(baseURI_);
     }
 
-    function swap(
+    function merge(
         uint256[] calldata fromIds_,
         uint256 toId_,
         uint256 deadline_,
@@ -71,12 +65,12 @@ abstract contract BK721Upgradeable is
         __checkSignature(
             keccak256(
                 abi.encode(
-                    _SWAP_TYPE_HASH,
+                    __MERGE_TYPE_HASH,
                     user,
                     fromIds_,
                     toId_,
                     deadline_,
-                    _useNonce(user)
+                    _useNonce(user) // resitance to reentrancy
                 )
             ),
             signature_
@@ -87,7 +81,7 @@ abstract contract BK721Upgradeable is
         for (uint256 i; i < length; ) {
             fromId = fromIds_[i];
             if (ownerOf(fromId) != user) revert BK721__Unauthorized();
-            _burn(fromId);
+            //_burn(fromId);
             unchecked {
                 ++i;
             }
@@ -95,43 +89,7 @@ abstract contract BK721Upgradeable is
 
         __mintTransfer(user, toId_);
 
-        emit Swapped(fromIds_, toId_);
-    }
-
-    function lock(uint256 tokenId_) external notLocked(tokenId_) {
-        if (ownerOf(tokenId_) != _msgSender()) revert BK721__AlreadyLocked();
-        _lockedTokens.set(tokenId_);
-
-        emit Locked(tokenId_);
-    }
-
-    function withdraw(
-        uint256 tokenId_,
-        uint256 pointFee_,
-        uint256 deadline_,
-        bytes calldata signature_
-    ) external whenNotPaused {
-        if (block.timestamp > deadline_) revert BK721__Expired();
-        address user = _msgSender();
-        if (user != ownerOf(tokenId_)) revert BK721__Unauthorized();
-        if (!isLocked(tokenId_)) revert BK721__NotLocked();
-
-        __checkSignature(
-            keccak256(
-                abi.encode(
-                    _WITHDRAW_TYPE_HASH,
-                    tokenId_,
-                    pointFee_,
-                    deadline_,
-                    _useNonce(tokenId_)
-                )
-            ),
-            signature_
-        );
-
-        _lockedTokens.unset(tokenId_);
-
-        emit Released(tokenId_);
+        emit Merged(fromIds_, toId_);
     }
 
     function updateTreasury(ITreasuryV2 treasury_)
@@ -149,7 +107,7 @@ abstract contract BK721Upgradeable is
         whenPaused
         onlyRole(Roles.OPERATOR_ROLE)
     {
-        if (!treasury().supportedPayment(feeToken_))
+        if (!treasury().supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
         _setRoyalty(feeToken_, uint96(feeAmt_));
         emit FeeUpdated(feeToken_, feeAmt_);
@@ -210,10 +168,6 @@ abstract contract BK721Upgradeable is
 
     function baseURI() external view returns (string memory) {
         return string(_baseTokenURIPtr.read());
-    }
-
-    function isLocked(uint256 tokenId) public view returns (bool) {
-        return _lockedTokens.get(tokenId);
     }
 
     function metadataOf(uint256 tokenId_)
@@ -301,7 +255,6 @@ abstract contract BK721Upgradeable is
         override(ERC721EnumerableUpgradeable, ERC721Upgradeable)
     {
         _requireNotPaused();
-        __checkLock(tokenId_);
         super._beforeTokenTransfer(from_, to_, tokenId_);
 
         address sender = _msgSender();
@@ -346,9 +299,5 @@ abstract contract BK721Upgradeable is
         ) revert BK721__InvalidSignature();
     }
 
-    function __checkLock(uint256 tokenId_) private view {
-        if (isLocked(tokenId_)) revert BK721__AlreadyLocked();
-    }
-
-    uint256[46] private __gap;
+    uint256[47] private __gap;
 }

@@ -60,7 +60,10 @@ contract CommandGate is
         __executeTx(
             contract_,
             fnSig_,
-            bytes.concat(params_, abi.encode(_msgSender(), address(0), msg.value))
+            bytes.concat(
+                params_,
+                abi.encode(_msgSender(), address(0), msg.value)
+            )
         );
     }
 
@@ -73,7 +76,7 @@ contract CommandGate is
         bytes32 s,
         bytes4 fnSig_,
         address contract_,
-        bytes calldata data_
+        bytes memory data_
     ) external whenNotPaused {
         if (!__isWhitelisted.get(contract_.fillLast96Bits()))
             revert CommandGate__UnknownAddress(contract_);
@@ -85,12 +88,8 @@ contract CommandGate is
             address(this),
             value_
         );
-
-        __executeTx(
-            contract_,
-            fnSig_,
-            bytes.concat(data_, abi.encode(token_, value_))
-        );
+        data_ = bytes.concat(data_, abi.encode(user, token_, value_));
+        __executeTx(contract_, fnSig_, data_);
     }
 
     function withdrawTo(
@@ -107,7 +106,7 @@ contract CommandGate is
 
     function onERC721Received(
         address,
-        address,
+        address from_,
         uint256 tokenId_,
         bytes calldata data_
     ) external override returns (bytes4) {
@@ -119,7 +118,7 @@ contract CommandGate is
         __executeTx(
             target,
             fnSig,
-            bytes.concat(data, abi.encode(_msgSender(), tokenId_))
+            bytes.concat(data, abi.encode(from_, _msgSender(), tokenId_))
         );
 
         return this.onERC721Received.selector;

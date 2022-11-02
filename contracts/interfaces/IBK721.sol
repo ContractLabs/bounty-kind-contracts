@@ -16,7 +16,7 @@ interface IBK721 is IBKAsset {
 
     event FeeUpdated(IERC20Upgradeable indexed token, uint256 indexed amount);
     event Locked(uint256 indexed tokenId);
-    event Swapped(uint256[] indexed from, uint256 to);
+    event Merged(uint256[] indexed from, uint256 to);
     event Released(uint256 indexed tokenId);
     event BatchMinted(address indexed to, uint256 indexed amount);
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
 
-interface ITreasuryV2 is IWithdrawableUpgradeable {
+interface ITreasuryV2 {
     error Treasury__Expired();
     error Treasury__LengthMismatch();
     error Treasury__InvalidSignature();
@@ -19,8 +19,7 @@ interface ITreasuryV2 is IWithdrawableUpgradeable {
     event PaymentRemoved(address indexed token);
     event PaymentsRemoved();
 
-    function supportedPayment(IERC20Upgradeable token_)
-        external
-        view
-        returns (bool);
+    function supportedPayment(address token_) external view returns (bool);
+
+    function priceOf(address token_) external view returns (uint256);
 }
