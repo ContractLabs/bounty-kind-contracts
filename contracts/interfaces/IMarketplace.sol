@@ -1,40 +1,50 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-// interface IMarketplace {
-//     error Marketplace__OutOfBounds();
-//     error Marketplace__Unauthorized();
-//     error Marketplace__LengthMismatch();
-//     error Marketplace__UnsupportedPayment();
-//     struct Price {
-//         uint256[] tokenIds; // package tokenId
-//         address maker; // address post
-//         uint256 price; // price of the package (unit is USD/JPY/VND/...) * 1 ether
-//         address[] fiat; // payable fiat
-//         address buyByFiat;
-//         bool isBuy; // order status
-//     }
-//     struct GameFee {
-//         string fee; // bao nhieu phan `Percen` cua weiPrice
-//         address taker; //
-//         uint256 percent;
-//         bool existed;
-//     }
+import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
+import {
+    IERC20PermitUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
-//     struct Game {
-//         uint256 fee;
-//         uint256 limitFee;
-//         uint256 creatorFee;
-//         mapping(uint256 => Price) tokenPrice;
-//         GameFee[] arrFees;
-//         mapping(string => GameFee) fees;
-//     }
+interface IMarketplace {
+    error Marketplace__Expired();
+    error Marketplace__InvalidSignature();
+    struct Seller {
+        uint8 v;
+        uint256 deadline;
+        IERC721PermitUpgradeable nft;
+        uint256 unitPrice;
+        IERC20Upgradeable payment;
+        uint256 tokenId;
+        bytes32 r;
+        bytes32 s;
+    }
 
-//     event _setPrice(
-//         address _game,
-//         uint256[] _tokenIds,
-//         uint256 _price,
-//         uint8 _type
-//     );
-//     event _resetPrice(address _game, uint256 _orderId);
-// }
+    struct Buyer {
+        uint8 v;
+        uint256 deadline;
+        bytes32 r;
+        bytes32 s;
+    }
+
+    event ProtocolFeeUpdated(uint256 indexed feeFraction);
+
+    event Redeemed(
+        address indexed buyer,
+        address indexed seller,
+        uint256 indexed tokenId,
+        IERC721PermitUpgradeable nft,
+        IERC20Upgradeable payment,
+        uint256 unitPrice
+    );
+
+    function setProtocolFee(uint256 feeFraction_) external;
+
+    function redeem(
+        uint256 deadline_,
+        Buyer calldata buyer_,
+        Seller calldata seller_,
+        bytes calldata signature_
+    ) external payable;
+}

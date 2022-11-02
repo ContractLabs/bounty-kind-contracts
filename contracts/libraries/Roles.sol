@@ -16,4 +16,6 @@ library Roles {
         0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3;
     bytes32 public constant TREASURER_ROLE =
         0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07;
+    bytes32 public constant FACTORY_ROLE =
+        0xdfbefbf47cfe66b701d8cfdbce1de81c821590819cb07e71cb01b6602fb0ee27;
 }

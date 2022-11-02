@@ -8,6 +8,8 @@ import "./internal-upgradeable/BaseUpgradeable.sol";
 import "./internal-upgradeable/AssetRoyaltyUpgradeable.sol";
 import "./internal-upgradeable/FundForwarderUpgradeable.sol";
 
+import "oz-custom/contracts/internal-upgradeable/ProtocolFeeUpgradeable.sol";
+
 import "./interfaces/IBK721.sol";
 import "./interfaces/IIngameSwap.sol";
 
@@ -18,7 +20,7 @@ import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol"
 abstract contract BK721Upgradeable is
     IBK721,
     BaseUpgradeable,
-    AssetRoyaltyUpgradeable,
+    ProtocolFeeUpgradeable,
     ERC721PermitUpgradeable,
     FundForwarderUpgradeable,
     ERC721EnumerableUpgradeable
@@ -38,19 +40,20 @@ abstract contract BK721Upgradeable is
         0x29ed224349fce3aa6691d0ebaa0401e6397c11160fc1571d8de406ee323cb0de;
 
     bytes32 public version;
-
-    bytes32 private _pointPool;
     bytes32 private _baseTokenURIPtr;
     BitMapsUpgradeable.BitMap private _lockedTokens;
     mapping(uint256 => uint256) public typeIdTrackers;
 
-    event Locked();
-    event Released();
-    event Swapped();
-
     modifier notLocked(uint256 tokenId_) {
         __checkLock(tokenId_);
         _;
+    }
+
+    function setBaseURI(string calldata baseURI_)
+        external
+        onlyRole(Roles.OPERATOR_ROLE)
+    {
+        _setBaseURI(baseURI_);
     }
 
     function swap(
@@ -59,8 +62,10 @@ abstract contract BK721Upgradeable is
         uint256 deadline_,
         bytes calldata signature_
     ) external {
-        if (block.timestamp > deadline_) revert();
-        if (_ownerOf[toId_].fromFirst20Bytes() != address(0)) revert();
+        if (block.timestamp > deadline_) revert BK721__Expired();
+        if (_ownerOf[toId_].fromFirst20Bytes() != address(0))
+            revert BK721__AlreadyMinted();
+
         address user = _msgSender();
 
         __checkSignature(
@@ -78,9 +83,11 @@ abstract contract BK721Upgradeable is
         );
 
         uint256 length = fromIds_.length;
+        uint256 fromId;
         for (uint256 i; i < length; ) {
-            if (ownerOf(fromIds_[i]) != user) revert();
-            _burn(fromIds_[i]);
+            fromId = fromIds_[i];
+            if (ownerOf(fromId) != user) revert BK721__Unauthorized();
+            _burn(fromId);
             unchecked {
                 ++i;
             }
@@ -88,14 +95,14 @@ abstract contract BK721Upgradeable is
 
         __mintTransfer(user, toId_);
 
-        emit Swapped();
+        emit Swapped(fromIds_, toId_);
     }
 
     function lock(uint256 tokenId_) external notLocked(tokenId_) {
-        if (ownerOf(tokenId_) != _msgSender()) revert();
+        if (ownerOf(tokenId_) != _msgSender()) revert BK721__AlreadyLocked();
         _lockedTokens.set(tokenId_);
 
-        emit Locked();
+        emit Locked(tokenId_);
     }
 
     function withdraw(
@@ -104,10 +111,10 @@ abstract contract BK721Upgradeable is
         uint256 deadline_,
         bytes calldata signature_
     ) external whenNotPaused {
+        if (block.timestamp > deadline_) revert BK721__Expired();
         address user = _msgSender();
-        if (user != ownerOf(tokenId_)) revert();
-        if (block.timestamp > deadline_) revert();
-        if (!isLocked(tokenId_)) revert();
+        if (user != ownerOf(tokenId_)) revert BK721__Unauthorized();
+        if (!isLocked(tokenId_)) revert BK721__NotLocked();
 
         __checkSignature(
             keccak256(
@@ -121,10 +128,10 @@ abstract contract BK721Upgradeable is
             ),
             signature_
         );
-        __decreasePoint(user, pointFee_);
+
         _lockedTokens.unset(tokenId_);
 
-        emit Released();
+        emit Released(tokenId_);
     }
 
     function updateTreasury(ITreasuryV2 treasury_)
@@ -139,14 +146,13 @@ abstract contract BK721Upgradeable is
 
     function setFee(IERC20Upgradeable feeToken_, uint256 feeAmt_)
         external
-        override
         whenPaused
         onlyRole(Roles.OPERATOR_ROLE)
     {
         if (!treasury().supportedPayment(feeToken_))
             revert BK721__TokenNotSupported();
-        _setfee(feeToken_, feeAmt_);
-        emit FeeChanged();
+        _setRoyalty(feeToken_, uint96(feeAmt_));
+        emit FeeUpdated(feeToken_, feeAmt_);
     }
 
     function safeMint(address to_, uint256 typeId_)
@@ -154,10 +160,7 @@ abstract contract BK721Upgradeable is
         onlyRole(Roles.PROXY_ROLE)
     {
         unchecked {
-            __safeMintTransfer(
-                to_,
-                (typeId_ << 128) | typeIdTrackers[typeId_]++
-            );
+            _safeMint(to_, (typeId_ << 32) | typeIdTrackers[typeId_]++);
         }
     }
 
@@ -167,7 +170,7 @@ abstract contract BK721Upgradeable is
         onlyRole(Roles.MINTER_ROLE)
     {
         unchecked {
-            __mintTransfer(to_, (typeId_ << 128) | typeIdTrackers[typeId_]++);
+            _mint(to_, (typeId_ << 32) | typeIdTrackers[typeId_]++);
         }
     }
 
@@ -179,7 +182,7 @@ abstract contract BK721Upgradeable is
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                __mintTransfer(to_, ptr);
+                _mint(to_, ptr);
                 ++ptr;
                 ++i;
             }
@@ -196,7 +199,7 @@ abstract contract BK721Upgradeable is
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                __safeMintTransfer(to_, ptr);
+                _safeMint(to_, ptr);
                 ++ptr;
                 ++i;
             }
@@ -205,8 +208,8 @@ abstract contract BK721Upgradeable is
         emit BatchMinted(to_, length_);
     }
 
-    function pointPool() external view returns (IIngameSwap) {
-        return IIngameSwap(_pointPool.fromFirst20Bytes());
+    function baseURI() external view returns (string memory) {
+        return string(_baseTokenURIPtr.read());
     }
 
     function isLocked(uint256 tokenId) public view returns (bool) {
@@ -219,13 +222,13 @@ abstract contract BK721Upgradeable is
         override
         returns (uint256 typeId, uint256 index)
     {
-        ownerOf(tokenId_);
-        typeId = tokenId_ >> 128;
-        index = tokenId_ & ~uint128(0);
+        if (_ownerOf[tokenId_] == 0) revert BK721__NotMinted();
+        typeId = tokenId_ >> 32;
+        index = tokenId_ & ~uint32(0);
     }
 
     function nextIdFromType(uint256 typeId_) public view returns (uint256) {
-        return (typeId_ << 128) | typeIdTrackers[typeId_];
+        return (typeId_ << 32) | typeIdTrackers[typeId_];
     }
 
     function tokenURI(uint256 tokenId)
@@ -234,7 +237,10 @@ abstract contract BK721Upgradeable is
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(_baseTokenURIPtr.read(), tokenId));
+        return
+            string(
+                abi.encodePacked(_baseTokenURIPtr.read(), tokenId.toString())
+            );
     }
 
     function supportsInterface(bytes4 interfaceId_)
@@ -253,6 +259,10 @@ abstract contract BK721Upgradeable is
             super.supportsInterface(interfaceId_);
     }
 
+    function _setBaseURI(string calldata baseURI_) internal {
+        _baseTokenURIPtr = bytes(baseURI_).write();
+    }
+
     function __BK_init(
         string calldata name_,
         string calldata symbol_,
@@ -263,37 +273,22 @@ abstract contract BK721Upgradeable is
         ITreasuryV2 treasury_,
         bytes32 version_
     ) internal onlyInitializing {
-        __BK_init_unchained(
-            name_,
-            symbol_,
-            baseURI_,
-            feeAmt_,
-            feeToken_,
-            governance_,
-            treasury_,
-            version_
-        );
+        __Base_init_unchained(governance_, 0);
+        __FundForwarder_init_unchained(treasury_);
+        __ERC721_init_unchained(name_, symbol_);
+        __Signable_init(type(BK721Upgradeable).name, "1");
+        __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
     }
 
     function __BK_init_unchained(
-        string calldata name_,
-        string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IGovernanceV2 governance_,
-        ITreasuryV2 treasury_,
         bytes32 version_
     ) internal onlyInitializing {
-        __Base_init(governance_, 0);
-        __FundForwarder_init(treasury_);
-        __ERC721_init(name_, symbol_);
-        __EIP712_init(type(BK721Upgradeable).name, "2");
-
         version = version_;
-        _setfee(feeToken_, feeAmt_);
-
-        _baseTokenURIPtr = bytes(baseURI_).write();
+        _setRoyalty(feeToken_, uint96(feeAmt_));
+        _setBaseURI(baseURI_);
     }
 
     function _beforeTokenTransfer(
@@ -335,17 +330,6 @@ abstract contract BK721Upgradeable is
         _transfer(sender, to_, tokenId_);
     }
 
-    function __decreasePoint(address user_, uint256 amount_) private {
-        (bool ok, ) = _pointPool.fromFirst20Bytes().call(
-            abi.encodeWithSelector(
-                IIngameSwap.decrease.selector,
-                user_,
-                amount_
-            )
-        );
-        if (!ok) revert();
-    }
-
     function _baseURI() internal view virtual override returns (string memory) {
         return string(_baseTokenURIPtr.read());
     }
@@ -357,14 +341,14 @@ abstract contract BK721Upgradeable is
         if (
             !_hasRole(
                 Roles.SIGNER_ROLE,
-                _recoverSigner(_hashTypedDataV4(structHash_), signature_)
+                _recoverSigner(structHash_, signature_)
             )
-        ) revert();
+        ) revert BK721__InvalidSignature();
     }
 
     function __checkLock(uint256 tokenId_) private view {
-        if (isLocked(tokenId_)) revert();
+        if (isLocked(tokenId_)) revert BK721__AlreadyLocked();
     }
 
-    uint256[45] private __gap;
+    uint256[46] private __gap;
 }

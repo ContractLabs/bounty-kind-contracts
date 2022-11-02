@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "oz-custom/contracts/oz-upgradeable/access/IAccessControlEnumerableUpgradeable.sol";
 
-import "../internal-upgradeable/interfaces/IBlacklistableUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/interfaces/IBlacklistableUpgradeable.sol";
 
 interface IGovernanceV2 is
     IBlacklistableUpgradeable,

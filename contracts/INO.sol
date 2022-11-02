@@ -1,24 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
+import {
+    ERC721TokenReceiverUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
-import "./internal-upgradeable/ProxyCheckerUpgradeable.sol";
+
 import "./internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IINO.sol";
+import "./interfaces/IBK721.sol";
 
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/BitMap256.sol";
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
 import "oz-custom/contracts/libraries/EnumerableSetV2.sol";
-import "oz-custom/contracts/oz-upgradeable/utils/math/MathUpgradeable.sol";
 
 contract INO is
     IINO,
@@ -52,17 +54,13 @@ contract INO is
         internal
         onlyInitializing
     {
-        __INO_init_unchained(governance_, treasury_);
+        __INO_init_unchained();
+        __ReentrancyGuard_init_unchained();
+        __Base_init_unchained(governance_, 0);
+        __FundForwarder_init_unchained(treasury_);
     }
 
-    function __INO_init_unchained(
-        IGovernanceV2 governance_,
-        ITreasuryV2 treasury_
-    ) internal onlyInitializing {
-        __ReentrancyGuard_init();
-        __FundForwarder_init(treasury_);
-        __Base_init(governance_, 0);
-    }
+    function __INO_init_unchained() internal onlyInitializing {}
 
     function redeem(
         uint256 ticketId_,
@@ -96,7 +94,6 @@ contract INO is
 
         address paymentToken;
         uint256 total;
-        bool ok;
         // get rid of stack too deep
         {
             paymentToken = ticketId_.fromLast160Bits();
@@ -114,27 +111,17 @@ contract INO is
                     paymentToken
                 ) revert INO__UnsupportedPayment(paymentToken);
             }
-
-            if (paymentToken != address(0)) {
-                (ok, ) = paymentToken.call(
-                    abi.encodeWithSelector(
-                        IERC20PermitUpgradeable.permit.selector,
-                        sender,
-                        address(this),
-                        total =
-                            payment.unitPrices *
-                            2 **
-                                IERC20MetadataUpgradeable(paymentToken)
-                                    .decimals() *
-                            amount,
-                        deadline_,
-                        v,
-                        r,
-                        s
-                    )
+            total = payment.unitPrices * amount;
+            if (paymentToken != address(0))
+                IERC20PermitUpgradeable(paymentToken).permit(
+                    sender,
+                    address(this),
+                    total,
+                    deadline_,
+                    v,
+                    r,
+                    s
                 );
-                if (!ok) revert INO__ExternalCallFailed();
-            }
         }
         _safeTransferFrom(
             IERC20Upgradeable(paymentToken),
@@ -142,16 +129,7 @@ contract INO is
             address(treasury()),
             total
         );
-
-        (ok, ) = _campaign.nft.call(
-            abi.encodeWithSelector(
-                0x61587911,
-                sender,
-                _campaign.typeNFT,
-                amount
-            )
-        );
-        if (!ok) revert INO__ExternalCallFailed();
+        IBK721(_campaign.nft).safeMintBatch(sender, _campaign.typeNFT, amount);
 
         if (msg.value != 0) _safeNativeTransfer(sender, msg.value);
 
@@ -213,4 +191,6 @@ contract INO is
         emit TreasuryUpdated(treasury(), treasury_);
         _updateTreasury(treasury_);
     }
+
+    uint256[47] private __gap;
 }

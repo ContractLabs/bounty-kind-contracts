@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "../internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
-
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
 
 interface ITreasuryV2 is IWithdrawableUpgradeable {
     error Treasury__Expired();
     error Treasury__LengthMismatch();
+    error Treasury__InvalidSignature();
 
     event PaymentsUpdated();
     event PricesUpdated();

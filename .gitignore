@@ -57,3 +57,5 @@ tmp
 abi
 accounts
 typechain-types
+.ENV
+env

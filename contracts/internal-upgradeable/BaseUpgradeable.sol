@@ -70,16 +70,7 @@ abstract contract BaseUpgradeable is ContextUpgradeable, UUPSUpgradeable {
         internal
         onlyInitializing
     {
-        if (role_ != 0) {
-            (bool ok, ) = address(governance_).call(
-                abi.encodeWithSelector(
-                    IGovernanceV2.requestAccess.selector,
-                    role_
-                )
-            );
-            if (!ok) revert Base__AuthorizeFailed();
-        }
-
+        governance_.requestAccess(role_);
         __updateGovernance(governance_);
     }
 

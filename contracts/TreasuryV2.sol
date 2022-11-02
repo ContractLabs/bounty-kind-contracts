@@ -2,11 +2,11 @@
 pragma solidity ^0.8.15;
 
 import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/WithdrawableUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
-import "./internal-upgradeable/ProxyCheckerUpgradeable.sol";
-import "./internal-upgradeable/WithdrawableUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/EnumerableSetV2.sol";
 
@@ -35,9 +35,9 @@ contract TreasuryUpgradeable is
     EnumerableSetV2.AddressSet private _payments;
 
     function init(IGovernanceV2 governance_) external initializer {
-        __Base_init(governance_, 0);
-        __ReentrancyGuard_init();
-        __EIP712_init(type(TreasuryUpgradeable).name, "2");
+        __Base_init_unchained(governance_, 0);
+        __ReentrancyGuard_init_unchained();
+        __Signable_init(type(TreasuryUpgradeable).name, "2");
     }
 
     function withdraw(
@@ -59,29 +59,32 @@ contract TreasuryUpgradeable is
         IERC20Upgradeable token_,
         address to_,
         uint256 amount_,
-        address signer_,
         uint256 deadline_,
         bytes calldata signature_
     ) external nonReentrant whenNotPaused {
-        _onlyEOA(to_);
+        _onlyEOA(_msgSender());
         _checkBlacklist(to_);
-        _checkRole(Roles.SIGNER_ROLE, signer_);
 
         if (block.timestamp > deadline_) revert Treasury__Expired();
-        _verify(
-            _msgSender(),
-            signer_,
-            keccak256(
-                abi.encode(
-                    _PERMIT_TYPE_HASH,
-                    token_,
-                    to_,
-                    _useNonce(to_),
-                    deadline_
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    _hashTypedDataV4(
+                        keccak256(
+                            abi.encode(
+                                _PERMIT_TYPE_HASH,
+                                token_,
+                                to_,
+                                _useNonce(to_),
+                                deadline_
+                            )
+                        )
+                    ),
+                    signature_
                 )
-            ),
-            signature_
-        );
+            )
+        ) revert Treasury__InvalidSignature();
 
         _safeTransfer(token_, to_, amount_);
 

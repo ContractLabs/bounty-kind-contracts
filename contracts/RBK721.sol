@@ -9,8 +9,8 @@ import "./BK721.sol";
 
 contract RentableBK721Upgradeable is
     IRBK721,
-    ERC721RentableUpgradeable,
-    BK721Upgradeable
+    BK721Upgradeable,
+    ERC721RentableUpgradeable
 {
     using SafeCastUpgradeable for uint256;
 
@@ -55,8 +55,8 @@ contract RentableBK721Upgradeable is
             revert RBK721__Rented();
         userInfo.user = _msgSender();
         emit UserUpdated(tokenId, userInfo.user, expires_);
+
         _verify(
-            userInfo.user,
             ownerOf(tokenId),
             keccak256(
                 abi.encode(

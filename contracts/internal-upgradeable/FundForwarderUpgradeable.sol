@@ -2,8 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "oz-custom/contracts/oz-upgradeable/utils/ContextUpgradeable.sol";
-
-import "./TransferableUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 
 import "./interfaces/IFundForwarderUpgradeable.sol";
 
