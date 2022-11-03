@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "../../interfaces/ITreasuryV2.sol";
+import "../../interfaces/ITreasury.sol";
 
 interface IFundForwarderUpgradeable {
-    event TreasuryUpdated(ITreasuryV2 indexed from, ITreasuryV2 indexed to);
+    event TreasuryUpdated(ITreasury indexed from, ITreasury indexed to);
 
-    function updateTreasury(ITreasuryV2 treasury_) external;
+    function updateTreasury(ITreasury treasury_) external;
 }

@@ -32,20 +32,18 @@ contract CommandGate is
 
     BitMaps.BitMap private __isWhitelisted;
 
-    constructor(address vault_, IGovernanceV2 authority_)
-        payable
-        Base(authority_, 0)
-        FundForwarder(vault_)
-    {}
+    constructor(
+        address vault_,
+        IAuthority authority_
+    ) payable Base(authority_, 0) FundForwarder(vault_) {}
 
     function kill() external onlyRole(Roles.FACTORY_ROLE) {
         selfdestruct(payable(vault));
     }
 
-    function whitelistAddress(address addr_)
-        external
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function whitelistAddress(
+        address addr_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
         __isWhitelisted.set(addr_.fillLast96Bits());
     }
 
@@ -92,11 +90,7 @@ contract CommandGate is
         __executeTx(contract_, fnSig_, data_);
     }
 
-    function withdrawTo(
-        address token_,
-        address to_,
-        uint256 value_
-    ) external {
+    function withdrawTo(address token_, address to_, uint256 value_) external {
         if (token_.supportsInterface(type(IERC20).interfaceId))
             _safeERC20Transfer(IERC20(token_), to_, value_);
         else if (token_.supportsInterface(type(IERC721).interfaceId))
@@ -144,15 +138,9 @@ contract CommandGate is
         }
     }
 
-    function __decodeData(bytes calldata data_)
-        private
-        view
-        returns (
-            address target,
-            bytes4 fnSig,
-            bytes memory params
-        )
-    {
+    function __decodeData(
+        bytes calldata data_
+    ) private view returns (address target, bytes4 fnSig, bytes memory params) {
         (target, fnSig, params) = abi.decode(data_, (address, bytes4, bytes));
 
         if (!__isWhitelisted.get(target.fillLast96Bits()))

@@ -13,14 +13,13 @@ abstract contract FundForwarderUpgradeable is
 {
     bytes32 private _treasury;
 
-    function __FundForwarder_init(ITreasuryV2 treasury_)
-        internal
-        onlyInitializing
-    {
+    function __FundForwarder_init(
+        ITreasury treasury_
+    ) internal onlyInitializing {
         __FundForwarder_init_unchained(treasury_);
     }
 
-    function __FundForwarder_init_unchained(ITreasuryV2 treasury_) internal {
+    function __FundForwarder_init_unchained(ITreasury treasury_) internal {
         _updateTreasury(treasury_);
     }
 
@@ -32,15 +31,15 @@ abstract contract FundForwarderUpgradeable is
         _safeNativeTransfer(treasury_, msg.value);
     }
 
-    function updateTreasury(ITreasuryV2) external virtual override;
+    function updateTreasury(ITreasury) external virtual override;
 
-    function treasury() public view returns (ITreasuryV2 treasury_) {
+    function treasury() public view returns (ITreasury treasury_) {
         assembly {
             treasury_ := sload(_treasury.slot)
         }
     }
 
-    function _updateTreasury(ITreasuryV2 treasury_) internal {
+    function _updateTreasury(ITreasury treasury_) internal {
         assembly {
             sstore(_treasury.slot, treasury_)
         }

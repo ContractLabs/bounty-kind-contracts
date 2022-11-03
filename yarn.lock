@@ -947,6 +947,13 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
+"@solidity-parser/parser@^0.14.5":
+  version "0.14.5"
+  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.14.5.tgz#87bc3cc7b068e08195c219c91cd8ddff5ef1a804"
+  integrity sha512-6dKnHZn7fg/iQATVEzqyUOyEidbn05q7YA2mQ9hC0MMXhhV3/JrsxmFSYZAcr7j1yUP700LLhTruvJ3MiQmjJg==
+  dependencies:
+    antlr4ts "^0.5.0-alpha.4"
+
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.9.tgz#df4907fc07a886922637b15e02d4cebc4c0021b2"
@@ -4228,10 +4235,10 @@ os-tmpdir@~1.0.2:
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==
 
-oz-custom@^1.1.4-b:
-  version "1.1.4-b"
-  resolved "https://registry.yarnpkg.com/oz-custom/-/oz-custom-1.1.4-b.tgz#f6c5b18955ea507a6ebd1e15d671767096ce7c1b"
-  integrity sha512-TcVNKHCpzlngaStc6uRLoA+Jsxv6zpA0ROFOlX9R94jnr4u7Xsmq0FPQFcn5AhcqsR1xPqeQH42kl1PaF9dRJg==
+oz-custom@^1.1.4-d:
+  version "1.1.4-d"
+  resolved "https://registry.yarnpkg.com/oz-custom/-/oz-custom-1.1.4-d.tgz#ce63013018f6a6d7d681da89bc679d47eef6e002"
+  integrity sha512-Ex2R/AN4n8NcPbN4HH+3wx29Pxcwt/QkRG7Bv3m7td4oSQ2edMzQHdO9GY5IIBOYBNfaahgMEVksQbIo3kjbhw==
   dependencies:
     "@ethersproject/abi" "^5.4.7"
     "@ethersproject/providers" "^5.4.7"
@@ -4441,6 +4448,18 @@ prettier-plugin-solidity@^1.0.0-beta.24:
   integrity sha512-6JlV5BBTWzmDSq4kZ9PTXc3eLOX7DF5HpbqmmaF+kloyUwOZbJ12hIYsUaZh2fVgZdV2t0vWcvY6qhILhlzgqg==
   dependencies:
     "@solidity-parser/parser" "^0.14.3"
+    emoji-regex "^10.1.0"
+    escape-string-regexp "^4.0.0"
+    semver "^7.3.7"
+    solidity-comments-extractor "^0.0.7"
+    string-width "^4.2.3"
+
+prettier-plugin-solidity@^1.0.0-rc.1:
+  version "1.0.0-rc.1"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-solidity/-/prettier-plugin-solidity-1.0.0-rc.1.tgz#97b6129430b262cb0b25cc4c865f9515be9c6ede"
+  integrity sha512-horUGyCBbfNHWvJ44UVEcsfVySEoG2gxGs7TcBfTZWNvD4VU6rjzwAkrUtKV6VvRZWn9dh01XZ2UhhB3eVnMXQ==
+  dependencies:
+    "@solidity-parser/parser" "^0.14.5"
     emoji-regex "^10.1.0"
     escape-string-regexp "^4.0.0"
     semver "^7.3.7"

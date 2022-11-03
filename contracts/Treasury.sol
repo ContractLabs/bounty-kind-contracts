@@ -10,18 +10,22 @@ import "./internal-upgradeable/BaseUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/EnumerableSetV2.sol";
 
-import "./interfaces/ITreasuryV2.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "./interfaces/ITreasury.sol";
+import {
+    IERC721Upgradeable,
+    ERC721TokenReceiverUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 
-contract TreasuryUpgradeable is
-    ITreasuryV2,
+contract Treasury is
+    ITreasury,
     BaseUpgradeable,
     SignableUpgradeable,
     ProxyCheckerUpgradeable,
     WithdrawableUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    ERC721TokenReceiverUpgradeable
 {
     using Bytes32Address for address;
     using ERC165CheckerUpgradeable for address;
@@ -32,16 +36,25 @@ contract TreasuryUpgradeable is
         0x48c79cba00677850a648b537b2558198a45e7f81d7643207ace134fa238f149f;
 
     ///@dev value is equal to keccak256("Permit(address token,address to,uint256 value,uint256 nonce,uint256 deadline)")
-    bytes32 private constant _PERMIT_TYPE_HASH =
+    bytes32 private constant __PERMIT_TYPE_HASH =
         0x78ecb86225a2600f4a19912d238c02ae4aba51082b8a69ebd615456f7e702c07;
 
     mapping(bytes32 => uint256) private __priceOf;
     EnumerableSetV2.AddressSet private _payments;
 
-    function init(IGovernanceV2 governance_) external initializer {
+    function init(IAuthority governance_) external initializer {
         __Base_init_unchained(governance_, 0);
         __ReentrancyGuard_init_unchained();
-        __Signable_init(type(TreasuryUpgradeable).name, "2");
+        __Signable_init(type(Treasury).name, "2");
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     function withdraw(
@@ -52,11 +65,7 @@ contract TreasuryUpgradeable is
         __withdraw(token_, to_, value_);
     }
 
-    function __withdraw(
-        address token_,
-        address to_,
-        uint256 value_
-    ) private {
+    function __withdraw(address token_, address to_, uint256 value_) private {
         if (supportedPayment(token_)) {
             if (token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
                 IERC721Upgradeable(token_).safeTransferFrom(
@@ -76,8 +85,8 @@ contract TreasuryUpgradeable is
         uint256 deadline_,
         bytes calldata signature_
     ) external whenNotPaused {
-        _onlyEOA(_msgSender());
         _checkBlacklist(to_);
+        _onlyEOA(_msgSender());
 
         if (block.timestamp > deadline_) revert Treasury__Expired();
         if (
@@ -86,7 +95,7 @@ contract TreasuryUpgradeable is
                 _recoverSigner(
                     keccak256(
                         abi.encode(
-                            _PERMIT_TYPE_HASH,
+                            __PERMIT_TYPE_HASH,
                             token_,
                             to_,
                             value_,
@@ -128,10 +137,9 @@ contract TreasuryUpgradeable is
         emit PricesUpdated();
     }
 
-    function updatePayments(address[] calldata tokens_)
-        external
-        onlyRole(Roles.TREASURER_ROLE)
-    {
+    function updatePayments(
+        address[] calldata tokens_
+    ) external onlyRole(Roles.TREASURER_ROLE) {
         _payments.add(tokens_);
         emit PaymentsUpdated();
     }
@@ -141,10 +149,9 @@ contract TreasuryUpgradeable is
         emit PaymentsRemoved();
     }
 
-    function removePayment(address token_)
-        external
-        onlyRole(Roles.TREASURER_ROLE)
-    {
+    function removePayment(
+        address token_
+    ) external onlyRole(Roles.TREASURER_ROLE) {
         if (_payments.remove(token_)) emit PaymentRemoved(token_);
     }
 

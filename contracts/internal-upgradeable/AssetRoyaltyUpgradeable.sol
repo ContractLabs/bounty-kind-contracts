@@ -22,10 +22,10 @@ abstract contract AssetRoyaltyUpgradeable is
 
     function __AssetRoyalty_init_unchained() internal onlyInitializing {}
 
-    function setFee(IERC20Upgradeable feeToken_, uint256 feeAmt_)
-        external
-        virtual
-        override;
+    function setFee(
+        IERC20Upgradeable feeToken_,
+        uint256 feeAmt_
+    ) external virtual override;
 
     function feeInfo()
         public
@@ -41,11 +41,10 @@ abstract contract AssetRoyaltyUpgradeable is
         _feeInfo = _packPayment(feeToken_, feeAmt_);
     }
 
-    function _packPayment(IERC20Upgradeable token_, uint256 price_)
-        internal
-        pure
-        returns (uint256)
-    {
+    function _packPayment(
+        IERC20Upgradeable token_,
+        uint256 price_
+    ) internal pure returns (uint256) {
         return address(token_).fillFirst96Bits() | price_.toUint96();
     }
 

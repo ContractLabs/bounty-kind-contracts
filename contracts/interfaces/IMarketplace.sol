@@ -10,22 +10,23 @@ import {
 interface IMarketplace {
     error Marketplace__Expired();
     error Marketplace__InvalidSignature();
+
     struct Seller {
         uint8 v;
-        uint256 deadline;
-        IERC721PermitUpgradeable nft;
-        uint256 unitPrice;
-        IERC20Upgradeable payment;
-        uint256 tokenId;
         bytes32 r;
         bytes32 s;
+        uint256 tokenId;
+        uint256 deadline;
+        uint256 unitPrice;
+        IERC20Upgradeable payment;
+        IERC721PermitUpgradeable nft;
     }
 
     struct Buyer {
         uint8 v;
-        uint256 deadline;
         bytes32 r;
         bytes32 s;
+        uint256 deadline;
     }
 
     event ProtocolFeeUpdated(uint256 indexed feeFraction);

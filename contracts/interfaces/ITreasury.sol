@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
 
-interface ITreasuryV2 {
+interface ITreasury {
     error Treasury__Expired();
     error Treasury__LengthMismatch();
     error Treasury__InvalidSignature();

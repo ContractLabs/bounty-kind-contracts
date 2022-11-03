@@ -5,7 +5,7 @@ import "oz-custom/contracts/oz-upgradeable/access/IAccessControlEnumerableUpgrad
 
 import "oz-custom/contracts/internal-upgradeable/interfaces/IBlacklistableUpgradeable.sol";
 
-interface IGovernanceV2 is
+interface IAuthority is
     IBlacklistableUpgradeable,
     IAccessControlEnumerableUpgradeable
 {

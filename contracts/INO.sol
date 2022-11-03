@@ -50,10 +50,10 @@ contract INO is
     // buyer => campaignId => purchasedAmt
     mapping(bytes32 => mapping(uint256 => uint256)) private _purchasedAmt;
 
-    function __INO_init(IGovernanceV2 governance_, ITreasuryV2 treasury_)
-        internal
-        onlyInitializing
-    {
+    function __INO_init(
+        IAuthority governance_,
+        ITreasury treasury_
+    ) internal onlyInitializing {
         __INO_init_unchained();
         __ReentrancyGuard_init_unchained();
         __Base_init_unchained(governance_, 0);
@@ -136,10 +136,10 @@ contract INO is
         emit Redeemed(sender, ticketId_, paymentToken, total);
     }
 
-    function setCampaign(uint256 campaignId_, Campaign calldata campaign_)
-        external
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function setCampaign(
+        uint256 campaignId_,
+        Campaign calldata campaign_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
         bytes32 ptr = _campaigns[campaignId_];
         if (
             ptr != 0 && abi.decode(ptr.read(), (Campaign)).end > block.timestamp
@@ -154,19 +154,15 @@ contract INO is
         _campaigns[campaignId_] = abi.encode(_campaign).write();
     }
 
-    function paymentOf(uint256 campaignId_)
-        public
-        view
-        returns (Payment[] memory)
-    {
+    function paymentOf(
+        uint256 campaignId_
+    ) public view returns (Payment[] memory) {
         return abi.decode(_campaigns[campaignId_].read(), (Campaign)).payments;
     }
 
-    function campaign(uint256 campaignId_)
-        external
-        view
-        returns (Campaign memory campaign_)
-    {
+    function campaign(
+        uint256 campaignId_
+    ) external view returns (Campaign memory campaign_) {
         bytes32 ptr = _campaigns[campaignId_];
         if (ptr == 0) return campaign_;
         campaign_ = abi.decode(ptr.read(), (Campaign));
@@ -182,12 +178,9 @@ contract INO is
         return type(ERC721TokenReceiverUpgradeable).interfaceId;
     }
 
-    function updateTreasury(ITreasuryV2 treasury_)
-        external
-        override
-        onlyRole(Roles.OPERATOR_ROLE)
-        whenPaused
-    {
+    function updateTreasury(
+        ITreasury treasury_
+    ) external override onlyRole(Roles.OPERATOR_ROLE) whenPaused {
         emit TreasuryUpdated(treasury(), treasury_);
         _updateTreasury(treasury_);
     }

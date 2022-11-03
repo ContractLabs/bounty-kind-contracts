@@ -29,10 +29,9 @@ abstract contract FactoryUpgradeable is
         __Factory_init_unchained(implement_);
     }
 
-    function __Factory_init_unchained(address implement_)
-        internal
-        onlyInitializing
-    {
+    function __Factory_init_unchained(
+        address implement_
+    ) internal onlyInitializing {
         _setImplement(implement_);
     }
 

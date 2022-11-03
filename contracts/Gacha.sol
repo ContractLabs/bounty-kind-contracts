@@ -1,32 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
-
 import "./internal-upgradeable/BaseUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IGacha.sol";
-import "./interfaces/ITreasuryV2.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
-
-// import "./interfaces/IERC721Mintable.sol";
-// import "./interfaces/IERC721Burnable.sol";
-//import "./interfaces/IPaymentProvider.sol";
 import "./interfaces/IBK721.sol";
+import "./interfaces/ITreasury.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
+import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 
-import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
+import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 
 contract Gacha is
     IGacha,
     BaseUpgradeable,
-    SignableUpgradeable,
     ProxyCheckerUpgradeable,
     TransferableUpgradeable,
     FundForwarderUpgradeable
@@ -40,10 +33,10 @@ contract Gacha is
     BitMapsUpgradeable.BitMap private __supportedPayments;
     mapping(uint256 => mapping(address => uint96)) private __unitPrices;
 
-    function initialize(IGovernanceV2 authority_, ITreasuryV2 vault_)
-        external
-        initializer
-    {
+    function init(
+        IAuthority authority_,
+        ITreasury vault_
+    ) external initializer {
         __FundForwarder_init_unchained(address(vault_));
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
@@ -61,7 +54,7 @@ contract Gacha is
         if (!__supportedPayments.get(token_.fillLast96Bits()))
             revert Gacha__InvalidPayment();
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId)) {
-            uint256 unitPrice = ITreasuryV2(vault).priceOf(token_) *
+            uint256 unitPrice = ITreasury(vault).priceOf(token_) *
                 __unitPrices[type_][token_];
             if (unitPrice != value_) revert Gacha__InsufficientAmount();
         }

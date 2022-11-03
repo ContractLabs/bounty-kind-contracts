@@ -25,18 +25,18 @@ contract Marketplace is
 
     uint256 public constant PERCENTAGE_FRACTION = 10_000;
 
-    /// @dev value is equal to keccak256("Permit(address buyer,address nft,address payment,uint256 price,uint256 tokenId,uint256 deadline,uint256 nonce)")
+    /// @dev value is equal to keccak256("Permit(address buyer,address nft,address payment,uint256 price,uint256 tokenId,uint256 nonce,uint256 deadline)")
     bytes32 private constant __PERMIT_TYPE_HASH =
-        0x9205e89c3d96743995d38c007e65bcfd1a2454d38ee3e97eaedd40a415b289e0;
+        0xc396b6309f782cacc3389f4dd579db291ad1b771b8b4966f3695dab14150633e;
 
     uint256 public protocolFee;
     BitMapsUpgradeable.BitMap private __whitelistedContracts;
 
-    function initialize(
+    function init(
         uint256 feeFraction_,
         address[] calldata supportedContracts_,
-        IGovernanceV2 governance_,
-        ITreasuryV2 treasury_
+        IAuthority governance_,
+        ITreasury treasury_
     ) external initializer {
         __setProtocolFee(feeFraction_);
         __whiteListContracts(supportedContracts_);
@@ -46,15 +46,14 @@ contract Marketplace is
         __Base_init_unchained(governance_, Roles.TREASURER_ROLE);
     }
 
-    function setProtocolFee(uint256 feeFraction_)
-        external
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function setProtocolFee(
+        uint256 feeFraction_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
         __setProtocolFee(feeFraction_);
         emit ProtocolFeeUpdated(feeFraction_);
     }
 
-    function updateTreasury(ITreasuryV2 treasury_) external override {
+    function updateTreasury(ITreasury treasury_) external override {
         emit TreasuryUpdated(treasury(), treasury_);
         _updateTreasury(treasury_);
     }
@@ -170,9 +169,9 @@ contract Marketplace is
         }
     }
 
-    function __whiteListContracts(address[] calldata supportedContracts_)
-        private
-    {
+    function __whiteListContracts(
+        address[] calldata supportedContracts_
+    ) private {
         uint256 length = supportedContracts_.length;
         uint256[] memory uintContracts = new uint256[](length);
         address[] memory supportedContracts = supportedContracts_;
@@ -207,8 +206,8 @@ contract Marketplace is
                             seller_.payment,
                             seller_.unitPrice,
                             seller_.tokenId,
-                            deadline_,
-                            _useNonce(buyer)
+                            _useNonce(buyer),
+                            deadline_
                         )
                     ),
                     signature_

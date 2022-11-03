@@ -14,7 +14,9 @@ interface INotifyGate {
     event Notified(
         address indexed sender,
         bytes indexed message,
-        bytes indexed data
+        address indexed token,
+        uint256 value,
+        bytes data
     );
 
     function notifyWithNative(bytes calldata message_) external payable;

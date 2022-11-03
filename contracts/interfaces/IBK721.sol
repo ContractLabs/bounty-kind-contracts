@@ -20,19 +20,25 @@ interface IBK721 is IBKAsset {
     event Released(uint256 indexed tokenId);
     event BatchMinted(address indexed to, uint256 indexed amount);
 
-    function mint(address to_, uint256 tokenId_) external;
+    function mint(
+        address to_,
+        uint256 tokenId_
+    ) external returns (uint256 tokenId);
 
-    function safeMint(address to_, uint256 tokenId_) external;
+    function safeMint(
+        address to_,
+        uint256 tokenId_
+    ) external returns (uint256 tokenId);
 
     function mintBatch(
         address to_,
         uint256 fromId_,
         uint256 length_
-    ) external;
+    ) external returns (uint256[] memory tokenIds);
 
     function safeMintBatch(
         address to_,
         uint256 fromId_,
         uint256 length_
-    ) external;
+    ) external returns (uint256[] memory tokenIds);
 }

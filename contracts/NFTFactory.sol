@@ -6,11 +6,10 @@ import "oz-custom/contracts/internal/FundForwarder.sol";
 import "oz-custom/contracts/internal/MultiDelegatecall.sol";
 
 contract NFTFactory is Cloner, FundForwarder, MultiDelegatecall {
-    constructor(address implement_, address vault_)
-        payable
-        Cloner(implement_)
-        FundForwarder(vault_)
-    {}
+    constructor(
+        address implement_,
+        address vault_
+    ) payable Cloner(implement_) FundForwarder(vault_) {}
 
     function clone(
         bytes32 salt_,

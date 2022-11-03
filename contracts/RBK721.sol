@@ -15,7 +15,7 @@ contract RentableBK721Upgradeable is
     using SafeCastUpgradeable for uint256;
 
     ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
-    bytes32 private constant _PERMIT_RENT_TYPE_HASH =
+    bytes32 private constant __PERMIT_TYPE_HASH =
         0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078;
 
     function init(
@@ -24,8 +24,8 @@ contract RentableBK721Upgradeable is
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IGovernanceV2 governance_,
-        ITreasuryV2 treasury_
+        IAuthority governance_,
+        ITreasury treasury_
     ) external initializer {
         __BK_init(
             name_,
@@ -35,7 +35,7 @@ contract RentableBK721Upgradeable is
             feeToken_,
             governance_,
             treasury_,
-            /////@dev value is equal to keccak256("RentableBK_v1")
+            /// @dev value is equal to keccak256("RentableBK_v1")
             0xb2968efe7e8797044f984fc229747059269f7279ae7d4bb4737458dbb15e0f41
         );
     }
@@ -60,7 +60,7 @@ contract RentableBK721Upgradeable is
             ownerOf(tokenId),
             keccak256(
                 abi.encode(
-                    _PERMIT_RENT_TYPE_HASH,
+                    __PERMIT_TYPE_HASH,
                     userInfo.user,
                     tokenId,
                     expires_,
@@ -82,8 +82,7 @@ contract RentableBK721Upgradeable is
         uint256 tokenId_,
         address user_,
         uint64 expires_
-    ) public override {
-        _requireNotPaused();
+    ) public override whenNotPaused {
         if (!_isApprovedOrOwner(_msgSender(), tokenId_))
             revert Rentable__OnlyOwnerOrApproved();
 
@@ -98,7 +97,9 @@ contract RentableBK721Upgradeable is
         emit UserUpdated(tokenId_, user_, expires_);
     }
 
-    function supportsInterface(bytes4 interfaceId_)
+    function supportsInterface(
+        bytes4 interfaceId_
+    )
         public
         view
         override(BK721Upgradeable, ERC721RentableUpgradeable)

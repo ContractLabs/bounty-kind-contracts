@@ -59,3 +59,6 @@ accounts
 typechain-types
 .ENV
 env
+
+out
+forge-cache

@@ -25,28 +25,22 @@ abstract contract BK721Upgradeable is
     FundForwarderUpgradeable,
     ERC721EnumerableUpgradeable
 {
-    using SSTORE2 for bytes;
-    using SSTORE2 for bytes32;
+    using SSTORE2 for *;
+    using Bytes32Address for *;
     using StringLib for uint256;
-    using Bytes32Address for bytes32;
-    using Bytes32Address for address;
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
     ///@dev value is equal to keccak256("Swap(address user,uint256[] fromIds,uint256 toId,uint256 deadline,uint256 nonce)")
     bytes32 private constant __MERGE_TYPE_HASH =
         0x3763ec6725b0aae11be7380c0fa9b2ac1c7658553079ea4adfb386f6d1245e13;
-    ///@dev value is equal to keccak256("Withdraw(uint256 tokenId,uint256 pointFee,uint256 deadline,uint256 nonce)")
-    bytes32 private constant __WITHDRAW_TYPE_HASH =
-        0x29ed224349fce3aa6691d0ebaa0401e6397c11160fc1571d8de406ee323cb0de;
 
     bytes32 public version;
     bytes32 private _baseTokenURIPtr;
     mapping(uint256 => uint256) public typeIdTrackers;
 
-    function setBaseURI(string calldata baseURI_)
-        external
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function setBaseURI(
+        string calldata baseURI_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
         _setBaseURI(baseURI_);
     }
 
@@ -62,19 +56,24 @@ abstract contract BK721Upgradeable is
 
         address user = _msgSender();
 
-        __checkSignature(
-            keccak256(
-                abi.encode(
-                    __MERGE_TYPE_HASH,
-                    user,
-                    fromIds_,
-                    toId_,
-                    deadline_,
-                    _useNonce(user) // resitance to reentrancy
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    keccak256(
+                        abi.encode(
+                            __MERGE_TYPE_HASH,
+                            user,
+                            fromIds_,
+                            toId_,
+                            deadline_,
+                            _useNonce(user) // resitance to reentrancy
+                        )
+                    ),
+                    signature_
                 )
-            ),
-            signature_
-        );
+            )
+        ) revert BK721__InvalidSignature();
 
         uint256 length = fromIds_.length;
         uint256 fromId;
@@ -92,43 +91,41 @@ abstract contract BK721Upgradeable is
         emit Merged(fromIds_, toId_);
     }
 
-    function updateTreasury(ITreasuryV2 treasury_)
-        external
-        override
-        whenPaused
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function updateTreasury(
+        ITreasury treasury_
+    ) external override onlyRole(Roles.OPERATOR_ROLE) {
         emit TreasuryUpdated(treasury(), treasury_);
         _updateTreasury(treasury_);
     }
 
-    function setFee(IERC20Upgradeable feeToken_, uint256 feeAmt_)
-        external
-        whenPaused
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function setFee(
+        IERC20Upgradeable feeToken_,
+        uint256 feeAmt_
+    ) external whenPaused onlyRole(Roles.OPERATOR_ROLE) {
         if (!treasury().supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
         _setRoyalty(feeToken_, uint96(feeAmt_));
         emit FeeUpdated(feeToken_, feeAmt_);
     }
 
-    function safeMint(address to_, uint256 typeId_)
-        external
-        onlyRole(Roles.PROXY_ROLE)
-    {
+    function safeMint(
+        address to_,
+        uint256 typeId_
+    ) external onlyRole(Roles.PROXY_ROLE) returns (uint256 tokenId) {
         unchecked {
-            _safeMint(to_, (typeId_ << 32) | typeIdTrackers[typeId_]++);
+            _safeMint(
+                to_,
+                tokenId = (typeId_ << 32) | typeIdTrackers[typeId_]++
+            );
         }
     }
 
-    function mint(address to_, uint256 typeId_)
-        external
-        override
-        onlyRole(Roles.MINTER_ROLE)
-    {
+    function mint(
+        address to_,
+        uint256 typeId_
+    ) external override onlyRole(Roles.MINTER_ROLE) returns (uint256 tokenId) {
         unchecked {
-            _mint(to_, (typeId_ << 32) | typeIdTrackers[typeId_]++);
+            _mint(to_, tokenId = (typeId_ << 32) | typeIdTrackers[typeId_]++);
         }
     }
 
@@ -136,11 +133,17 @@ abstract contract BK721Upgradeable is
         address to_,
         uint256 typeId_,
         uint256 length_
-    ) external override onlyRole(Roles.MINTER_ROLE) {
+    )
+        external
+        override
+        onlyRole(Roles.MINTER_ROLE)
+        returns (uint256[] memory tokenIds)
+    {
+        tokenIds = new uint256[](length_);
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                _mint(to_, ptr);
+                _mint(to_, tokenIds[i] = ptr);
                 ++ptr;
                 ++i;
             }
@@ -153,11 +156,17 @@ abstract contract BK721Upgradeable is
         address to_,
         uint256 typeId_,
         uint256 length_
-    ) external override onlyRole(Roles.PROXY_ROLE) {
+    )
+        external
+        override
+        onlyRole(Roles.PROXY_ROLE)
+        returns (uint256[] memory tokenIds)
+    {
+        tokenIds = new uint256[](length_);
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                _safeMint(to_, ptr);
+                _safeMint(to_, tokenIds[i] = ptr);
                 ++ptr;
                 ++i;
             }
@@ -170,12 +179,9 @@ abstract contract BK721Upgradeable is
         return string(_baseTokenURIPtr.read());
     }
 
-    function metadataOf(uint256 tokenId_)
-        external
-        view
-        override
-        returns (uint256 typeId, uint256 index)
-    {
+    function metadataOf(
+        uint256 tokenId_
+    ) external view override returns (uint256 typeId, uint256 index) {
         if (_ownerOf[tokenId_] == 0) revert BK721__NotMinted();
         typeId = tokenId_ >> 32;
         index = tokenId_ & ~uint32(0);
@@ -185,19 +191,18 @@ abstract contract BK721Upgradeable is
         return (typeId_ << 32) | typeIdTrackers[typeId_];
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
         return
             string(
                 abi.encodePacked(_baseTokenURIPtr.read(), tokenId.toString())
             );
     }
 
-    function supportsInterface(bytes4 interfaceId_)
+    function supportsInterface(
+        bytes4 interfaceId_
+    )
         public
         view
         virtual
@@ -223,14 +228,14 @@ abstract contract BK721Upgradeable is
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IGovernanceV2 governance_,
-        ITreasuryV2 treasury_,
+        IAuthority governance_,
+        ITreasury treasury_,
         bytes32 version_
     ) internal onlyInitializing {
+        __Signable_init(name_, "1");
         __Base_init_unchained(governance_, 0);
         __FundForwarder_init_unchained(treasury_);
         __ERC721_init_unchained(name_, symbol_);
-        __Signable_init(type(BK721Upgradeable).name, "1");
         __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
     }
 
@@ -265,9 +270,10 @@ abstract contract BK721Upgradeable is
         if (
             from_ != address(0) &&
             to_ != address(0) &&
-            !governance().hasRole(Roles.MINTER_ROLE, sender)
+            !authority().hasRole(Roles.OPERATOR_ROLE, sender)
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
+            if (feeAmt == 0) return;
             _safeTransferFrom(feeToken, sender, address(treasury()), feeAmt);
         }
     }
@@ -287,10 +293,10 @@ abstract contract BK721Upgradeable is
         return string(_baseTokenURIPtr.read());
     }
 
-    function __checkSignature(bytes32 structHash_, bytes calldata signature_)
-        private
-        view
-    {
+    function __checkSignature(
+        bytes32 structHash_,
+        bytes calldata signature_
+    ) private view {
         if (
             !_hasRole(
                 Roles.SIGNER_ROLE,
@@ -300,4 +306,28 @@ abstract contract BK721Upgradeable is
     }
 
     uint256[47] private __gap;
+}
+
+contract BKNFT is BK721Upgradeable {
+    function init(
+        string calldata name_,
+        string calldata symbol_,
+        string calldata baseURI_,
+        uint256 feeAmt_,
+        IERC20Upgradeable feeToken_,
+        IAuthority governance_,
+        ITreasury treasury_,
+        bytes32 version_
+    ) external initializer {
+        __BK_init(
+            name_,
+            symbol_,
+            baseURI_,
+            feeAmt_,
+            feeToken_,
+            governance_,
+            treasury_,
+            version_
+        );
+    }
 }

@@ -30,9 +30,5 @@ interface ICommandGate {
         bytes calldata data_
     ) external;
 
-    function withdrawTo(
-        address token_,
-        address to_,
-        uint256 value_
-    ) external;
+    function withdrawTo(address token_, address to_, uint256 value_) external;
 }
