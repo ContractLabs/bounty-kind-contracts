@@ -23,14 +23,14 @@ contract BK20 is
         0x1e3e12e17166fc094bcca954a0694d36b0821cb6dff5e011e3ffef32e174d633;
 
     function init(
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_,
         string calldata name_,
         string calldata symbol_,
         uint256 decimals_
     ) external initializer {
         __ERC20Permit_init_unchained(name_);
-        __Base_init_unchained(governance_, 0);
+        __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(treasury_);
         __ERC20_init_unchained(name_, symbol_, decimals_);
     }

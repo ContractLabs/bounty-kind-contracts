@@ -228,12 +228,12 @@ abstract contract BK721Upgradeable is
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_,
         bytes32 version_
     ) internal onlyInitializing {
         __Signable_init(name_, "1");
-        __Base_init_unchained(governance_, 0);
+        __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(treasury_);
         __ERC721_init_unchained(name_, symbol_);
         __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
@@ -315,7 +315,7 @@ contract BKNFT is BK721Upgradeable {
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_,
         bytes32 version_
     ) external initializer {
@@ -325,7 +325,7 @@ contract BKNFT is BK721Upgradeable {
             baseURI_,
             feeAmt_,
             feeToken_,
-            governance_,
+            authority_,
             treasury_,
             version_
         );

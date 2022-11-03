@@ -42,8 +42,8 @@ contract Treasury is
     mapping(bytes32 => uint256) private __priceOf;
     EnumerableSetV2.AddressSet private _payments;
 
-    function init(IAuthority governance_) external initializer {
-        __Base_init_unchained(governance_, 0);
+    function init(IAuthority authority_) external initializer {
+        __Base_init_unchained(authority_, 0);
         __ReentrancyGuard_init_unchained();
         __Signable_init(type(Treasury).name, "2");
     }

@@ -24,7 +24,7 @@ contract RentableBK721Upgradeable is
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_
     ) external initializer {
         __BK_init(
@@ -33,7 +33,7 @@ contract RentableBK721Upgradeable is
             baseURI_,
             feeAmt_,
             feeToken_,
-            governance_,
+            authority_,
             treasury_,
             /// @dev value is equal to keccak256("RentableBK_v1")
             0xb2968efe7e8797044f984fc229747059269f7279ae7d4bb4737458dbb15e0f41

@@ -59,7 +59,10 @@ contract DemoTest is DSTest {
         emit logs(hex"ff");
     }
 
-    function echo(string memory s1, string memory s2) public pure returns (string memory, string memory) {
+    function echo(
+        string memory s1,
+        string memory s2
+    ) public pure returns (string memory, string memory) {
         return (s1, s2);
     }
 

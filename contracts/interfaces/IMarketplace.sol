@@ -9,7 +9,9 @@ import {
 
 interface IMarketplace {
     error Marketplace__Expired();
+    error Marketplace__UnsupportedNFT();
     error Marketplace__InvalidSignature();
+    error Marketplace__UnsupportedPayment();
 
     struct Seller {
         uint8 v;

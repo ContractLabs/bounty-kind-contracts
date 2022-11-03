@@ -27,31 +27,31 @@ contract StdCheatsTest is Test {
 
     function testHoax() public {
         hoax(address(1337));
-        test.bar{ value: 100 }(address(1337));
+        test.bar{value: 100}(address(1337));
     }
 
     function testHoaxOrigin() public {
         hoax(address(1337), address(1337));
-        test.origin{ value: 100 }(address(1337));
+        test.origin{value: 100}(address(1337));
     }
 
     function testHoaxDifferentAddresses() public {
         hoax(address(1337), address(7331));
-        test.origin{ value: 100 }(address(1337), address(7331));
+        test.origin{value: 100}(address(1337), address(7331));
     }
 
     function testStartHoax() public {
         startHoax(address(1337));
-        test.bar{ value: 100 }(address(1337));
-        test.bar{ value: 100 }(address(1337));
+        test.bar{value: 100}(address(1337));
+        test.bar{value: 100}(address(1337));
         vm.stopPrank();
         test.bar(address(this));
     }
 
     function testStartHoaxOrigin() public {
         startHoax(address(1337), address(1337));
-        test.origin{ value: 100 }(address(1337));
-        test.origin{ value: 100 }(address(1337));
+        test.origin{value: 100}(address(1337));
+        test.origin{value: 100}(address(1337));
         vm.stopPrank();
         test.bar(address(this));
     }
@@ -112,15 +112,13 @@ contract StdCheatsTest is Test {
     }
 
     function testCannotBoundMaxLessThanMin() public {
-        vm.expectRevert(bytes("Test bound(uint256,uint256,uint256): Max is less than min."));
+        vm.expectRevert(
+            bytes("Test bound(uint256,uint256,uint256): Max is less than min.")
+        );
         bound(5, 100, 10);
     }
 
-    function testBound(
-        uint256 num,
-        uint256 min,
-        uint256 max
-    ) public {
+    function testBound(uint256 num, uint256 min, uint256 max) public {
         if (min > max) (min, max) = (max, min);
 
         uint256 bounded = bound(num, min, max);
@@ -130,8 +128,14 @@ contract StdCheatsTest is Test {
     }
 
     function testBoundUint256Max() public {
-        assertEq(bound(0, type(uint256).max - 1, type(uint256).max), type(uint256).max - 1);
-        assertEq(bound(1, type(uint256).max - 1, type(uint256).max), type(uint256).max);
+        assertEq(
+            bound(0, type(uint256).max - 1, type(uint256).max),
+            type(uint256).max - 1
+        );
+        assertEq(
+            bound(1, type(uint256).max - 1, type(uint256).max),
+            type(uint256).max
+        );
     }
 
     function testCannotBoundMaxLessThanMin(
@@ -140,12 +144,17 @@ contract StdCheatsTest is Test {
         uint256 max
     ) public {
         vm.assume(min > max);
-        vm.expectRevert(bytes("Test bound(uint256,uint256,uint256): Max is less than min."));
+        vm.expectRevert(
+            bytes("Test bound(uint256,uint256,uint256): Max is less than min.")
+        );
         bound(num, min, max);
     }
 
     function testDeployCode() public {
-        address deployed = deployCode("StdCheats.t.sol:StdCheatsTest", bytes(""));
+        address deployed = deployCode(
+            "StdCheats.t.sol:StdCheatsTest",
+            bytes("")
+        );
         assertEq(string(getCode(deployed)), string(getCode(address(this))));
     }
 
@@ -158,7 +167,11 @@ contract StdCheatsTest is Test {
     constructor() payable {}
 
     function testDeployCodeVal() public {
-        address deployed = deployCode("StdCheats.t.sol:StdCheatsTest", bytes(""), 1 ether);
+        address deployed = deployCode(
+            "StdCheats.t.sol:StdCheatsTest",
+            bytes(""),
+            1 ether
+        );
         assertEq(string(getCode(deployed)), string(getCode(address(this))));
         assertEq(deployed.balance, 1 ether);
     }
@@ -188,7 +201,10 @@ contract StdCheatsTest is Test {
             // by using o_code = new bytes(size)
             o_code := mload(0x40)
             // new "memory end" including padding
-            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            mstore(
+                0x40,
+                add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f)))
+            )
             // store length in memory
             mstore(o_code, size)
             // actually retrieve the code, this needs assembly
@@ -205,10 +221,16 @@ contract StdCheatsTest is Test {
 
     function testParseJsonTxDetail() public {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/src/test/fixtures/broadcast.log.json");
+        string memory path = string.concat(
+            root,
+            "/src/test/fixtures/broadcast.log.json"
+        );
         string memory json = vm.readFile(path);
         bytes memory transactionDetails = json.parseRaw(".transactions[0].tx");
-        RawTx1559Detail memory rawTxDetail = abi.decode(transactionDetails, (RawTx1559Detail));
+        RawTx1559Detail memory rawTxDetail = abi.decode(
+            transactionDetails,
+            (RawTx1559Detail)
+        );
         Tx1559Detail memory txDetail = rawToConvertedEIP1559Detail(rawTxDetail);
         assertEq(txDetail.from, 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         assertEq(txDetail.to, 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
@@ -224,20 +246,29 @@ contract StdCheatsTest is Test {
 
     function testReadEIP1559Transaction() public {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/src/test/fixtures/broadcast.log.json");
+        string memory path = string.concat(
+            root,
+            "/src/test/fixtures/broadcast.log.json"
+        );
         uint256 index = 0;
         Tx1559 memory transaction = readTx1559(path, index);
     }
 
     function testReadEIP1559Transactions() public {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/src/test/fixtures/broadcast.log.json");
+        string memory path = string.concat(
+            root,
+            "/src/test/fixtures/broadcast.log.json"
+        );
         Tx1559[] memory transactions = readTx1559s(path);
     }
 
     function testReadReceipt() public {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/src/test/fixtures/broadcast.log.json");
+        string memory path = string.concat(
+            root,
+            "/src/test/fixtures/broadcast.log.json"
+        );
         uint256 index = 5;
         Receipt memory receipt = readReceipt(path, index);
         assertEq(
@@ -248,7 +279,10 @@ contract StdCheatsTest is Test {
 
     function testReadReceipts() public {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/src/test/fixtures/broadcast.log.json");
+        string memory path = string.concat(
+            root,
+            "/src/test/fixtures/broadcast.log.json"
+        );
         Receipt[] memory receipts = readReceipts(path);
     }
 }
@@ -270,7 +304,10 @@ contract Bar {
         require(tx.origin == expectedSender, "!prank");
     }
 
-    function origin(address expectedSender, address expectedOrigin) public payable {
+    function origin(
+        address expectedSender,
+        address expectedOrigin
+    ) public payable {
         require(msg.sender == expectedSender, "!prank");
         require(tx.origin == expectedOrigin, "!prank");
     }

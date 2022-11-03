@@ -9,7 +9,8 @@ import "ds-test/test.sol";
 abstract contract Test is DSTest, Script {
     using stdStorage for StdStorage;
 
-    uint256 internal constant UINT256_MAX = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    uint256 internal constant UINT256_MAX =
+        115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     StdStorage internal stdstore;
 
@@ -53,11 +54,7 @@ abstract contract Test is DSTest, Script {
         vm.prank(who, origin);
     }
 
-    function hoax(
-        address who,
-        address origin,
-        uint256 give
-    ) internal {
+    function hoax(address who, address origin, uint256 give) internal {
         vm.deal(who, give);
         vm.prank(who, origin);
     }
@@ -80,11 +77,7 @@ abstract contract Test is DSTest, Script {
         vm.startPrank(who, origin);
     }
 
-    function startHoax(
-        address who,
-        address origin,
-        uint256 give
-    ) internal {
+    function startHoax(address who, address origin, uint256 give) internal {
         vm.deal(who, give);
         vm.startPrank(who, origin);
     }
@@ -95,7 +88,9 @@ abstract contract Test is DSTest, Script {
     }
 
     // creates a labeled address and the corresponding private key
-    function makeAddrAndKey(string memory name) internal returns (address addr, uint256 privateKey) {
+    function makeAddrAndKey(
+        string memory name
+    ) internal returns (address addr, uint256 privateKey) {
         privateKey = uint256(keccak256(abi.encodePacked(name)));
         addr = vm.addr(privateKey);
         vm.label(addr, name);
@@ -107,12 +102,11 @@ abstract contract Test is DSTest, Script {
     }
 
     // DEPRECATED: Use `deal` instead
-    function tip(
-        address token,
-        address to,
-        uint256 give
-    ) internal {
-        emit log_named_string("WARNING", "Test tip(address,address,uint256): The `tip` stdcheat has been deprecated. Use `deal` instead.");
+    function tip(address token, address to, uint256 give) internal {
+        emit log_named_string(
+            "WARNING",
+            "Test tip(address,address,uint256): The `tip` stdcheat has been deprecated. Use `deal` instead."
+        );
         stdstore.target(token).sig(0x70a08231).with_key(to).checked_write(give);
     }
 
@@ -124,11 +118,7 @@ abstract contract Test is DSTest, Script {
 
     // Set the balance of an account for any ERC20 token
     // Use the alternative signature to update `totalSupply`
-    function deal(
-        address token,
-        address to,
-        uint256 give
-    ) internal {
+    function deal(address token, address to, uint256 give) internal {
         deal(token, to, give, false);
     }
 
@@ -139,7 +129,9 @@ abstract contract Test is DSTest, Script {
         bool adjust
     ) internal {
         // get current balance
-        (, bytes memory balData) = token.call(abi.encodeWithSelector(0x70a08231, to));
+        (, bytes memory balData) = token.call(
+            abi.encodeWithSelector(0x70a08231, to)
+        );
         uint256 prevBal = abi.decode(balData, (uint256));
 
         // update balance
@@ -147,7 +139,9 @@ abstract contract Test is DSTest, Script {
 
         // update total supply
         if (adjust) {
-            (, bytes memory totSupData) = token.call(abi.encodeWithSelector(0x18160ddd));
+            (, bytes memory totSupData) = token.call(
+                abi.encodeWithSelector(0x18160ddd)
+            );
             uint256 totSup = abi.decode(totSupData, (uint256));
             if (give < prevBal) {
                 totSup -= (prevBal - give);
@@ -163,7 +157,10 @@ abstract contract Test is DSTest, Script {
         uint256 min,
         uint256 max
     ) internal virtual returns (uint256 result) {
-        require(min <= max, "Test bound(uint256,uint256,uint256): Max is less than min.");
+        require(
+            min <= max,
+            "Test bound(uint256,uint256,uint256): Max is less than min."
+        );
 
         uint256 size = max - min;
 
@@ -183,14 +180,20 @@ abstract contract Test is DSTest, Script {
     // Deploy a contract by fetching the contract bytecode from
     // the artifacts directory
     // e.g. `deployCode(code, abi.encode(arg1,arg2,arg3))`
-    function deployCode(string memory what, bytes memory args) internal returns (address addr) {
+    function deployCode(
+        string memory what,
+        bytes memory args
+    ) internal returns (address addr) {
         bytes memory bytecode = abi.encodePacked(vm.getCode(what), args);
         /// @solidity memory-safe-assembly
         assembly {
             addr := create(0, add(bytecode, 0x20), mload(bytecode))
         }
 
-        require(addr != address(0), "Test deployCode(string,bytes): Deployment failed.");
+        require(
+            addr != address(0),
+            "Test deployCode(string,bytes): Deployment failed."
+        );
     }
 
     function deployCode(string memory what) internal returns (address addr) {
@@ -200,7 +203,10 @@ abstract contract Test is DSTest, Script {
             addr := create(0, add(bytecode, 0x20), mload(bytecode))
         }
 
-        require(addr != address(0), "Test deployCode(string): Deployment failed.");
+        require(
+            addr != address(0),
+            "Test deployCode(string): Deployment failed."
+        );
     }
 
     /// deploy contract with value on construction
@@ -215,17 +221,26 @@ abstract contract Test is DSTest, Script {
             addr := create(val, add(bytecode, 0x20), mload(bytecode))
         }
 
-        require(addr != address(0), "Test deployCode(string,bytes,uint256): Deployment failed.");
+        require(
+            addr != address(0),
+            "Test deployCode(string,bytes,uint256): Deployment failed."
+        );
     }
 
-    function deployCode(string memory what, uint256 val) internal returns (address addr) {
+    function deployCode(
+        string memory what,
+        uint256 val
+    ) internal returns (address addr) {
         bytes memory bytecode = vm.getCode(what);
         /// @solidity memory-safe-assembly
         assembly {
             addr := create(val, add(bytecode, 0x20), mload(bytecode))
         }
 
-        require(addr != address(0), "Test deployCode(string,uint256): Deployment failed.");
+        require(
+            addr != address(0),
+            "Test deployCode(string,uint256): Deployment failed."
+        );
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -254,11 +269,7 @@ abstract contract Test is DSTest, Script {
         }
     }
 
-    function assertEq(
-        bool a,
-        bool b,
-        string memory err
-    ) internal {
+    function assertEq(bool a, bool b, string memory err) internal {
         if (a != b) {
             emit log_named_string("Error", err);
             assertEq(a, b);
@@ -654,10 +665,15 @@ abstract contract Test is DSTest, Script {
         string value;
     }
 
-    function readEIP1559ScriptArtifact(string memory path) internal returns (EIP1559ScriptArtifact memory) {
+    function readEIP1559ScriptArtifact(
+        string memory path
+    ) internal returns (EIP1559ScriptArtifact memory) {
         string memory data = vm.readFile(path);
         bytes memory parsedData = vm.parseJson(data);
-        RawEIP1559ScriptArtifact memory rawArtifact = abi.decode(parsedData, (RawEIP1559ScriptArtifact));
+        RawEIP1559ScriptArtifact memory rawArtifact = abi.decode(
+            parsedData,
+            (RawEIP1559ScriptArtifact)
+        );
         EIP1559ScriptArtifact memory artifact;
         artifact.libraries = rawArtifact.libraries;
         artifact.path = rawArtifact.path;
@@ -665,11 +681,15 @@ abstract contract Test is DSTest, Script {
         artifact.pending = rawArtifact.pending;
         artifact.txReturns = rawArtifact.txReturns;
         artifact.receipts = rawToConvertedReceipts(rawArtifact.receipts);
-        artifact.transactions = rawToConvertedEIPTx1559s(rawArtifact.transactions);
+        artifact.transactions = rawToConvertedEIPTx1559s(
+            rawArtifact.transactions
+        );
         return artifact;
     }
 
-    function rawToConvertedEIPTx1559s(RawTx1559[] memory rawTxs) internal pure returns (Tx1559[] memory) {
+    function rawToConvertedEIPTx1559s(
+        RawTx1559[] memory rawTxs
+    ) internal pure returns (Tx1559[] memory) {
         Tx1559[] memory txs = new Tx1559[](rawTxs.length);
         for (uint256 i; i < rawTxs.length; i++) {
             txs[i] = rawToConvertedEIPTx1559(rawTxs[i]);
@@ -677,7 +697,9 @@ abstract contract Test is DSTest, Script {
         return txs;
     }
 
-    function rawToConvertedEIPTx1559(RawTx1559 memory rawTx) internal pure returns (Tx1559 memory) {
+    function rawToConvertedEIPTx1559(
+        RawTx1559 memory rawTx
+    ) internal pure returns (Tx1559 memory) {
         Tx1559 memory transaction;
         transaction.arguments = rawTx.arguments;
         transaction.contractName = rawTx.contractName;
@@ -688,7 +710,9 @@ abstract contract Test is DSTest, Script {
         return transaction;
     }
 
-    function rawToConvertedEIP1559Detail(RawTx1559Detail memory rawDetail) internal pure returns (Tx1559Detail memory) {
+    function rawToConvertedEIP1559Detail(
+        RawTx1559Detail memory rawDetail
+    ) internal pure returns (Tx1559Detail memory) {
         Tx1559Detail memory txDetail;
         txDetail.data = rawDetail.data;
         txDetail.from = rawDetail.from;
@@ -701,38 +725,63 @@ abstract contract Test is DSTest, Script {
         return txDetail;
     }
 
-    function readTx1559s(string memory path) internal returns (Tx1559[] memory) {
+    function readTx1559s(
+        string memory path
+    ) internal returns (Tx1559[] memory) {
         string memory deployData = vm.readFile(path);
-        bytes memory parsedDeployData = vm.parseJson(deployData, ".transactions");
+        bytes memory parsedDeployData = vm.parseJson(
+            deployData,
+            ".transactions"
+        );
         RawTx1559[] memory rawTxs = abi.decode(parsedDeployData, (RawTx1559[]));
         return rawToConvertedEIPTx1559s(rawTxs);
     }
 
-    function readTx1559(string memory path, uint256 index) internal returns (Tx1559 memory) {
+    function readTx1559(
+        string memory path,
+        uint256 index
+    ) internal returns (Tx1559 memory) {
         string memory deployData = vm.readFile(path);
-        string memory key = string(abi.encodePacked(".transactions[", vm.toString(index), "]"));
+        string memory key = string(
+            abi.encodePacked(".transactions[", vm.toString(index), "]")
+        );
         bytes memory parsedDeployData = vm.parseJson(deployData, key);
         RawTx1559 memory rawTx = abi.decode(parsedDeployData, (RawTx1559));
         return rawToConvertedEIPTx1559(rawTx);
     }
 
     // Analogous to readTransactions, but for receipts.
-    function readReceipts(string memory path) internal returns (Receipt[] memory) {
+    function readReceipts(
+        string memory path
+    ) internal returns (Receipt[] memory) {
         string memory deployData = vm.readFile(path);
         bytes memory parsedDeployData = vm.parseJson(deployData, ".receipts");
-        RawReceipt[] memory rawReceipts = abi.decode(parsedDeployData, (RawReceipt[]));
+        RawReceipt[] memory rawReceipts = abi.decode(
+            parsedDeployData,
+            (RawReceipt[])
+        );
         return rawToConvertedReceipts(rawReceipts);
     }
 
-    function readReceipt(string memory path, uint256 index) internal returns (Receipt memory) {
+    function readReceipt(
+        string memory path,
+        uint256 index
+    ) internal returns (Receipt memory) {
         string memory deployData = vm.readFile(path);
-        string memory key = string(abi.encodePacked(".receipts[", vm.toString(index), "]"));
+        string memory key = string(
+            abi.encodePacked(".receipts[", vm.toString(index), "]")
+        );
         bytes memory parsedDeployData = vm.parseJson(deployData, key);
-        RawReceipt memory rawReceipt = abi.decode(parsedDeployData, (RawReceipt));
+        RawReceipt memory rawReceipt = abi.decode(
+            parsedDeployData,
+            (RawReceipt)
+        );
         return rawToConvertedReceipt(rawReceipt);
     }
 
-    function rawToConvertedReceipts(RawReceipt[] memory rawReceipts) internal pure returns (Receipt[] memory) {
+    function rawToConvertedReceipts(
+        RawReceipt[] memory rawReceipts
+    ) internal pure returns (Receipt[] memory) {
         Receipt[] memory receipts = new Receipt[](rawReceipts.length);
         for (uint256 i; i < rawReceipts.length; i++) {
             receipts[i] = rawToConvertedReceipt(rawReceipts[i]);
@@ -740,7 +789,9 @@ abstract contract Test is DSTest, Script {
         return receipts;
     }
 
-    function rawToConvertedReceipt(RawReceipt memory rawReceipt) internal pure returns (Receipt memory) {
+    function rawToConvertedReceipt(
+        RawReceipt memory rawReceipt
+    ) internal pure returns (Receipt memory) {
         Receipt memory receipt;
         receipt.blockHash = rawReceipt.blockHash;
         receipt.to = rawReceipt.to;
@@ -758,7 +809,9 @@ abstract contract Test is DSTest, Script {
         return receipt;
     }
 
-    function rawToConvertedReceiptLogs(RawReceiptLog[] memory rawLogs) internal pure returns (ReceiptLog[] memory) {
+    function rawToConvertedReceiptLogs(
+        RawReceiptLog[] memory rawLogs
+    ) internal pure returns (ReceiptLog[] memory) {
         ReceiptLog[] memory logs = new ReceiptLog[](rawLogs.length);
         for (uint256 i; i < rawLogs.length; i++) {
             logs[i].logAddress = rawLogs[i].logAddress;
@@ -768,7 +821,9 @@ abstract contract Test is DSTest, Script {
             logs[i].logIndex = bytesToUint(rawLogs[i].logIndex);
             logs[i].topics = rawLogs[i].topics;
             logs[i].transactionIndex = bytesToUint(rawLogs[i].transactionIndex);
-            logs[i].transactionLogIndex = bytesToUint(rawLogs[i].transactionLogIndex);
+            logs[i].transactionLogIndex = bytesToUint(
+                rawLogs[i].transactionLogIndex
+            );
             logs[i].removed = rawLogs[i].removed;
         }
         return logs;
@@ -777,7 +832,10 @@ abstract contract Test is DSTest, Script {
     function bytesToUint(bytes memory b) internal pure returns (uint256) {
         uint256 number;
         for (uint256 i = 0; i < b.length; i++) {
-            number = number + uint256(uint8(b[i])) * (2**(8 * (b.length - (i + 1))));
+            number =
+                number +
+                uint256(uint8(b[i])) *
+                (2 ** (8 * (b.length - (i + 1))));
         }
         return number;
     }
@@ -788,15 +846,24 @@ abstract contract Test is DSTest, Script {
 //////////////////////////////////////////////////////////////////////////*/
 
 library stdError {
-    bytes public constant assertionError = abi.encodeWithSignature("Panic(uint256)", 0x01);
-    bytes public constant arithmeticError = abi.encodeWithSignature("Panic(uint256)", 0x11);
-    bytes public constant divisionError = abi.encodeWithSignature("Panic(uint256)", 0x12);
-    bytes public constant enumConversionError = abi.encodeWithSignature("Panic(uint256)", 0x21);
-    bytes public constant encodeStorageError = abi.encodeWithSignature("Panic(uint256)", 0x22);
-    bytes public constant popError = abi.encodeWithSignature("Panic(uint256)", 0x31);
-    bytes public constant indexOOBError = abi.encodeWithSignature("Panic(uint256)", 0x32);
-    bytes public constant memOverflowError = abi.encodeWithSignature("Panic(uint256)", 0x41);
-    bytes public constant zeroVarError = abi.encodeWithSignature("Panic(uint256)", 0x51);
+    bytes public constant assertionError =
+        abi.encodeWithSignature("Panic(uint256)", 0x01);
+    bytes public constant arithmeticError =
+        abi.encodeWithSignature("Panic(uint256)", 0x11);
+    bytes public constant divisionError =
+        abi.encodeWithSignature("Panic(uint256)", 0x12);
+    bytes public constant enumConversionError =
+        abi.encodeWithSignature("Panic(uint256)", 0x21);
+    bytes public constant encodeStorageError =
+        abi.encodeWithSignature("Panic(uint256)", 0x22);
+    bytes public constant popError =
+        abi.encodeWithSignature("Panic(uint256)", 0x31);
+    bytes public constant indexOOBError =
+        abi.encodeWithSignature("Panic(uint256)", 0x32);
+    bytes public constant memOverflowError =
+        abi.encodeWithSignature("Panic(uint256)", 0x41);
+    bytes public constant zeroVarError =
+        abi.encodeWithSignature("Panic(uint256)", 0x51);
     // DEPRECATED: Use Vm's `expectRevert` without any arguments instead
     bytes public constant lowLevelError = bytes(""); // `0x`
 }
@@ -819,10 +886,13 @@ library stdStorage {
     event SlotFound(address who, bytes4 fsig, bytes32 keysHash, uint256 slot);
     event WARNING_UninitedSlot(address who, uint256 slot);
 
-    uint256 private constant UINT256_MAX = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
-    int256 private constant INT256_MAX = 57896044618658097711785492504343953926634992332820282019728792003956564819967;
+    uint256 private constant UINT256_MAX =
+        115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    int256 private constant INT256_MAX =
+        57896044618658097711785492504343953926634992332820282019728792003956564819967;
 
-    Vm private constant vm_std_store = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm private constant vm_std_store =
+        Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     function sigs(string memory sigStr) internal pure returns (bytes4) {
         return bytes4(keccak256(bytes(sigStr)));
@@ -841,8 +911,13 @@ library stdStorage {
         bytes32[] memory ins = self._keys;
 
         // calldata to test against
-        if (self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]) {
-            return self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))];
+        if (
+            self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]
+        ) {
+            return
+                self.slots[who][fsig][
+                    keccak256(abi.encodePacked(ins, field_depth))
+                ];
         }
         bytes memory cald = abi.encodePacked(fsig, flatten(ins));
         vm_std_store.record();
@@ -859,11 +934,23 @@ library stdStorage {
                 emit WARNING_UninitedSlot(who, uint256(reads[0]));
             }
             if (fdat != curr) {
-                require(false, "stdStorage find(StdStorage): Packed slot. This would cause dangerous overwriting and currently isn't supported.");
+                require(
+                    false,
+                    "stdStorage find(StdStorage): Packed slot. This would cause dangerous overwriting and currently isn't supported."
+                );
             }
-            emit SlotFound(who, fsig, keccak256(abi.encodePacked(ins, field_depth)), uint256(reads[0]));
-            self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = uint256(reads[0]);
-            self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = true;
+            emit SlotFound(
+                who,
+                fsig,
+                keccak256(abi.encodePacked(ins, field_depth)),
+                uint256(reads[0])
+            );
+            self.slots[who][fsig][
+                keccak256(abi.encodePacked(ins, field_depth))
+            ] = uint256(reads[0]);
+            self.finds[who][fsig][
+                keccak256(abi.encodePacked(ins, field_depth))
+            ] = true;
         } else if (reads.length > 1) {
             for (uint256 i = 0; i < reads.length; i++) {
                 bytes32 prev = vm_std_store.load(who, reads[i]);
@@ -881,59 +968,100 @@ library stdStorage {
 
                 if (success && fdat == bytes32(hex"1337")) {
                     // we found which of the slots is the actual one
-                    emit SlotFound(who, fsig, keccak256(abi.encodePacked(ins, field_depth)), uint256(reads[i]));
-                    self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = uint256(reads[i]);
-                    self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))] = true;
+                    emit SlotFound(
+                        who,
+                        fsig,
+                        keccak256(abi.encodePacked(ins, field_depth)),
+                        uint256(reads[i])
+                    );
+                    self.slots[who][fsig][
+                        keccak256(abi.encodePacked(ins, field_depth))
+                    ] = uint256(reads[i]);
+                    self.finds[who][fsig][
+                        keccak256(abi.encodePacked(ins, field_depth))
+                    ] = true;
                     vm_std_store.store(who, reads[i], prev);
                     break;
                 }
                 vm_std_store.store(who, reads[i], prev);
             }
         } else {
-            require(false, "stdStorage find(StdStorage): No storage use detected for target.");
+            require(
+                false,
+                "stdStorage find(StdStorage): No storage use detected for target."
+            );
         }
 
-        require(self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))], "stdStorage find(StdStorage): Slot(s) not found.");
+        require(
+            self.finds[who][fsig][
+                keccak256(abi.encodePacked(ins, field_depth))
+            ],
+            "stdStorage find(StdStorage): Slot(s) not found."
+        );
 
         delete self._target;
         delete self._sig;
         delete self._keys;
         delete self._depth;
 
-        return self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))];
+        return
+            self.slots[who][fsig][
+                keccak256(abi.encodePacked(ins, field_depth))
+            ];
     }
 
-    function target(StdStorage storage self, address _target) internal returns (StdStorage storage) {
+    function target(
+        StdStorage storage self,
+        address _target
+    ) internal returns (StdStorage storage) {
         self._target = _target;
         return self;
     }
 
-    function sig(StdStorage storage self, bytes4 _sig) internal returns (StdStorage storage) {
+    function sig(
+        StdStorage storage self,
+        bytes4 _sig
+    ) internal returns (StdStorage storage) {
         self._sig = _sig;
         return self;
     }
 
-    function sig(StdStorage storage self, string memory _sig) internal returns (StdStorage storage) {
+    function sig(
+        StdStorage storage self,
+        string memory _sig
+    ) internal returns (StdStorage storage) {
         self._sig = sigs(_sig);
         return self;
     }
 
-    function with_key(StdStorage storage self, address who) internal returns (StdStorage storage) {
+    function with_key(
+        StdStorage storage self,
+        address who
+    ) internal returns (StdStorage storage) {
         self._keys.push(bytes32(uint256(uint160(who))));
         return self;
     }
 
-    function with_key(StdStorage storage self, uint256 amt) internal returns (StdStorage storage) {
+    function with_key(
+        StdStorage storage self,
+        uint256 amt
+    ) internal returns (StdStorage storage) {
         self._keys.push(bytes32(amt));
         return self;
     }
 
-    function with_key(StdStorage storage self, bytes32 key) internal returns (StdStorage storage) {
+    function with_key(
+        StdStorage storage self,
+        bytes32 key
+    ) internal returns (StdStorage storage) {
         self._keys.push(key);
         return self;
     }
 
-    function depth(StdStorage storage self, uint256 _depth) internal returns (StdStorage storage) {
+    function depth(
+        StdStorage storage self,
+        uint256 _depth
+    ) internal returns (StdStorage storage) {
         self._depth = _depth;
         return self;
     }
@@ -962,10 +1090,16 @@ library stdStorage {
         bytes32[] memory ins = self._keys;
 
         bytes memory cald = abi.encodePacked(fsig, flatten(ins));
-        if (!self.finds[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]) {
+        if (
+            !self.finds[who][fsig][
+                keccak256(abi.encodePacked(ins, field_depth))
+            ]
+        ) {
             find(self);
         }
-        bytes32 slot = bytes32(self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]);
+        bytes32 slot = bytes32(
+            self.slots[who][fsig][keccak256(abi.encodePacked(ins, field_depth))]
+        );
 
         bytes32 fdat;
         {
@@ -975,7 +1109,10 @@ library stdStorage {
         bytes32 curr = vm_std_store.load(who, slot);
 
         if (fdat != curr) {
-            require(false, "stdStorage find(StdStorage): Packed slot. This would cause dangerous overwriting and currently isn't supported.");
+            require(
+                false,
+                "stdStorage find(StdStorage): Packed slot. This would cause dangerous overwriting and currently isn't supported."
+            );
         }
         vm_std_store.store(who, slot, set);
         delete self._target;
@@ -998,7 +1135,9 @@ library stdStorage {
         int256 v = read_int(self);
         if (v == 0) return false;
         if (v == 1) return true;
-        revert("stdStorage read_bool(StdStorage): Cannot decode. Make sure you are reading a bool.");
+        revert(
+            "stdStorage read_bool(StdStorage): Cannot decode. Make sure you are reading a bool."
+        );
     }
 
     function read_address(StdStorage storage self) internal returns (address) {
@@ -1013,7 +1152,10 @@ library stdStorage {
         return abi.decode(read(self), (int256));
     }
 
-    function bytesToBytes32(bytes memory b, uint256 offset) public pure returns (bytes32) {
+    function bytesToBytes32(
+        bytes memory b,
+        uint256 offset
+    ) public pure returns (bytes32) {
         bytes32 out;
 
         uint256 max = b.length > 32 ? 32 : b.length;
@@ -1042,11 +1184,14 @@ library stdStorage {
 //////////////////////////////////////////////////////////////////////////*/
 
 library stdMath {
-    int256 private constant INT256_MIN = -57896044618658097711785492504343953926634992332820282019728792003956564819968;
+    int256 private constant INT256_MIN =
+        -57896044618658097711785492504343953926634992332820282019728792003956564819968;
 
     function abs(int256 a) internal pure returns (uint256) {
         // Required or it will fail when `a = type(int256).min`
-        if (a == INT256_MIN) return 57896044618658097711785492504343953926634992332820282019728792003956564819968;
+        if (a == INT256_MIN)
+            return
+                57896044618658097711785492504343953926634992332820282019728792003956564819968;
 
         return uint256(a > 0 ? a : -a);
     }
@@ -1066,7 +1211,10 @@ library stdMath {
         return abs(a) + abs(b);
     }
 
-    function percentDelta(uint256 a, uint256 b) internal pure returns (uint256) {
+    function percentDelta(
+        uint256 a,
+        uint256 b
+    ) internal pure returns (uint256) {
         uint256 absDelta = delta(a, b);
 
         return (absDelta * 1e18) / b;

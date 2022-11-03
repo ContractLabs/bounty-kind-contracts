@@ -20,6 +20,7 @@ contract Marketplace is
     ProxyCheckerUpgradeable,
     FundForwarderUpgradeable
 {
+    using Bytes32Address for *;
     using FixedPointMathLib for uint256;
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
@@ -35,7 +36,7 @@ contract Marketplace is
     function init(
         uint256 feeFraction_,
         address[] calldata supportedContracts_,
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_
     ) external initializer {
         __setProtocolFee(feeFraction_);
@@ -43,7 +44,7 @@ contract Marketplace is
 
         __FundForwarder_init_unchained(treasury_);
         __Signable_init(type(Marketplace).name, "1");
-        __Base_init_unchained(governance_, Roles.TREASURER_ROLE);
+        __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
 
     function setProtocolFee(
@@ -91,6 +92,8 @@ contract Marketplace is
         address sellerAddr_,
         Seller calldata seller_
     ) private {
+        if (!__whitelistedContracts.get(address(seller_.nft).fillLast96Bits()))
+            revert Marketplace__UnsupportedNFT();
         if (seller_.nft.getApproved(seller_.tokenId) != address(this))
             seller_.nft.permit(
                 seller_.tokenId,
@@ -118,6 +121,8 @@ contract Marketplace is
         uint256 _protocolFee = protocolFee;
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
+        if (treasury().supportedPayment(address(seller_.payment)))
+            revert Marketplace__UnsupportedPayment();
         if (address(seller_.payment) != address(0)) {
             if (
                 seller_.payment.allowance(buyerAddr_, address(this)) <
@@ -142,13 +147,16 @@ contract Marketplace is
                     percentageFraction
                 )
             );
-
-            _safeERC20TransferFrom(
-                seller_.payment,
-                buyerAddr_,
-                address(treasury()),
-                seller_.unitPrice.mulDivDown(_protocolFee, percentageFraction)
-            );
+            if (_protocolFee != 0)
+                _safeERC20TransferFrom(
+                    seller_.payment,
+                    buyerAddr_,
+                    address(treasury()),
+                    seller_.unitPrice.mulDivDown(
+                        _protocolFee,
+                        percentageFraction
+                    )
+                );
 
             if (msg.value == 0) return;
             _safeNativeTransfer(buyerAddr_, msg.value);
@@ -160,10 +168,14 @@ contract Marketplace is
                     percentageFraction
                 )
             );
-            _safeNativeTransfer(
-                address(treasury()),
-                seller_.unitPrice.mulDivDown(_protocolFee, percentageFraction)
-            );
+            if (_protocolFee != 0)
+                _safeNativeTransfer(
+                    address(treasury()),
+                    seller_.unitPrice.mulDivDown(
+                        _protocolFee,
+                        percentageFraction
+                    )
+                );
             if (msg.value == seller_.unitPrice) return;
             _safeNativeTransfer(buyerAddr_, msg.value - seller_.unitPrice);
         }

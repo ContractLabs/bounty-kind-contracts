@@ -30,11 +30,9 @@ contract INO is
     ReentrancyGuardUpgradeable,
     ERC721TokenReceiverUpgradeable
 {
-    using SSTORE2 for bytes;
-    using SSTORE2 for bytes32;
+    using SSTORE2 for *;
+    using Bytes32Address for *;
     using BitMap256 for uint256;
-    using Bytes32Address for address;
-    using Bytes32Address for uint256;
 
     bytes32 public constant VERSION =
         0x3d277aecc6eab90208a3b105ab5e72d55c1c0c69bf67ccc488f44498aef41550;
@@ -51,12 +49,12 @@ contract INO is
     mapping(bytes32 => mapping(uint256 => uint256)) private _purchasedAmt;
 
     function __INO_init(
-        IAuthority governance_,
+        IAuthority authority_,
         ITreasury treasury_
     ) internal onlyInitializing {
         __INO_init_unchained();
         __ReentrancyGuard_init_unchained();
-        __Base_init_unchained(governance_, 0);
+        __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(treasury_);
     }
 
