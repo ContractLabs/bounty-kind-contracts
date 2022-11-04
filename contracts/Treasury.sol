@@ -4,7 +4,6 @@ pragma solidity ^0.8.15;
 import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/WithdrawableUpgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
 
@@ -24,7 +23,6 @@ contract Treasury is
     SignableUpgradeable,
     ProxyCheckerUpgradeable,
     WithdrawableUpgradeable,
-    ReentrancyGuardUpgradeable,
     ERC721TokenReceiverUpgradeable
 {
     using Bytes32Address for address;
@@ -40,13 +38,14 @@ contract Treasury is
         0x78ecb86225a2600f4a19912d238c02ae4aba51082b8a69ebd615456f7e702c07;
 
     mapping(bytes32 => uint256) private __priceOf;
-    EnumerableSetV2.AddressSet private _payments;
+    EnumerableSetV2.AddressSet private __payments;
 
     function init(IAuthority authority_) external initializer {
         __Base_init_unchained(authority_, 0);
-        __ReentrancyGuard_init_unchained();
         __Signable_init(type(Treasury).name, "2");
     }
+
+    function updateTreasury(ITreasury) external override {}
 
     function onERC721Received(
         address,
@@ -140,23 +139,23 @@ contract Treasury is
     function updatePayments(
         address[] calldata tokens_
     ) external onlyRole(Roles.TREASURER_ROLE) {
-        _payments.add(tokens_);
+        __payments.add(tokens_);
         emit PaymentsUpdated();
     }
 
     function resetPayments() external onlyRole(Roles.TREASURER_ROLE) {
-        _payments.remove();
+        __payments.remove();
         emit PaymentsRemoved();
     }
 
     function removePayment(
         address token_
     ) external onlyRole(Roles.TREASURER_ROLE) {
-        if (_payments.remove(token_)) emit PaymentRemoved(token_);
+        if (__payments.remove(token_)) emit PaymentRemoved(token_);
     }
 
     function payments() external view returns (address[] memory) {
-        return _payments.values();
+        return __payments.values();
     }
 
     function validPayment(address token_) external view returns (bool) {
@@ -164,6 +163,6 @@ contract Treasury is
     }
 
     function supportedPayment(address token_) public view returns (bool) {
-        return _payments.contains(token_);
+        return __payments.contains(token_);
     }
 }

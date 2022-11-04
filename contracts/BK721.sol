@@ -5,19 +5,18 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721PermitU
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
-import "./internal-upgradeable/AssetRoyaltyUpgradeable.sol";
-import "./internal-upgradeable/FundForwarderUpgradeable.sol";
-
 import "oz-custom/contracts/internal-upgradeable/ProtocolFeeUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK721.sol";
+import "./interfaces/ITreasury.sol";
 import "./interfaces/IIngameSwap.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/StringLib.sol";
 import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-abstract contract BK721Upgradeable is
+abstract contract BK721 is
     IBK721,
     BaseUpgradeable,
     ProtocolFeeUpgradeable,
@@ -76,10 +75,10 @@ abstract contract BK721Upgradeable is
         ) revert BK721__InvalidSignature();
 
         uint256 length = fromIds_.length;
-        uint256 fromId;
+        //uint256 fromId;
         for (uint256 i; i < length; ) {
-            fromId = fromIds_[i];
-            if (ownerOf(fromId) != user) revert BK721__Unauthorized();
+            //fromId = fromIds_[i];
+            if (ownerOf(fromIds_[i]) != user) revert BK721__Unauthorized();
             //_burn(fromId);
             unchecked {
                 ++i;
@@ -94,15 +93,14 @@ abstract contract BK721Upgradeable is
     function updateTreasury(
         ITreasury treasury_
     ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        emit TreasuryUpdated(treasury(), treasury_);
-        _updateTreasury(treasury_);
+        _changeVault(address(treasury_));
     }
 
     function setFee(
         IERC20Upgradeable feeToken_,
         uint256 feeAmt_
     ) external whenPaused onlyRole(Roles.OPERATOR_ROLE) {
-        if (!treasury().supportedPayment(address(feeToken_)))
+        if (!ITreasury(vault).supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
         _setRoyalty(feeToken_, uint96(feeAmt_));
         emit FeeUpdated(feeToken_, feeAmt_);
@@ -188,7 +186,7 @@ abstract contract BK721Upgradeable is
     }
 
     function nextIdFromType(uint256 typeId_) public view returns (uint256) {
-        return (typeId_ << 32) | typeIdTrackers[typeId_];
+        return (typeId_ << 32) | (typeIdTrackers[typeId_] + 1);
     }
 
     function tokenURI(
@@ -196,7 +194,12 @@ abstract contract BK721Upgradeable is
     ) public view override returns (string memory) {
         return
             string(
-                abi.encodePacked(_baseTokenURIPtr.read(), tokenId.toString())
+                abi.encodePacked(
+                    _baseTokenURIPtr.read(),
+                    address(this),
+                    "/",
+                    tokenId.toString()
+                )
             );
     }
 
@@ -234,7 +237,7 @@ abstract contract BK721Upgradeable is
     ) internal onlyInitializing {
         __Signable_init(name_, "1");
         __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(treasury_);
+        __FundForwarder_init_unchained(address(treasury_));
         __ERC721_init_unchained(name_, symbol_);
         __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
     }
@@ -274,7 +277,7 @@ abstract contract BK721Upgradeable is
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
             if (feeAmt == 0) return;
-            _safeTransferFrom(feeToken, sender, address(treasury()), feeAmt);
+            _safeTransferFrom(feeToken, sender, vault, feeAmt);
         }
     }
 
@@ -293,22 +296,10 @@ abstract contract BK721Upgradeable is
         return string(_baseTokenURIPtr.read());
     }
 
-    function __checkSignature(
-        bytes32 structHash_,
-        bytes calldata signature_
-    ) private view {
-        if (
-            !_hasRole(
-                Roles.SIGNER_ROLE,
-                _recoverSigner(structHash_, signature_)
-            )
-        ) revert BK721__InvalidSignature();
-    }
-
     uint256[47] private __gap;
 }
 
-contract BKNFT is BK721Upgradeable {
+contract BKNFT is BK721 {
     function init(
         string calldata name_,
         string calldata symbol_,
@@ -316,8 +307,7 @@ contract BKNFT is BK721Upgradeable {
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_,
-        ITreasury treasury_,
-        bytes32 version_
+        ITreasury treasury_
     ) external initializer {
         __BK_init(
             name_,
@@ -327,7 +317,8 @@ contract BKNFT is BK721Upgradeable {
             feeToken_,
             authority_,
             treasury_,
-            version_
+            /// @dev value is equal to keccak256("BKNFT_v1")
+            0x379792d4af837d435deaf8f2b7ca3c489899f24f02d5309487fe8be0aa778cca
         );
     }
 }

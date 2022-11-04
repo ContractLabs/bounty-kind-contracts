@@ -5,13 +5,9 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721Rentabl
 
 import "./interfaces/IRBK721.sol";
 
-import "./BK721.sol";
+import {IAuthority, ITreasury, BK721} from "./BK721.sol";
 
-contract RentableBK721Upgradeable is
-    IRBK721,
-    BK721Upgradeable,
-    ERC721RentableUpgradeable
-{
+contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     using SafeCastUpgradeable for uint256;
 
     ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
@@ -99,12 +95,7 @@ contract RentableBK721Upgradeable is
 
     function supportsInterface(
         bytes4 interfaceId_
-    )
-        public
-        view
-        override(BK721Upgradeable, ERC721RentableUpgradeable)
-        returns (bool)
-    {
+    ) public view override(BK721, ERC721RentableUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId_);
     }
 
@@ -116,7 +107,7 @@ contract RentableBK721Upgradeable is
         address from_,
         address to_,
         uint256 tokenId_
-    ) internal override(BK721Upgradeable, ERC721RentableUpgradeable) {
+    ) internal override(BK721, ERC721RentableUpgradeable) {
         super._beforeTokenTransfer(from_, to_, tokenId_);
     }
 }

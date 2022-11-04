@@ -4235,10 +4235,10 @@ os-tmpdir@~1.0.2:
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==
 
-oz-custom@^1.1.4-d:
-  version "1.1.4-d"
-  resolved "https://registry.yarnpkg.com/oz-custom/-/oz-custom-1.1.4-d.tgz#ce63013018f6a6d7d681da89bc679d47eef6e002"
-  integrity sha512-Ex2R/AN4n8NcPbN4HH+3wx29Pxcwt/QkRG7Bv3m7td4oSQ2edMzQHdO9GY5IIBOYBNfaahgMEVksQbIo3kjbhw==
+oz-custom@^1.1.4-f:
+  version "1.1.4-f"
+  resolved "https://registry.yarnpkg.com/oz-custom/-/oz-custom-1.1.4-f.tgz#c73064cb6a7f11d9022b5375f8a23aa78b38593f"
+  integrity sha512-FGVnWAJw21rq5HJ0Ou4JN2Ptrl16KXu7s5M64EaBFh/mjy/KzWJgBM7v8ITKWEJkp6Af2NxbvefG63pkUEB58g==
   dependencies:
     "@ethersproject/abi" "^5.4.7"
     "@ethersproject/providers" "^5.4.7"

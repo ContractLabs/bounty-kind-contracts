@@ -26,8 +26,8 @@ contract CommandGate is
     MultiDelegatecall,
     ERC721TokenReceiver
 {
-    using Bytes32Address for address;
     using ERC165Checker for address;
+    using Bytes32Address for address;
     using BitMaps for BitMaps.BitMap;
 
     BitMaps.BitMap private __isWhitelisted;

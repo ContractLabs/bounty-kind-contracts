@@ -7,9 +7,10 @@ import {
 } from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
-import "./internal-upgradeable/FundForwarderUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK20.sol";
+import "./interfaces/ITreasury.sol";
 
 contract BK20 is
     IBK20,
@@ -31,7 +32,7 @@ contract BK20 is
     ) external initializer {
         __ERC20Permit_init_unchained(name_);
         __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(treasury_);
+        __FundForwarder_init_unchained(address(treasury_));
         __ERC20_init_unchained(name_, symbol_, decimals_);
     }
 
@@ -59,7 +60,6 @@ contract BK20 is
     function updateTreasury(
         ITreasury treasury_
     ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        emit TreasuryUpdated(treasury(), treasury_);
-        _updateTreasury(treasury_);
+        _changeVault(address(treasury_));
     }
 }

@@ -10,7 +10,7 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
 
     function notifyWithNative(bytes calldata message_) external payable {
         _safeNativeTransfer(vault, msg.value);
-        emit Notified(_msgSender(), message_, address(0), msg.value, "");
+        emit Notified(_msgSender(), message_, address(0), msg.value);
     }
 
     function onERC721Received(
@@ -22,7 +22,7 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
         address nft = _msgSender();
         IERC721(nft).safeTransferFrom(address(this), vault, tokenId_);
 
-        emit Notified(from_, message_, nft, tokenId_, "");
+        emit Notified(from_, message_, nft, tokenId_);
 
         return this.onERC721Received.selector;
     }
@@ -50,6 +50,6 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
         }
         _safeERC20TransferFrom(token_, user, vault, value_);
 
-        emit Notified(user, message_, address(token_), value_, "");
+        emit Notified(user, message_, address(token_), value_);
     }
 }

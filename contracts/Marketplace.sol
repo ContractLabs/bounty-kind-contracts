@@ -7,8 +7,9 @@ import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
-import "./internal-upgradeable/FundForwarderUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
+import "./interfaces/ITreasury.sol";
 import "./interfaces/IMarketplace.sol";
 
 import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
@@ -42,7 +43,7 @@ contract Marketplace is
         __setProtocolFee(feeFraction_);
         __whiteListContracts(supportedContracts_);
 
-        __FundForwarder_init_unchained(treasury_);
+        __FundForwarder_init_unchained(address(treasury_));
         __Signable_init(type(Marketplace).name, "1");
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
@@ -54,9 +55,10 @@ contract Marketplace is
         emit ProtocolFeeUpdated(feeFraction_);
     }
 
-    function updateTreasury(ITreasury treasury_) external override {
-        emit TreasuryUpdated(treasury(), treasury_);
-        _updateTreasury(treasury_);
+    function updateTreasury(
+        ITreasury treasury_
+    ) external override onlyRole(Roles.OPERATOR_ROLE) {
+        _changeVault(address(treasury_));
     }
 
     function redeem(
@@ -66,7 +68,9 @@ contract Marketplace is
         bytes calldata signature_
     ) external payable whenNotPaused {
         address buyer = _msgSender();
-        __checkUser(buyer);
+        _checkBlacklist(buyer);
+        _onlyEOA(buyer);
+
         __checkSignature(buyer, seller_, deadline_, signature_);
 
         address seller = seller_.nft.ownerOf(seller_.tokenId);
@@ -121,7 +125,8 @@ contract Marketplace is
         uint256 _protocolFee = protocolFee;
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
-        if (treasury().supportedPayment(address(seller_.payment)))
+
+        if (ITreasury(vault).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
         if (address(seller_.payment) != address(0)) {
             if (
@@ -151,7 +156,7 @@ contract Marketplace is
                 _safeERC20TransferFrom(
                     seller_.payment,
                     buyerAddr_,
-                    address(treasury()),
+                    vault,
                     seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction
@@ -170,7 +175,7 @@ contract Marketplace is
             );
             if (_protocolFee != 0)
                 _safeNativeTransfer(
-                    address(treasury()),
+                    vault,
                     seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction
@@ -226,11 +231,6 @@ contract Marketplace is
                 )
             )
         ) revert Marketplace__InvalidSignature();
-    }
-
-    function __checkUser(address account_) private view {
-        _checkBlacklist(account_);
-        _onlyEOA(account_);
     }
 
     uint256[48] private __gap;

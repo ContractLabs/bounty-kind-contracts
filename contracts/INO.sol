@@ -10,7 +10,7 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20Pe
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
 
-import "./internal-upgradeable/FundForwarderUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IINO.sol";
 import "./interfaces/IBK721.sol";
@@ -55,7 +55,7 @@ contract INO is
         __INO_init_unchained();
         __ReentrancyGuard_init_unchained();
         __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(treasury_);
+        __FundForwarder_init_unchained(address(treasury_));
     }
 
     function __INO_init_unchained() internal onlyInitializing {}
@@ -124,7 +124,7 @@ contract INO is
         _safeTransferFrom(
             IERC20Upgradeable(paymentToken),
             sender,
-            address(treasury()),
+            vault,
             total
         );
         IBK721(_campaign.nft).safeMintBatch(sender, _campaign.typeNFT, amount);
@@ -178,9 +178,8 @@ contract INO is
 
     function updateTreasury(
         ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) whenPaused {
-        emit TreasuryUpdated(treasury(), treasury_);
-        _updateTreasury(treasury_);
+    ) external override onlyRole(Roles.OPERATOR_ROLE) {
+        _changeVault(address(treasury_));
     }
 
     uint256[47] private __gap;

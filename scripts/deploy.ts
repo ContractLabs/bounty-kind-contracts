@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
-import {Contract, ContractFactory} from "ethers";
-import {ethers, upgrades} from "hardhat";
+import { Contract, ContractFactory } from "ethers";
+import { ethers, upgrades } from "hardhat";
 
 dotenv.config()
 
@@ -120,17 +120,84 @@ async function main(): Promise<void> {
     // await yu.deployed();
     // console.log("YU deployed to: ", yu.address);
 
+    const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
+    const sphere: Contract = await upgrades.deployProxy(
+        BKNFT,
+        [
+            "Bountykind Sphere",
+            "NFTSphere",
+            "https://dev-game-api.w3w.app/api/nfts/metadata/",
+            0,
+            process.env.YU || "",
+            process.env.AUTHORITY || "",
+            process.env.TREASURY || "",
+        ],
+        {
+            kind: "uups",
+            initializer: "init",
+        },
+    );
+    await sphere.deployed();
+    console.log("sphere deployed to: ", sphere.address);
+
+    const item: Contract = await upgrades.deployProxy(
+        BKNFT,
+        [
+            "Bountykind Item",
+            "NFTItem",
+            "https://dev-game-api.w3w.app/api/nfts/metadata/",
+            0,
+            process.env.YU || "",
+            process.env.AUTHORITY || "",
+            process.env.TREASURY || "",
+        ],
+        {
+            kind: "uups",
+            initializer: "init",
+        },
+    );
+    await item.deployed();
+    console.log("item deployed to: ", item.address);
+
+    const RBK721: ContractFactory = await ethers.getContractFactory("RBK721")
+    const character: Contract = await upgrades.deployProxy(
+        RBK721,
+        [
+            "Bountykind Character",
+            "NFTCharacter",
+            "https://dev-game-api.w3w.app/api/nfts/metadata/",
+            0,
+            process.env.YU || "",
+            process.env.AUTHORITY || "",
+            process.env.TREASURY || "",
+        ],
+        {
+            kind: "uups",
+            initializer: "init",
+        },
+    )
+    await character.deployed();
+    console.log("character deployed to: ", character.address);
+
+    // const yu: Contract = await upgrades.deployProxy(
+    //     BK20,
+    //     [authority.address, treasury.address, "YU", "YU", 18],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await yu.deployed();
+    // console.log("YU deployed to: ", yu.address);
+
     const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
     const marketplace: Contract = await upgrades.deployProxy(
         Marketplace,
         [
-			0,
-			[],
+            0,
+            [sphere.address, item.address, character.address],
             process.env.AUTHORITY || "",
-            process.env.TREASURY || "",
-            "Forbidden Fruit Energy",
-            "FFE",
-            18,
+            process.env.TREASURY || ""
         ],
         {
             kind: "uups",

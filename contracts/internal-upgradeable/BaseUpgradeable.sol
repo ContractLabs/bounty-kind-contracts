@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "oz-custom/contracts/oz-upgradeable/utils/ContextUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+import "../interfaces/ITreasury.sol";
 import "../interfaces/IAuthority.sol";
 
 import "../libraries/Roles.sol";
@@ -48,6 +49,8 @@ abstract contract BaseUpgradeable is ContextUpgradeable, UUPSUpgradeable {
         __updateAuthority(authority_);
         emit AuthorityUpdated(old, authority_);
     }
+
+    function updateTreasury(ITreasury treasury_) external virtual;
 
     function authority() public view returns (IAuthority authority_) {
         assembly {

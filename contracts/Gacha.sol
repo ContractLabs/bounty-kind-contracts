@@ -9,8 +9,6 @@ import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 import "./interfaces/IGacha.sol";
 import "./interfaces/IBK721.sol";
 import "./interfaces/ITreasury.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
@@ -24,8 +22,7 @@ contract Gacha is
     TransferableUpgradeable,
     FundForwarderUpgradeable
 {
-    using Bytes32Address for address;
-    using Bytes32Address for uint256;
+    using Bytes32Address for *;
     using ERC165CheckerUpgradeable for address;
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
@@ -39,6 +36,12 @@ contract Gacha is
     ) external initializer {
         __FundForwarder_init_unchained(address(vault_));
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
+    }
+
+    function updateTreasury(
+        ITreasury treasury_
+    ) external override onlyRole(Roles.OPERATOR_ROLE) {
+        _changeVault(address(treasury_));
     }
 
     function redeemTicket(
