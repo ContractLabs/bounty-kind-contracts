@@ -207,9 +207,24 @@ async function main(): Promise<void> {
     // await marketplace.deployed();
     // console.log("Marketplace deployed to: ", marketplace.address);
 
-    const Gacha : ContractFactory = await ethers.getContractFactory("Gacha");
-    const gacha: Contract = await upgrades.deployProxy(
-        Gacha,
+    // const Gacha : ContractFactory = await ethers.getContractFactory("Gacha");
+    // const gacha: Contract = await upgrades.deployProxy(
+    //     Gacha,
+    //     [
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || ""
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await gacha.deployed();
+    // console.log("Gacha deployed to: ", gacha.address);
+
+    const INO : ContractFactory = await ethers.getContractFactory("INO");
+    const ino: Contract = await upgrades.deployProxy(
+        INO,
         [
             process.env.AUTHORITY || "",
             process.env.TREASURY || ""
@@ -217,10 +232,11 @@ async function main(): Promise<void> {
         {
             kind: "uups",
             initializer: "init",
+            unsafeAllow: ['delegatecall']
         },
     );
-    await gacha.deployed();
-    console.log("Gacha deployed to: ", gacha.address);
+    await ino.deployed();
+    console.log("INO deployed to: ", ino.address);
 }
 
 main()
