@@ -207,37 +207,45 @@ async function main(): Promise<void> {
     // await marketplace.deployed();
     // console.log("Marketplace deployed to: ", marketplace.address);
 
-    const Gacha : ContractFactory = await ethers.getContractFactory("Gacha");
-    const gacha: Contract = await upgrades.deployProxy(
-        Gacha,
-        [
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || ""
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-            unsafeAllow: ['delegatecall']
-        },
-    );
-    await gacha.deployed();
-    console.log("Gacha deployed to: ", gacha.address);
+    // const Gacha : ContractFactory = await ethers.getContractFactory("Gacha");
+    // const gacha: Contract = await upgrades.deployProxy(
+    //     Gacha,
+    //     [
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || ""
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //         unsafeAllow: ['delegatecall']
+    //     },
+    // );
+    // await gacha.deployed();
+    // console.log("Gacha deployed to: ", gacha.address);
 
-    const INO : ContractFactory = await ethers.getContractFactory("INO");
-    const ino: Contract = await upgrades.deployProxy(
-        INO,
-        [
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || ""
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-            unsafeAllow: ['delegatecall']
-        },
+    // const INO : ContractFactory = await ethers.getContractFactory("INO");
+    // const ino: Contract = await upgrades.deployProxy(
+    //     INO,
+    //     [
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || ""
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //         unsafeAllow: ['delegatecall']
+    //     },
+    // );
+    // await ino.deployed();
+    // console.log("INO deployed to: ", ino.address);
+
+    const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
+    const commandGate: Contract = await CommandGate.deploy(
+        process.env.AUTHORITY || "",
+        process.env.TREASURY || ""
     );
-    await ino.deployed();
-    console.log("INO deployed to: ", ino.address);
+    await commandGate.deployed();
+    console.log("CommandGate deployed to: ", commandGate.address);
 }
 
 main()

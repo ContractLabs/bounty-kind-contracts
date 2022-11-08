@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
+import "./ITreasury.sol";
 import {
     IERC20Permit
 } from "oz-custom/contracts/oz/token/ERC20/extensions/draft-IERC20Permit.sol";
@@ -9,6 +10,8 @@ interface ICommandGate {
     error CommandGate__Expired();
     error CommandGate__ExecutionFailed();
     error CommandGate__UnknownAddress(address);
+
+    function updateTreasury(ITreasury treasury_) external;
 
     function whitelistAddress(address addr_) external;
 

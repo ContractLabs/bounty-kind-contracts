@@ -33,9 +33,15 @@ contract CommandGate is
     BitMaps.BitMap private __isWhitelisted;
 
     constructor(
-        address vault_,
-        IAuthority authority_
-    ) payable Base(authority_, 0) FundForwarder(vault_) {}
+        IAuthority authority_,
+        ITreasury vault_
+    ) payable Base(authority_, 0) FundForwarder(address(vault_)) {}
+
+    function updateTreasury(
+        ITreasury treasury_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
+        _changeVault(address(treasury_));
+    }
 
     function whitelistAddress(
         address addr_
@@ -99,7 +105,7 @@ contract CommandGate is
         address from_,
         uint256 tokenId_,
         bytes calldata data_
-    ) external override returns (bytes4) {
+    ) external override whenNotPaused returns (bytes4) {
         (address target, bytes4 fnSig, bytes memory data) = __decodeData(data_);
 
         if (!__isWhitelisted.get(target.fillLast96Bits()))
