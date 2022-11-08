@@ -65,4 +65,28 @@ interface IINO {
         uint64 indexed startAt,
         uint64 indexed endAt
     );
+
+    function batchExecute(
+        bytes[] calldata data_
+    ) external returns (bytes[] memory);
+
+    function redeem(
+        uint256 ticketId_,
+        address user_,
+        address token_,
+        uint256 value_
+    ) external;
+
+    function setCampaign(
+        uint256 campaignId_,
+        Campaign calldata campaign_
+    ) external;
+
+    function paymentOf(
+        uint256 campaignId_
+    ) external view returns (Payment[] memory);
+
+    function campaign(
+        uint256 campaignId_
+    ) external view returns (Campaign memory campaign_);
 }

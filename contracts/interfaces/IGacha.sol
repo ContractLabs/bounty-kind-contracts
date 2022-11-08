@@ -24,4 +24,24 @@ interface IGacha {
         uint256 indexed typeId,
         address indexed user
     );
+
+    function batchExecute(
+        bytes[] calldata data_
+    ) external returns (bytes[] memory);
+
+    function updateTicketPrice(
+        uint256 typeId_,
+        address[] calldata supportedPayments,
+        uint96[] calldata unitPrices_
+    ) external;
+
+    function redeemTicket(
+        uint256 id_,
+        uint256 type_,
+        address user_,
+        address token_,
+        uint256 value_
+    ) external;
+
+    function reward(address token_, uint256 ticketId_, uint256 value_) external;
 }

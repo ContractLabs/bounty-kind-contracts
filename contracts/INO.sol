@@ -64,7 +64,7 @@ contract INO is
         address user_,
         address token_,
         uint256 value_
-    ) external payable onlyRole(Roles.PROXY_ROLE) {
+    ) external onlyRole(Roles.PROXY_ROLE) {
         Campaign memory _campaign;
         uint256 amount;
         // get rid of stack too deep
