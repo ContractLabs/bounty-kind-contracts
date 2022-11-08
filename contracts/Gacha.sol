@@ -2,9 +2,11 @@
 pragma solidity ^0.8.15;
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
+
 import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import "./interfaces/IGacha.sol";
 import "./interfaces/IBK721.sol";
@@ -20,7 +22,8 @@ contract Gacha is
     BaseUpgradeable,
     ProxyCheckerUpgradeable,
     TransferableUpgradeable,
-    FundForwarderUpgradeable
+    FundForwarderUpgradeable,
+    MultiDelegatecallUpgradeable
 {
     using Bytes32Address for *;
     using ERC165CheckerUpgradeable for address;
@@ -30,19 +33,24 @@ contract Gacha is
     BitMapsUpgradeable.BitMap private __supportedPayments;
     mapping(uint256 => mapping(address => uint96)) private __unitPrices;
 
-    function init(IAuthority authority_, ITreasury vault_)
-        external
-        initializer
-    {
+    function init(
+        IAuthority authority_,
+        ITreasury vault_
+    ) external initializer {
+        __MultiDelegatecall_init_unchained();
         __FundForwarder_init_unchained(address(vault_));
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
 
-    function updateTreasury(ITreasury treasury_)
-        external
-        override
-        onlyRole(Roles.OPERATOR_ROLE)
-    {
+    function batchExecute(
+        bytes[] calldata data_
+    ) external returns (bytes[] memory) {
+        return _multiDelegatecall(data_);
+    }
+
+    function updateTreasury(
+        ITreasury treasury_
+    ) external override onlyRole(Roles.OPERATOR_ROLE) {
         _changeVault(address(treasury_));
     }
 

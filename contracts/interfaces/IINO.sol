@@ -9,6 +9,7 @@ interface IINO {
     error INO__OnGoingCampaign();
     error INO__Unauthorized();
     error INO__CampaignEnded();
+    error INO__InsuficcientAmount();
     error INO__AllocationExceeded();
     error INO__UnsupportedPayment(address);
 

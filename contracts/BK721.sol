@@ -10,7 +10,6 @@ import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK721.sol";
 import "./interfaces/ITreasury.sol";
-import "./interfaces/IIngameSwap.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/StringLib.sol";
@@ -99,7 +98,7 @@ abstract contract BK721 is
     function setFee(
         IERC20Upgradeable feeToken_,
         uint256 feeAmt_
-    ) external whenPaused onlyRole(Roles.OPERATOR_ROLE) {
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
         if (!ITreasury(vault).supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
         _setRoyalty(feeToken_, uint96(feeAmt_));
@@ -121,7 +120,7 @@ abstract contract BK721 is
     function mint(
         address to_,
         uint256 typeId_
-    ) external override onlyRole(Roles.MINTER_ROLE) returns (uint256 tokenId) {
+    ) external onlyRole(Roles.MINTER_ROLE) returns (uint256 tokenId) {
         unchecked {
             _mint(to_, tokenId = (typeId_ << 32) | typeIdTrackers[typeId_]++);
         }
@@ -131,12 +130,7 @@ abstract contract BK721 is
         address to_,
         uint256 typeId_,
         uint256 length_
-    )
-        external
-        override
-        onlyRole(Roles.MINTER_ROLE)
-        returns (uint256[] memory tokenIds)
-    {
+    ) external onlyRole(Roles.MINTER_ROLE) returns (uint256[] memory tokenIds) {
         tokenIds = new uint256[](length_);
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
@@ -154,12 +148,7 @@ abstract contract BK721 is
         address to_,
         uint256 typeId_,
         uint256 length_
-    )
-        external
-        override
-        onlyRole(Roles.PROXY_ROLE)
-        returns (uint256[] memory tokenIds)
-    {
+    ) external onlyRole(Roles.PROXY_ROLE) returns (uint256[] memory tokenIds) {
         tokenIds = new uint256[](length_);
         uint256 ptr = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
@@ -179,7 +168,7 @@ abstract contract BK721 is
 
     function metadataOf(
         uint256 tokenId_
-    ) external view override returns (uint256 typeId, uint256 index) {
+    ) external view returns (uint256 typeId, uint256 index) {
         if (_ownerOf[tokenId_] == 0) revert BK721__NotMinted();
         typeId = tokenId_ >> 32;
         index = tokenId_ & ~uint32(0);

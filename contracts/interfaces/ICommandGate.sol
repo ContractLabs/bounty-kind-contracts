@@ -31,4 +31,10 @@ interface ICommandGate {
     ) external;
 
     function withdrawTo(address token_, address to_, uint256 value_) external;
+
+    function depositERC721MultiWithCommand(
+        uint256[] calldata tokenIds_,
+        address[] calldata contracts_,
+        bytes[] calldata data_
+    ) external;
 }

@@ -67,11 +67,7 @@ contract Treasury is
         __withdraw(token_, to_, value_);
     }
 
-    function __withdraw(
-        address token_,
-        address to_,
-        uint256 value_
-    ) private {
+    function __withdraw(address token_, address to_, uint256 value_) private {
         if (supportedPayment(token_)) {
             if (token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
                 IERC721Upgradeable(token_).safeTransferFrom(
@@ -143,10 +139,9 @@ contract Treasury is
         emit PricesUpdated();
     }
 
-    function updatePayments(address[] calldata tokens_)
-        external
-        onlyRole(Roles.TREASURER_ROLE)
-    {
+    function updatePayments(
+        address[] calldata tokens_
+    ) external onlyRole(Roles.TREASURER_ROLE) {
         __payments.add(tokens_);
         emit PaymentsUpdated();
     }
@@ -156,10 +151,9 @@ contract Treasury is
         emit PaymentsRemoved();
     }
 
-    function removePayment(address token_)
-        external
-        onlyRole(Roles.TREASURER_ROLE)
-    {
+    function removePayment(
+        address token_
+    ) external onlyRole(Roles.TREASURER_ROLE) {
         if (__payments.remove(token_)) emit PaymentRemoved(token_);
     }
 

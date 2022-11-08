@@ -41,4 +41,17 @@ interface IBK721 is IBKAsset {
         uint256 fromId_,
         uint256 length_
     ) external returns (uint256[] memory tokenIds);
+
+    function merge(
+        uint256[] calldata fromIds_,
+        uint256 toId_,
+        uint256 deadline_,
+        bytes calldata signature_
+    ) external;
+
+    function nextIdFromType(uint256 typeId_) external view returns (uint256);
+
+    function baseURI() external view returns (string memory);
+
+    function setBaseURI(string calldata baseURI_) external;
 }

@@ -37,10 +37,6 @@ contract CommandGate is
         IAuthority authority_
     ) payable Base(authority_, 0) FundForwarder(vault_) {}
 
-    function kill() external onlyRole(Roles.FACTORY_ROLE) {
-        selfdestruct(payable(vault));
-    }
-
     function whitelistAddress(
         address addr_
     ) external onlyRole(Roles.OPERATOR_ROLE) {

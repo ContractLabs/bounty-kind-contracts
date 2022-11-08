@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
-import {
-    ERC721TokenReceiverUpgradeable
-} from "oz-custom/contracts/oz-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
 import "./internal-upgradeable/BaseUpgradeable.sol";
 
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
+import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import "./interfaces/IINO.sol";
 import "./interfaces/IBK721.sol";
@@ -20,15 +17,13 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20Pe
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/BitMap256.sol";
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
-import "oz-custom/contracts/libraries/EnumerableSetV2.sol";
 
 contract INO is
     IINO,
     BaseUpgradeable,
-    ProxyCheckerUpgradeable,
     FundForwarderUpgradeable,
     ReentrancyGuardUpgradeable,
-    ERC721TokenReceiverUpgradeable
+    MultiDelegatecallUpgradeable
 {
     using SSTORE2 for *;
     using Bytes32Address for *;
@@ -48,29 +43,28 @@ contract INO is
     // buyer => campaignId => purchasedAmt
     mapping(bytes32 => mapping(uint256 => uint256)) private __purchasedAmt;
 
-    function __INO_init(
+    function init(
         IAuthority authority_,
         ITreasury treasury_
-    ) internal onlyInitializing {
-        __INO_init_unchained();
+    ) external initializer {
         __ReentrancyGuard_init_unchained();
+        __MultiDelegatecall_init_unchained();
         __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(address(treasury_));
     }
 
-    function __INO_init_unchained() internal onlyInitializing {}
+    function batchExecute(
+        bytes[] calldata data_
+    ) external returns (bytes[] memory) {
+        return _multiDelegatecall(data_);
+    }
 
     function redeem(
         uint256 ticketId_,
-        uint256 deadline_,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable whenNotPaused nonReentrant {
-        address sender = _msgSender();
-        _onlyEOA(sender);
-        _checkBlacklist(sender);
-
+        address user_,
+        address token_,
+        uint256 value_
+    ) external payable onlyRole(Roles.PROXY_ROLE) {
         Campaign memory _campaign;
         uint256 amount;
         // get rid of stack too deep
@@ -84,54 +78,30 @@ contract INO is
             amount = ticketId_ & ~uint32(0);
             __supplies[campaignId] -= amount;
             if (
-                (__purchasedAmt[sender.fillLast12Bytes()][
+                (__purchasedAmt[user_.fillLast12Bytes()][
                     campaignId
                 ] += amount) > _campaign.limit
             ) revert INO__AllocationExceeded();
         }
 
-        address paymentToken;
-        uint256 total;
-        // get rid of stack too deep
-        {
-            paymentToken = ticketId_.fromLast160Bits();
-            Payment memory payment;
-            // get rid of stack too deep
-            {
-                uint256 pmt;
-                assembly {
-                    pmt := paymentToken
-                }
+        Payment memory payment;
 
-                if (
-                    !_campaign.bitmap.unsafeGet(pmt) ||
-                    (payment = _campaign.payments[pmt.index()]).paymentToken !=
-                    paymentToken
-                ) revert INO__UnsupportedPayment(paymentToken);
-            }
-            total = payment.unitPrices * amount;
-            if (paymentToken != address(0))
-                IERC20PermitUpgradeable(paymentToken).permit(
-                    sender,
-                    address(this),
-                    total,
-                    deadline_,
-                    v,
-                    r,
-                    s
-                );
+        uint256 pmt;
+        assembly {
+            pmt := token_
         }
-        _safeTransferFrom(
-            IERC20Upgradeable(paymentToken),
-            sender,
-            vault,
-            total
-        );
-        IBK721(_campaign.nft).safeMintBatch(sender, _campaign.typeNFT, amount);
 
-        if (msg.value != 0) _safeNativeTransfer(sender, msg.value);
+        if (
+            !_campaign.bitmap.unsafeGet(pmt) ||
+            (payment = _campaign.payments[pmt.index()]).paymentToken != token_
+        ) revert INO__UnsupportedPayment(token_);
 
-        emit Redeemed(sender, ticketId_, paymentToken, total);
+        if (value_ / payment.unitPrices < amount)
+            revert INO__InsuficcientAmount();
+
+        IBK721(_campaign.nft).safeMintBatch(user_, _campaign.typeNFT, amount);
+
+        emit Redeemed(user_, ticketId_, token_, value_);
     }
 
     function setCampaign(
@@ -164,16 +134,6 @@ contract INO is
         bytes32 ptr = __campaigns[campaignId_];
         if (ptr == 0) return campaign_;
         campaign_ = abi.decode(ptr.read(), (Campaign));
-    }
-
-    function onERC721Received(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
-        emit Received(from, to, tokenId, data);
-        return type(ERC721TokenReceiverUpgradeable).interfaceId;
     }
 
     function updateTreasury(
