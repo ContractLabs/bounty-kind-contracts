@@ -30,18 +30,40 @@ contract Gacha is
     BitMapsUpgradeable.BitMap private __supportedPayments;
     mapping(uint256 => mapping(address => uint96)) private __unitPrices;
 
-    function init(
-        IAuthority authority_,
-        ITreasury vault_
-    ) external initializer {
+    function init(IAuthority authority_, ITreasury vault_)
+        external
+        initializer
+    {
         __FundForwarder_init_unchained(address(vault_));
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
 
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
+    function updateTreasury(ITreasury treasury_)
+        external
+        override
+        onlyRole(Roles.OPERATOR_ROLE)
+    {
         _changeVault(address(treasury_));
+    }
+
+    function updateTicketPrice(
+        uint256 typeId_,
+        address[] calldata supportedPayments,
+        uint96[] calldata unitPrices_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
+        uint256 length = supportedPayments.length;
+        uint256[] memory uintPayments;
+        address[] memory _supportedPayments = supportedPayments;
+        assembly {
+            uintPayments := _supportedPayments
+        }
+        for (uint256 i; i < length; ) {
+            __supportedPayments.set(uintPayments[i]);
+            __unitPrices[typeId_][supportedPayments[i]] = unitPrices_[i];
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function redeemTicket(

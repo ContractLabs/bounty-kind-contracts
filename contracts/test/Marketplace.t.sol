@@ -86,27 +86,9 @@ contract MarketplaceTest is Test {
 
         erc20PermitUtil = new ERC20PermitUtil(pmt.DOMAIN_SEPARATOR());
 
-        nft1.init("A", "", "", 0, pmt, authority, treasury, 0x00);
-        nft2.init(
-            "B",
-            "",
-            "",
-            200,
-            pmt,
-            authority,
-            treasury,
-            bytes32(uint256(1))
-        );
-        nft3.init(
-            "C",
-            "",
-            "",
-            300,
-            pmt,
-            authority,
-            treasury,
-            bytes32(uint256(2))
-        );
+        nft1.init("A", "", "", 0, pmt, authority, treasury);
+        nft2.init("B", "", "", 200, pmt, authority, treasury);
+        nft3.init("C", "", "", 300, pmt, authority, treasury);
 
         id1 = nft1.mint(seller, 0);
         id2 = nft2.mint(seller, 1);

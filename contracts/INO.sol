@@ -37,16 +37,16 @@ contract INO is
     bytes32 public constant VERSION =
         0x3d277aecc6eab90208a3b105ab5e72d55c1c0c69bf67ccc488f44498aef41550;
 
-    ///@dev value is equal to keccak256("Permit(address buyer,uint256 ticketId,uint256 amount,uint256 nonce,uint256 deadline)")
-    bytes32 public constant _PERMIT_TYPE_HASH =
+    /// @dev value is equal to keccak256("Permit(address buyer,uint256 ticketId,uint256 amount,uint256 nonce,uint256 deadline)")
+    bytes32 public constant __PERMIT_TYPE_HASH =
         0x5421fbeb44dd87c0132aceddf0c5325a43ac9ccb2291ee8cbf59d92a5fb63681;
 
     // campaignId => supplies
-    mapping(uint256 => uint256) private _supplies;
+    mapping(uint256 => uint256) private __supplies;
     // campaignId => Campaign
-    mapping(uint256 => bytes32) private _campaigns;
+    mapping(uint256 => bytes32) private __campaigns;
     // buyer => campaignId => purchasedAmt
-    mapping(bytes32 => mapping(uint256 => uint256)) private _purchasedAmt;
+    mapping(bytes32 => mapping(uint256 => uint256)) private __purchasedAmt;
 
     function __INO_init(
         IAuthority authority_,
@@ -76,15 +76,15 @@ contract INO is
         // get rid of stack too deep
         {
             uint256 campaignId = (ticketId_ >> 32) & ~uint64(0);
-            _campaign = abi.decode(_campaigns[campaignId].read(), (Campaign));
+            _campaign = abi.decode(__campaigns[campaignId].read(), (Campaign));
             if (
                 _campaign.start > block.timestamp ||
                 _campaign.end < block.timestamp
             ) revert INO__CampaignEnded();
             amount = ticketId_ & ~uint32(0);
-            _supplies[campaignId] -= amount;
+            __supplies[campaignId] -= amount;
             if (
-                (_purchasedAmt[sender.fillLast12Bytes()][
+                (__purchasedAmt[sender.fillLast12Bytes()][
                     campaignId
                 ] += amount) > _campaign.limit
             ) revert INO__AllocationExceeded();
@@ -138,7 +138,7 @@ contract INO is
         uint256 campaignId_,
         Campaign calldata campaign_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        bytes32 ptr = _campaigns[campaignId_];
+        bytes32 ptr = __campaigns[campaignId_];
         if (
             ptr != 0 && abi.decode(ptr.read(), (Campaign)).end > block.timestamp
         ) revert INO__OnGoingCampaign();
@@ -148,20 +148,20 @@ contract INO is
             _campaign.start += uint64(block.timestamp),
             _campaign.end += uint64(block.timestamp)
         );
-        _supplies[campaignId_] = _campaign.maxSupply;
-        _campaigns[campaignId_] = abi.encode(_campaign).write();
+        __supplies[campaignId_] = _campaign.maxSupply;
+        __campaigns[campaignId_] = abi.encode(_campaign).write();
     }
 
     function paymentOf(
         uint256 campaignId_
     ) public view returns (Payment[] memory) {
-        return abi.decode(_campaigns[campaignId_].read(), (Campaign)).payments;
+        return abi.decode(__campaigns[campaignId_].read(), (Campaign)).payments;
     }
 
     function campaign(
         uint256 campaignId_
     ) external view returns (Campaign memory campaign_) {
-        bytes32 ptr = _campaigns[campaignId_];
+        bytes32 ptr = __campaigns[campaignId_];
         if (ptr == 0) return campaign_;
         campaign_ = abi.decode(ptr.read(), (Campaign));
     }

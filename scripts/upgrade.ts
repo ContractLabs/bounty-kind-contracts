@@ -35,15 +35,15 @@ async function main(): Promise<void> {
   await treasury.deployed();
   console.log("Treasury upgraded to : ", await upgrades.erc1967.getImplementationAddress(treasury.address));
 
-  const BK20: ContractFactory = await ethers.getContractFactory("BK20");
-  const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
-  await FFE.deployed();
-  console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
+  // const BK20: ContractFactory = await ethers.getContractFactory("BK20");
+  // const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
+  // await FFE.deployed();
+  // console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
 
 
-  const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
-  await YU.deployed();
-  console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
+  // const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
+  // await YU.deployed();
+  // console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
 }
 
 main()
