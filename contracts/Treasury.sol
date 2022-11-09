@@ -40,7 +40,7 @@ contract Treasury is
         0x78ecb86225a2600f4a19912d238c02ae4aba51082b8a69ebd615456f7e702c07;
 
     mapping(bytes32 => uint256) private __priceOf;
-    EnumerableSetV2.AddressSet private _payments;
+    EnumerableSetV2.AddressSet private _payments; /// remove
     EnumerableSetV2.AddressSet private __payments;
 
     function init(IAuthority authority_) external initializer {

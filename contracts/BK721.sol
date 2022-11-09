@@ -288,15 +288,31 @@ abstract contract BK721 is
     uint256[47] private __gap;
 }
 
-contract BKNFT is BK721 {
+interface IBKNFT {
     function init(
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
-        IERC20Upgradeable feeToken_,
-        IAuthority authority_,
-        ITreasury treasury_
+        IERC20Upgradeable feeToken_
+    ) external;
+}
+
+contract BKNFT is IBKNFT, BK721 {
+    ITreasury private immutable __cachedTreasury;
+    IAuthority private immutable __cachedAuthority;
+
+    constructor(IAuthority authority_, ITreasury treasury_) payable {
+        __cachedTreasury = treasury_;
+        __cachedAuthority = authority_;
+    }
+
+    function init(
+        string calldata name_,
+        string calldata symbol_,
+        string calldata baseURI_,
+        uint256 feeAmt_,
+        IERC20Upgradeable feeToken_
     ) external initializer {
         __BK_init(
             name_,
@@ -304,10 +320,11 @@ contract BKNFT is BK721 {
             baseURI_,
             feeAmt_,
             feeToken_,
-            authority_,
-            treasury_,
+            __cachedAuthority,
+            __cachedTreasury,
             /// @dev value is equal to keccak256("BKNFT_v1")
             0x379792d4af837d435deaf8f2b7ca3c489899f24f02d5309487fe8be0aa778cca
         );
+        _checkRole(Roles.FACTORY_ROLE, _msgSender());
     }
 }

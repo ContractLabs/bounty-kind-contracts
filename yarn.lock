@@ -1119,10 +1119,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts-upgradeable@npm:^4.8.0":
+  version: 4.8.0
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.8.0"
+  checksum: c39f3a719830c068d0ae413a8beee4072fa19f777b55bf6155fe21023414eab0633a641318845ac50929837b71848de1efbd00d4c181ddd6d8b735ceb0a82070
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/contracts@npm:^4.7.3":
   version: 4.7.3
   resolution: "@openzeppelin/contracts@npm:4.7.3"
   checksum: 18382fcacf7cfd652f5dd0e70c08f08ea74eaa8ff11e9f9850639ada70198ae01a3f9493d89a52d724f2db394e9616bf6258017804612ba273167cf657fbb073
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts@npm:^4.8.0":
+  version: 4.8.0
+  resolution: "@openzeppelin/contracts@npm:4.8.0"
+  checksum: dfab51a7f91735cfb1e94dd5074736b0dac0207e4ebf26eb46b32defd3b67adce5a36b248daa7b841c21be74863c1e37cf92ed194a9c36d3f8c5326d1a24242a
   languageName: node
   linkType: hard
 
@@ -2104,8 +2118,8 @@ __metadata:
     "@nomiclabs/hardhat-ethers": ^2.2.1
     "@nomiclabs/hardhat-etherscan": ^3.1.2
     "@nomiclabs/hardhat-web3": ^2.0.0
-    "@openzeppelin/contracts": ^4.7.3
-    "@openzeppelin/contracts-upgradeable": ^4.7.3
+    "@openzeppelin/contracts": ^4.8.0
+    "@openzeppelin/contracts-upgradeable": ^4.8.0
     "@openzeppelin/hardhat-upgrades": ^1.21.0
     "@typechain/ethers-v5": ^10.1.1
     "@typechain/hardhat": ^6.1.4
@@ -2119,7 +2133,7 @@ __metadata:
     hardhat: ^2.12.2
     hardhat-contract-sizer: ^2.6.1
     hardhat-gas-reporter: ^1.0.9
-    oz-custom: ^1.1.5
+    oz-custom: 1.1.5-a
     prettier: ^2.7.1
     prettier-plugin-solidity: ^1.0.0-rc.1
     solhint: ^3.3.7
@@ -6090,9 +6104,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oz-custom@npm:^1.1.5":
-  version: 1.1.5
-  resolution: "oz-custom@npm:1.1.5"
+"oz-custom@npm:1.1.5-a":
+  version: 1.1.5-a
+  resolution: "oz-custom@npm:1.1.5-a"
   dependencies:
     "@ethersproject/abi": ^5.4.7
     "@ethersproject/providers": ^5.4.7
@@ -6124,7 +6138,7 @@ __metadata:
     typechain: ^8.1.0
     typescript: ">=4.5.0"
     workspace: ^0.0.1-preview.1
-  checksum: 030384bdbf07aaafd4d293f5e9c6eac5d8d5814010fb97732e1914371e9e29a886119a902545d30f4873979330b0715774eb56459ffccce2a52f7b35aeae953d
+  checksum: 26c6c9f64a93fd276f213b153b90041f542347ea6527c65b414521e68e2625812c50569a1876f678a34fc9327894efd6f3724cd666aca16cd361e7bb5230fc81
   languageName: node
   linkType: hard
 

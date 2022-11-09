@@ -239,13 +239,22 @@ async function main(): Promise<void> {
     // await ino.deployed();
     // console.log("INO deployed to: ", ino.address);
 
-    const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
-    const commandGate: Contract = await CommandGate.deploy(
+    // const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
+    // const commandGate: Contract = await CommandGate.deploy(
+    //     process.env.AUTHORITY || "",
+    //     process.env.TREASURY || ""
+    // );
+    // await commandGate.deployed();
+    // console.log("CommandGate deployed to: ", commandGate.address);
+
+    const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
+    const factory: Contract = await Factory.deploy(
+        ethers.constants.AddressZero,
         process.env.AUTHORITY || "",
         process.env.TREASURY || ""
     );
-    await commandGate.deployed();
-    console.log("CommandGate deployed to: ", commandGate.address);
+    await factory.deployed();
+    console.log("Factory deployed to: ", factory.address);
 }
 
 main()
