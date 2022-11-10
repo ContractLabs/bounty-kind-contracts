@@ -15,6 +15,7 @@ import {
     IERC721Upgradeable,
     ERC721TokenReceiverUpgradeable
 } from "oz-custom/contracts/oz-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 
@@ -38,6 +39,8 @@ contract Treasury is
     ///@dev value is equal to keccak256("Permit(address token,address to,uint256 value,uint256 nonce,uint256 deadline)")
     bytes32 private constant __PERMIT_TYPE_HASH =
         0x78ecb86225a2600f4a19912d238c02ae4aba51082b8a69ebd615456f7e702c07;
+    AggregatorV3Interface public constant PRICE_FEED =
+        AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
 
     mapping(bytes32 => uint256) private __priceOf;
     EnumerableSetV2.AddressSet private _payments; /// remove
@@ -67,7 +70,11 @@ contract Treasury is
         __withdraw(token_, to_, value_);
     }
 
-    function __withdraw(address token_, address to_, uint256 value_) private {
+    function __withdraw(
+        address token_,
+        address to_,
+        uint256 value_
+    ) private {
         if (supportedPayment(token_)) {
             if (token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
                 IERC721Upgradeable(token_).safeTransferFrom(
@@ -114,6 +121,11 @@ contract Treasury is
     }
 
     function priceOf(address token_) external view returns (uint256) {
+        if (token_ == address(0)) {
+            AggregatorV3Interface _priceFeed = PRICE_FEED;
+            (, int256 usdUnit, , , ) = _priceFeed.latestRoundData();
+            return (uint256(usdUnit) * 10**18) / _priceFeed.decimals();
+        }
         return __priceOf[token_.fillLast12Bytes()];
     }
 
@@ -139,9 +151,10 @@ contract Treasury is
         emit PricesUpdated();
     }
 
-    function updatePayments(
-        address[] calldata tokens_
-    ) external onlyRole(Roles.TREASURER_ROLE) {
+    function updatePayments(address[] calldata tokens_)
+        external
+        onlyRole(Roles.TREASURER_ROLE)
+    {
         __payments.add(tokens_);
         emit PaymentsUpdated();
     }
@@ -151,9 +164,10 @@ contract Treasury is
         emit PaymentsRemoved();
     }
 
-    function removePayment(
-        address token_
-    ) external onlyRole(Roles.TREASURER_ROLE) {
+    function removePayment(address token_)
+        external
+        onlyRole(Roles.TREASURER_ROLE)
+    {
         if (__payments.remove(token_)) emit PaymentRemoved(token_);
     }
 
