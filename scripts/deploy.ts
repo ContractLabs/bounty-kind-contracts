@@ -247,14 +247,16 @@ async function main(): Promise<void> {
     // await commandGate.deployed();
     // console.log("CommandGate deployed to: ", commandGate.address);
 
-    const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
-    const factory: Contract = await Factory.deploy(
-        ethers.constants.AddressZero,
-        process.env.AUTHORITY || "",
-        process.env.TREASURY || ""
-    );
-    await factory.deployed();
-    console.log("Factory deployed to: ", factory.address);
+    // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
+    // const factory: Contract = await Factory.deploy(
+    //     ethers.constants.AddressZero,
+    //     process.env.AUTHORITY || "",
+    //     process.env.TREASURY || ""
+    // );
+    // await factory.deployed();
+    // console.log("Factory deployed to: ", factory.address);
+
+    
 }
 
 main()

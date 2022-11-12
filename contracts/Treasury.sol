@@ -124,7 +124,7 @@ contract Treasury is
         if (token_ == address(0)) {
             AggregatorV3Interface _priceFeed = PRICE_FEED;
             (, int256 usdUnit, , , ) = _priceFeed.latestRoundData();
-            return (uint256(usdUnit) * 10**18) / _priceFeed.decimals();
+            return (uint256(usdUnit) * 10**18) / (10 ** _priceFeed.decimals());
         }
         return __priceOf[token_.fillLast12Bytes()];
     }
