@@ -30,7 +30,7 @@ contract BK20 is
         string calldata symbol_,
         uint256 decimals_
     ) external initializer {
-        __ERC20Permit_init_unchained(name_);
+        __ERC20Permit_init(name_);
         __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(address(treasury_));
         __ERC20_init_unchained(name_, symbol_, decimals_);

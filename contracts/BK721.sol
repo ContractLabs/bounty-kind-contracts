@@ -224,7 +224,7 @@ abstract contract BK721 is
         ITreasury treasury_,
         bytes32 version_
     ) internal onlyInitializing {
-        __Signable_init(name_, "1");
+        __ERC721Permit_init(name_, symbol_);
         __Base_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(address(treasury_));
         __ERC721_init_unchained(name_, symbol_);
