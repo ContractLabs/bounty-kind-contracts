@@ -48,6 +48,12 @@ contract Marketplace is
         __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
     }
 
+    function whiteListContracts(
+        address[] calldata addrs_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
+        __whiteListContracts(addrs_);
+    }
+
     function setProtocolFee(
         uint256 feeFraction_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
@@ -85,6 +91,10 @@ contract Marketplace is
             seller_.payment,
             seller_.unitPrice
         );
+    }
+
+    function isWhitelisted(address addr_) external view returns (bool) {
+        return __whitelistedContracts.get(addr_.fillLast96Bits());
     }
 
     function __setProtocolFee(uint256 feeFraction_) private {

@@ -30,10 +30,10 @@ async function main(): Promise<void> {
   // await rentableNFC.deployed();
   // console.log("RentableNFC upgraded to : ", await upgrades.erc1967.getImplementationAddress(rentableNFC.address));
 
-  const Treasury: ContractFactory = await ethers.getContractFactory("Treasury");
-  const treasury: Contract = await upgrades.upgradeProxy(process.env.TREASURY || "", Treasury);
-  await treasury.deployed();
-  console.log("Treasury upgraded to : ", await upgrades.erc1967.getImplementationAddress(treasury.address));
+  // const Treasury: ContractFactory = await ethers.getContractFactory("Treasury");
+  // const treasury: Contract = await upgrades.upgradeProxy(process.env.TREASURY || "", Treasury);
+  // await treasury.deployed();
+  // console.log("Treasury upgraded to : ", await upgrades.erc1967.getImplementationAddress(treasury.address));
 
   // const BK20: ContractFactory = await ethers.getContractFactory("BK20");
   // const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
@@ -49,6 +49,16 @@ async function main(): Promise<void> {
   // const gacha: Contract = await upgrades.upgradeProxy(process.env.GACHA || "", Gacha, {unsafeAllow: ['delegatecall']});
   // await gacha.deployed();
   // console.log("Gacha upgraded to : ", await upgrades.erc1967.getImplementationAddress(gacha.address));
+
+  // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
+  // const nft: Contract = await upgrades.upgradeProxy(process.env.SPHERE || "", NFT);
+  // await nft.deployed();
+  // console.log("NFT upgraded to : ", await upgrades.erc1967.getImplementationAddress(nft.address));
+
+  const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
+  const marketplace: Contract = await upgrades.upgradeProxy(process.env.MARKETPLACE || "", Marketplace);
+  await marketplace.deployed();
+  console.log("Marketplace upgraded to : ", await upgrades.erc1967.getImplementationAddress(marketplace.address));
 }
 
 main()

@@ -13,7 +13,6 @@ import "./interfaces/ITreasury.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/StringLib.sol";
-import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 abstract contract BK721 is
     IBK721,
@@ -226,8 +225,8 @@ abstract contract BK721 is
     ) internal onlyInitializing {
         __ERC721Permit_init(name_, symbol_);
         __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(address(treasury_));
         __ERC721_init_unchained(name_, symbol_);
+        __FundForwarder_init_unchained(address(treasury_));
         __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
     }
 
@@ -294,25 +293,21 @@ interface IBKNFT {
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
-        IERC20Upgradeable feeToken_
+        IERC20Upgradeable feeToken_,
+        IAuthority authority_,
+        ITreasury treasury_
     ) external;
 }
 
 contract BKNFT is IBKNFT, BK721 {
-    ITreasury private immutable __cachedTreasury;
-    IAuthority private immutable __cachedAuthority;
-
-    constructor(IAuthority authority_, ITreasury treasury_) payable {
-        __cachedTreasury = treasury_;
-        __cachedAuthority = authority_;
-    }
-
     function init(
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
-        IERC20Upgradeable feeToken_
+        IERC20Upgradeable feeToken_,
+        IAuthority authority_,
+        ITreasury treasury_
     ) external initializer {
         __BK_init(
             name_,
@@ -320,11 +315,10 @@ contract BKNFT is IBKNFT, BK721 {
             baseURI_,
             feeAmt_,
             feeToken_,
-            __cachedAuthority,
-            __cachedTreasury,
+            authority_,
+            treasury_,
             /// @dev value is equal to keccak256("BKNFT_v1")
             0x379792d4af837d435deaf8f2b7ca3c489899f24f02d5309487fe8be0aa778cca
         );
-        _checkRole(Roles.FACTORY_ROLE, _msgSender());
     }
 }
