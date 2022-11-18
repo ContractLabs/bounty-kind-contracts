@@ -72,7 +72,7 @@ contract GachaTest is Test {
         payments[2] = address(nft);
         gacha.updateTicketPrice(1, payments, unitPrices);
 
-        commandGate = new CommandGate(address(treasury), authority);
+        commandGate = new CommandGate(authority, treasury);
         commandGate.whitelistAddress(address(gacha));
 
         vm.stopPrank();

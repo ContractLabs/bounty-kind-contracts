@@ -6,6 +6,7 @@ import "./IBK721.sol";
 interface IRBK721 is IBK721 {
     error RBK721__Rented();
     error RBK721__Expired();
+    error RBK721__InvalidSignature();
 
     function setUser(
         uint256 tokenId,

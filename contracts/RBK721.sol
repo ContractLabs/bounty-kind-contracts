@@ -5,7 +5,7 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721Rentabl
 
 import "./interfaces/IRBK721.sol";
 
-import {IAuthority, ITreasury, BK721} from "./BK721.sol";
+import {IAuthority, ITreasury, BK721, Roles} from "./BK721.sol";
 
 contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     using SafeCastUpgradeable for uint256;
@@ -52,22 +52,26 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         userInfo.user = _msgSender();
         emit UserUpdated(tokenId, userInfo.user, expires_);
 
-        _verify(
-            ownerOf(tokenId),
-            keccak256(
-                abi.encode(
-                    __PERMIT_TYPE_HASH,
-                    userInfo.user,
-                    tokenId,
-                    expires_,
-                    deadline_,
-                    _useNonce(tokenId)
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    keccak256(
+                        abi.encode(
+                            __PERMIT_TYPE_HASH,
+                            userInfo.user,
+                            tokenId,
+                            expires_,
+                            deadline_,
+                            _useNonce(tokenId)
+                        )
+                    ),
+                    v,
+                    r,
+                    s
                 )
-            ),
-            v,
-            r,
-            s
-        );
+            )
+        ) revert RBK721__InvalidSignature();
         unchecked {
             userInfo.expires = (block.timestamp + expires_).toUint96();
         }

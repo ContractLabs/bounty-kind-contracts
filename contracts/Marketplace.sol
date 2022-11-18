@@ -136,7 +136,7 @@ contract Marketplace is
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
 
-        if (ITreasury(vault).supportedPayment(address(seller_.payment)))
+        if (!ITreasury(vault).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
         if (address(seller_.payment) != address(0)) {
             if (
