@@ -51,14 +51,19 @@ async function main(): Promise<void> {
   // console.log("Gacha upgraded to : ", await upgrades.erc1967.getImplementationAddress(gacha.address));
 
   // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-  // const nft: Contract = await upgrades.upgradeProxy(process.env.SPHERE || "", NFT);
+  // const nft: Contract = await upgrades.upgradeProxy(process.env.ITEM || "", NFT);
   // await nft.deployed();
   // console.log("NFT upgraded to : ", await upgrades.erc1967.getImplementationAddress(nft.address));
 
-  const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
-  const marketplace: Contract = await upgrades.upgradeProxy(process.env.MARKETPLACE || "", Marketplace);
-  await marketplace.deployed();
-  console.log("Marketplace upgraded to : ", await upgrades.erc1967.getImplementationAddress(marketplace.address));
+  // const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
+  // const marketplace: Contract = await upgrades.upgradeProxy(process.env.MARKETPLACE || "", Marketplace);
+  // await marketplace.deployed();
+  // console.log("Marketplace upgraded to : ", await upgrades.erc1967.getImplementationAddress(marketplace.address));
+
+  const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
+  const character: Contract = await upgrades.upgradeProxy(process.env.CHARACTER || "", RBK721);
+  await character.deployed();
+  console.log("RBK721 upgraded to : ", await upgrades.erc1967.getImplementationAddress(character.address));
 }
 
 main()
