@@ -27,9 +27,9 @@ abstract contract BK721 is
     using StringLib for uint256;
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
 
-    ///@dev value is equal to keccak256("Swap(address user,uint256[] fromIds,uint256 toId,uint256 deadline,uint256 nonce)")
+    ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
     bytes32 private constant __MERGE_TYPE_HASH =
-        0x3763ec6725b0aae11be7380c0fa9b2ac1c7658553079ea4adfb386f6d1245e13;
+        0x085ba72701c4339ed5b893f5421cabf9405901f059ff0c12083eb0b1df6bc19a;
 
     bytes32 public version;
     bytes32 private _baseTokenURIPtr;
@@ -48,8 +48,6 @@ abstract contract BK721 is
         bytes calldata signature_
     ) external {
         if (block.timestamp > deadline_) revert BK721__Expired();
-        if (_ownerOf[toId_].fromFirst20Bytes() != address(0))
-            revert BK721__AlreadyMinted();
 
         address user = _msgSender();
 
@@ -61,10 +59,10 @@ abstract contract BK721 is
                         abi.encode(
                             __MERGE_TYPE_HASH,
                             user,
-                            fromIds_,
                             toId_,
                             deadline_,
-                            _useNonce(user) // resitance to reentrancy
+                            _useNonce(user), // resitance to reentrancy
+                            fromIds_
                         )
                     ),
                     signature_
@@ -83,6 +81,8 @@ abstract contract BK721 is
             }
         }
 
+        if (_ownerOf[toId_].fromFirst20Bytes() != address(0))
+            revert BK721__AlreadyMinted();
         __mintTransfer(user, toId_);
 
         emit Merged(fromIds_, toId_);
