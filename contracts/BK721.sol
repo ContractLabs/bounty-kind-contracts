@@ -62,7 +62,7 @@ abstract contract BK721 is
                             toId_,
                             deadline_,
                             _useNonce(user), // resitance to reentrancy
-                            fromIds_
+                            keccak256(abi.encodePacked(fromIds_))
                         )
                     ),
                     signature_

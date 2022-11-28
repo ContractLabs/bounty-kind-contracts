@@ -5,32 +5,23 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 
 interface IINO {
-    error INO__ExternalCallFailed();
-    error INO__OnGoingCampaign();
     error INO__Unauthorized();
-    error INO__CampaignEnded();
+    error INO__OnGoingCampaign();
     error INO__InsuficcientAmount();
     error INO__AllocationExceeded();
+    error INO__ExternalCallFailed();
     error INO__UnsupportedPayment(address);
+    error INO__CampaignEndedOrNotYetStarted();
 
     struct Campaign {
-        //// slot #0 ////
         uint64 start;
         uint32 limit; // user buy limit
         address nft;
-        //// slot #1 ////
         uint64 end;
         uint64 maxSupply;
         uint128 typeNFT;
-        //// slot #2 ///
-        uint256 bitmap;
-        //// slot #3 ////
-        Payment[] payments;
-    }
-
-    struct Payment {
-        address paymentToken;
-        uint96 unitPrices;
+        uint96 usdPrice;
+        address[] payments;
     }
 
     struct Ticket {
@@ -66,6 +57,11 @@ interface IINO {
         uint64 indexed endAt
     );
 
+    function ticketId(
+        uint64 campaignId_,
+        uint32 amount_
+    ) external pure returns (uint256);
+
     function batchExecute(
         bytes[] calldata data_
     ) external returns (bytes[] memory);
@@ -84,7 +80,7 @@ interface IINO {
 
     function paymentOf(
         uint256 campaignId_
-    ) external view returns (Payment[] memory);
+    ) external view returns (address[] memory);
 
     function campaign(
         uint256 campaignId_

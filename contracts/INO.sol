@@ -17,6 +17,7 @@ import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20Pe
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/BitMap256.sol";
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
+import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
 contract INO is
     IINO,
@@ -28,6 +29,7 @@ contract INO is
     using SSTORE2 for *;
     using Bytes32Address for *;
     using BitMap256 for uint256;
+    using FixedPointMathLib for *;
 
     bytes32 public constant VERSION =
         0x3d277aecc6eab90208a3b105ab5e72d55c1c0c69bf67ccc488f44498aef41550;
@@ -59,6 +61,13 @@ contract INO is
         return _multiDelegatecall(data_);
     }
 
+    function ticketId(
+        uint64 campaignId_,
+        uint32 amount_
+    ) external pure returns (uint256) {
+        return (campaignId_ << 32) | (amount_ & 0xffffffff);
+    }
+
     function redeem(
         uint256 ticketId_,
         address user_,
@@ -71,10 +80,12 @@ contract INO is
         {
             uint256 campaignId = (ticketId_ >> 32) & ~uint64(0);
             _campaign = abi.decode(__campaigns[campaignId].read(), (Campaign));
+
             if (
                 _campaign.start > block.timestamp ||
                 _campaign.end < block.timestamp
-            ) revert INO__CampaignEnded();
+            ) revert INO__CampaignEndedOrNotYetStarted();
+
             amount = ticketId_ & ~uint32(0);
             __supplies[campaignId] -= amount;
             if (
@@ -84,20 +95,31 @@ contract INO is
             ) revert INO__AllocationExceeded();
         }
 
-        Payment memory payment;
-
-        uint256 pmt;
-        assembly {
-            pmt := token_
+        {
+            uint256 length = _campaign.payments.length;
+            bool contains;
+            for (uint256 i; i < length; ) {
+                if (token_ == _campaign.payments[i]) {
+                    contains = true;
+                    break;
+                }
+                unchecked {
+                    ++i;
+                }
+            }
+            if (!contains) revert INO__UnsupportedPayment(token_);
         }
 
-        if (
-            !_campaign.bitmap.unsafeGet(pmt) ||
-            (payment = _campaign.payments[pmt.index()]).paymentToken != token_
-        ) revert INO__UnsupportedPayment(token_);
-
-        if (value_ / payment.unitPrices < amount)
-            revert INO__InsuficcientAmount();
+        {
+            address _vault = vault;
+            // usd per token
+            uint256 unitPrice = ITreasury(_vault).priceOf(token_);
+            // amount tokens to usd
+            uint256 usdPrice = value_.mulDivDown(unitPrice, 1 ether);
+            // amount usd to pay
+            uint256 usdTotal = _campaign.usdPrice * amount;
+            if (usdPrice < usdTotal) revert INO__InsuficcientAmount();
+        }
 
         IBK721(_campaign.nft).safeMintBatch(user_, _campaign.typeNFT, amount);
 
@@ -109,22 +131,26 @@ contract INO is
         Campaign calldata campaign_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
         bytes32 ptr = __campaigns[campaignId_];
+
         if (
             ptr != 0 && abi.decode(ptr.read(), (Campaign)).end > block.timestamp
         ) revert INO__OnGoingCampaign();
+
         Campaign memory _campaign = campaign_;
+
         emit NewCampaign(
             campaignId_,
             _campaign.start += uint64(block.timestamp),
             _campaign.end += uint64(block.timestamp)
         );
+
         __supplies[campaignId_] = _campaign.maxSupply;
         __campaigns[campaignId_] = abi.encode(_campaign).write();
     }
 
     function paymentOf(
         uint256 campaignId_
-    ) public view returns (Payment[] memory) {
+    ) public view returns (address[] memory) {
         return abi.decode(__campaigns[campaignId_].read(), (Campaign)).payments;
     }
 
