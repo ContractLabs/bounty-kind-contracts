@@ -91,93 +91,93 @@ async function main(): Promise<void> {
     // await treasury.deployed();
     // console.log("Treasury deployed to: ", process.env.TREASURY);
 
-    const BK20: ContractFactory = await ethers.getContractFactory("BK20");
-    const ffe: Contract = await upgrades.deployProxy(
-        BK20,
-        [
-            process.env.AUTHORITY,
-            process.env.TREASURY,
-            "Forbidden Fruit Energy",
-            "FFE",
-            18,
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    );
-    await ffe.deployed();
-    console.log("FFE deployed to: ", ffe.address);
+    // const BK20: ContractFactory = await ethers.getContractFactory("BK20");
+    // const ffe: Contract = await upgrades.deployProxy(
+    //     BK20,
+    //     [
+    //         process.env.AUTHORITY,
+    //         process.env.TREASURY,
+    //         "Forbidden Fruit Energy",
+    //         "FFE",
+    //         18,
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await ffe.deployed();
+    // console.log("FFE deployed to: ", ffe.address);
 
-    const yu: Contract = await upgrades.deployProxy(
-        BK20,
-        [process.env.AUTHORITY, process.env.TREASURY, "YU", "YU", 18],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    );
-    await yu.deployed();
-    console.log("YU deployed to: ", yu.address);
+    // const yu: Contract = await upgrades.deployProxy(
+    //     BK20,
+    //     [process.env.AUTHORITY, process.env.TREASURY, "YU", "YU", 18],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await yu.deployed();
+    // console.log("YU deployed to: ", yu.address);
 
-    const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-    const sphere: Contract = await upgrades.deployProxy(
-        BKNFT,
-        [
-            "Bountykind Sphere",
-            "NFTSphere",
-            "https://dev-game-api.w3w.app/api/nfts/metadata/",
-            0,
-            process.env.YU || "",
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || "",
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    );
-    await sphere.deployed();
-    console.log("sphere deployed to: ", sphere.address);
+    // const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
+    // const sphere: Contract = await upgrades.deployProxy(
+    //     BKNFT,
+    //     [
+    //         "Bountykind Sphere",
+    //         "NFTSphere",
+    //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
+    //         0,
+    //         process.env.YU || "",
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || "",
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await sphere.deployed();
+    // console.log("sphere deployed to: ", sphere.address);
 
-    const item: Contract = await upgrades.deployProxy(
-        BKNFT,
-        [
-            "Bountykind Item",
-            "NFTItem",
-            "https://dev-game-api.w3w.app/api/nfts/metadata/",
-            0,
-            process.env.YU || "",
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || "",
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    );
-    await item.deployed();
-    console.log("item deployed to: ", item.address);
+    // const item: Contract = await upgrades.deployProxy(
+    //     BKNFT,
+    //     [
+    //         "Bountykind Item",
+    //         "NFTItem",
+    //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
+    //         0,
+    //         process.env.YU || "",
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || "",
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // );
+    // await item.deployed();
+    // console.log("item deployed to: ", item.address);
 
-    const RBK721: ContractFactory = await ethers.getContractFactory("RBK721")
-    const character: Contract = await upgrades.deployProxy(
-        RBK721,
-        [
-            "Bountykind Character",
-            "NFTCharacter",
-            "https://dev-game-api.w3w.app/api/nfts/metadata/",
-            0,
-            process.env.YU || "",
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || "",
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    )
-    await character.deployed();
-    console.log("character deployed to: ", character.address);
+    // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721")
+    // const character: Contract = await upgrades.deployProxy(
+    //     RBK721,
+    //     [
+    //         "Bountykind Character",
+    //         "NFTCharacter",
+    //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
+    //         0,
+    //         process.env.YU || "",
+    //         process.env.AUTHORITY || "",
+    //         process.env.TREASURY || "",
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "init",
+    //     },
+    // )
+    // await character.deployed();
+    // console.log("character deployed to: ", character.address);
 
     // const yu: Contract = await upgrades.deployProxy(
     //     BK20,
@@ -239,13 +239,13 @@ async function main(): Promise<void> {
     // await ino.deployed();
     // console.log("INO deployed to: ", ino.address);
 
-    // const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
-    // const commandGate: Contract = await CommandGate.deploy(
-    //     process.env.AUTHORITY || "",
-    //     process.env.TREASURY || ""
-    // );
-    // await commandGate.deployed();
-    // console.log("CommandGate deployed to: ", commandGate.address);
+    const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
+    const commandGate: Contract = await CommandGate.deploy(
+        process.env.AUTHORITY || "",
+        process.env.TREASURY || ""
+    );
+    await commandGate.deployed();
+    console.log("CommandGate deployed to: ", commandGate.address);
 
     // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
     // const factory: Contract = await Factory.deploy(

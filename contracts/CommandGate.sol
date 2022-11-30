@@ -37,6 +37,10 @@ contract CommandGate is
         ITreasury vault_
     ) payable Base(authority_, 0) FundForwarder(address(vault_)) {}
 
+    function isWhitelisted(address addr_) external view returns (bool) {
+        return __isWhitelisted.get(addr_.fillLast96Bits());
+    }
+
     function updateTreasury(
         ITreasury treasury_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
