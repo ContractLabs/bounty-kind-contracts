@@ -44,10 +44,17 @@ async function main(): Promise<void> {
     // await YU.deployed();
     // console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
 
-    // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
-    // const gacha: Contract = await upgrades.upgradeProxy(process.env.GACHA || "", Gacha, {unsafeAllow: ['delegatecall']});
-    // await gacha.deployed();
-    // console.log("Gacha upgraded to : ", await upgrades.erc1967.getImplementationAddress(gacha.address));
+    const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
+    const gacha: Contract = await upgrades.upgradeProxy(
+        process.env.GACHA || "",
+        Gacha,
+        {unsafeAllow: ["delegatecall"]},
+    );
+    await gacha.deployed();
+    console.log(
+        "Gacha upgraded to : ",
+        await upgrades.erc1967.getImplementationAddress(gacha.address),
+    );
 
     // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
     // const nft: Contract = await upgrades.upgradeProxy(process.env.ITEM || "", NFT);
@@ -64,17 +71,17 @@ async function main(): Promise<void> {
     // await character.deployed();
     // console.log("RBK721 upgraded to : ", await upgrades.erc1967.getImplementationAddress(character.address));
 
-    const INO: ContractFactory = await ethers.getContractFactory("INO");
-    const ino: Contract = await upgrades.upgradeProxy(
-        process.env.INO || "",
-        INO,
-        {unsafeAllow: ["delegatecall"]},
-    );
-    await ino.deployed();
-    console.log(
-        "INO upgraded to: ",
-        await upgrades.erc1967.getImplementationAddress(ino.address),
-    );
+    // const INO: ContractFactory = await ethers.getContractFactory("INO");
+    // const ino: Contract = await upgrades.upgradeProxy(
+    //     process.env.INO || "",
+    //     INO,
+    //     {unsafeAllow: ["delegatecall"]},
+    // );
+    // await ino.deployed();
+    // console.log(
+    //     "INO upgraded to: ",
+    //     await upgrades.erc1967.getImplementationAddress(ino.address),
+    // );
 }
 
 main()

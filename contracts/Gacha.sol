@@ -74,6 +74,15 @@ contract Gacha is
         }
     }
 
+    function supportedPayments(address payment_) external view returns (bool) {
+        uint256 payment;
+        assembly {
+            payment := payment_
+        }
+
+        return __supportedPayments.get(payment);
+    }
+
     function redeemTicket(
         uint256 id_,
         uint256 type_,
