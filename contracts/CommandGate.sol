@@ -60,7 +60,7 @@ contract CommandGate is
     ) external payable whenNotPaused {
         if (!__isWhitelisted.get(contract_.fillLast96Bits()))
             revert CommandGate__UnknownAddress(contract_);
-
+        _safeNativeTransfer(vault, msg.value);
         __executeTx(
             contract_,
             fnSig_,
@@ -86,12 +86,7 @@ contract CommandGate is
             revert CommandGate__UnknownAddress(contract_);
         address user = _msgSender();
         token_.permit(user, address(this), value_, deadline_, v, r, s);
-        _safeERC20TransferFrom(
-            IERC20(address(token_)),
-            user,
-            address(this),
-            value_
-        );
+        _safeERC20TransferFrom(IERC20(address(token_)), user, vault, value_);
         data_ = bytes.concat(data_, abi.encode(user, token_, value_));
         __executeTx(contract_, fnSig_, data_);
     }
@@ -114,11 +109,11 @@ contract CommandGate is
 
         if (!__isWhitelisted.get(target.fillLast96Bits()))
             revert CommandGate__UnknownAddress(target);
-
+        address token = _msgSender();
         __executeTx(
             target,
             fnSig,
-            bytes.concat(data, abi.encode(from_, _msgSender(), tokenId_))
+            bytes.concat(data, abi.encode(from_, token, tokenId_))
         );
 
         return this.onERC721Received.selector;

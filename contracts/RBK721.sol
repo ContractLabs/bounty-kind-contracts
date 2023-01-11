@@ -87,6 +87,8 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
             revert Rentable__OnlyOwnerOrApproved();
 
         UserInfo memory info = _users[tokenId_];
+        if (info.expires > block.timestamp && info.user != address(0))
+            revert RBK721__Rented();
         info.user = user_;
         unchecked {
             info.expires = (block.timestamp + expires_).toUint96();
