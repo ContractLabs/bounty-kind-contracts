@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 
-import "./internal-upgradeable/BaseUpgradeable.sol";
+import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
+
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
-import "./interfaces/ITreasury.sol";
+import "./interfaces/IBKTreasury.sol";
 import "./interfaces/IMarketplace.sol";
 
 import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
 contract Marketplace is
     IMarketplace,
-    BaseUpgradeable,
+    ManagerUpgradeable,
     SignableUpgradeable,
     ProxyCheckerUpgradeable,
     FundForwarderUpgradeable
@@ -34,18 +35,25 @@ contract Marketplace is
     uint256 public protocolFee;
     BitMapsUpgradeable.BitMap private __whitelistedContracts;
 
-    function init(
+    function initialize(
         uint256 feeFraction_,
         address[] calldata supportedContracts_,
-        IAuthority authority_,
-        ITreasury treasury_
+        IAuthority authority_
     ) external initializer {
         __setProtocolFee(feeFraction_);
         __whiteListContracts(supportedContracts_);
 
-        __FundForwarder_init_unchained(address(treasury_));
-        __Signable_init(type(Marketplace).name, "1");
-        __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
+        __Signable_init_unchained(type(Marketplace).name, "1");
+        __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
+        __FundForwarder_init_unchained(
+            IFundForwarderUpgradeable(address(authority_)).vault()
+        );
+    }
+
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
     }
 
     function whiteListContracts(
@@ -59,12 +67,6 @@ contract Marketplace is
     ) external onlyRole(Roles.OPERATOR_ROLE) {
         __setProtocolFee(feeFraction_);
         emit ProtocolFeeUpdated(feeFraction_);
-    }
-
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        _changeVault(address(treasury_));
     }
 
     function redeem(
@@ -110,12 +112,10 @@ contract Marketplace is
             revert Marketplace__UnsupportedNFT();
         if (seller_.nft.getApproved(seller_.tokenId) != address(this))
             seller_.nft.permit(
+                address(this),
                 seller_.tokenId,
                 seller_.deadline,
-                address(this),
-                seller_.v,
-                seller_.r,
-                seller_.s
+                seller_.signature
             );
 
         seller_.nft.safeTransferFrom(
@@ -136,7 +136,7 @@ contract Marketplace is
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
 
-        if (!ITreasury(vault).supportedPayment(address(seller_.payment)))
+        if (!IBKTreasury(vault).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
         if (address(seller_.payment) != address(0)) {
             if (
@@ -200,7 +200,7 @@ contract Marketplace is
         address[] calldata supportedContracts_
     ) private {
         uint256 length = supportedContracts_.length;
-        uint256[] memory uintContracts = new uint256[](length);
+        uint256[] memory uintContracts;
         address[] memory supportedContracts = supportedContracts_;
         assembly {
             uintContracts := supportedContracts
@@ -233,7 +233,7 @@ contract Marketplace is
                             seller_.payment,
                             seller_.unitPrice,
                             seller_.tokenId,
-                            _useNonce(buyer),
+                            _useNonce(buyer.fillLast12Bytes()),
                             deadline_
                         )
                     ),

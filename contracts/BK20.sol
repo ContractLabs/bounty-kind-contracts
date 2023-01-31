@@ -1,20 +1,27 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import {
     ERC20PermitUpgradeable
 } from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 
-import "./internal-upgradeable/BaseUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
+import {
+    Roles,
+    IAuthority,
+    ManagerUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
+import {
+    FundForwarderUpgradeable,
+    IFundForwarderUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK20.sol";
-import "./interfaces/ITreasury.sol";
+import "oz-custom/contracts/presets-upgradeable/interfaces/ITreasury.sol";
 
 contract BK20 is
     IBK20,
-    BaseUpgradeable,
+    ManagerUpgradeable,
     ERC20PermitUpgradeable,
     ERC20BurnableUpgradeable,
     FundForwarderUpgradeable
@@ -23,17 +30,23 @@ contract BK20 is
     bytes32 public constant VERSION =
         0x1e3e12e17166fc094bcca954a0694d36b0821cb6dff5e011e3ffef32e174d633;
 
-    function init(
+    function initialize(
         IAuthority authority_,
-        ITreasury treasury_,
         string calldata name_,
-        string calldata symbol_,
-        uint256 decimals_
+        string calldata symbol_
     ) external initializer {
         __ERC20Permit_init(name_);
-        __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(address(treasury_));
-        __ERC20_init_unchained(name_, symbol_, decimals_);
+        __Manager_init_unchained(authority_, 0);
+        __ERC20_init_unchained(name_, symbol_, 8);
+        __FundForwarder_init_unchained(
+            IFundForwarderUpgradeable(address(authority_)).vault()
+        );
+    }
+
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
     }
 
     function mint(
@@ -47,19 +60,11 @@ contract BK20 is
         address from,
         address to,
         uint256 amount
-    ) internal override {
-        _requireNotPaused();
-
+    ) internal override whenNotPaused {
         _checkBlacklist(to);
         _checkBlacklist(from);
         _checkBlacklist(_msgSender());
 
         super._beforeTokenTransfer(from, to, amount);
-    }
-
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        _changeVault(address(treasury_));
     }
 }

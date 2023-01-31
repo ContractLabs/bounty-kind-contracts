@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721RentableUpgradeable.sol";
 
 import "./interfaces/IRBK721.sol";
 
-import {IAuthority, ITreasury, BK721, Roles} from "./BK721.sol";
+import {IAuthority, IBKTreasury, BK721, Roles} from "./BK721.sol";
 
 contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     using SafeCastUpgradeable for uint256;
@@ -14,14 +14,13 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     bytes32 private constant __PERMIT_TYPE_HASH =
         0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078;
 
-    function init(
+    function initialize(
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority authority_,
-        ITreasury treasury_
+        IAuthority authority_
     ) external initializer {
         __BK_init(
             name_,
@@ -30,7 +29,6 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
             feeAmt_,
             feeToken_,
             authority_,
-            treasury_,
             /// @dev value is equal to keccak256("RentableBK_v1")
             0xb2968efe7e8797044f984fc229747059269f7279ae7d4bb4737458dbb15e0f41
         );
@@ -40,9 +38,7 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         uint256 tokenId,
         uint64 expires_,
         uint256 deadline_,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        bytes calldata signature_
     ) external override whenNotPaused {
         if (block.timestamp > deadline_) revert RBK721__Expired();
 
@@ -66,9 +62,7 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
                             _useNonce(tokenId)
                         )
                     ),
-                    v,
-                    r,
-                    s
+                    signature_
                 )
             )
         ) revert RBK721__InvalidSignature();

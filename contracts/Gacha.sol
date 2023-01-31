@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
-import "./internal-upgradeable/BaseUpgradeable.sol";
+import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
 import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
@@ -10,7 +10,7 @@ import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.so
 
 import "./interfaces/IGacha.sol";
 import "./interfaces/IBK721.sol";
-import "./interfaces/ITreasury.sol";
+import "./interfaces/IBKTreasury.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
@@ -19,7 +19,7 @@ import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgr
 
 contract Gacha is
     IGacha,
-    BaseUpgradeable,
+    ManagerUpgradeable,
     ProxyCheckerUpgradeable,
     TransferableUpgradeable,
     FundForwarderUpgradeable,
@@ -33,13 +33,12 @@ contract Gacha is
     BitMapsUpgradeable.BitMap private __supportedPayments;
     mapping(uint256 => mapping(address => uint96)) private __unitPrices;
 
-    function init(
-        IAuthority authority_,
-        ITreasury vault_
-    ) external initializer {
+    function initialize(IAuthority authority_) external initializer {
         __MultiDelegatecall_init_unchained();
-        __FundForwarder_init_unchained(address(vault_));
-        __Base_init_unchained(authority_, Roles.TREASURER_ROLE);
+        __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
+        __FundForwarder_init_unchained(
+            IFundForwarderUpgradeable(address(authority_)).vault()
+        );
     }
 
     function batchExecute(
@@ -48,26 +47,26 @@ contract Gacha is
         return _multiDelegatecall(data_);
     }
 
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        _changeVault(address(treasury_));
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
     }
 
     function updateTicketPrice(
         uint256 typeId_,
-        address[] calldata supportedPayments,
+        address[] calldata supportedPayments_,
         uint96[] calldata unitPrices_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        uint256 length = supportedPayments.length;
+        uint256 length = supportedPayments_.length;
         uint256[] memory uintPayments;
-        address[] memory _supportedPayments = supportedPayments;
+        address[] memory _supportedPayments = supportedPayments_;
         assembly {
             uintPayments := _supportedPayments
         }
         for (uint256 i; i < length; ) {
             __supportedPayments.set(uintPayments[i]);
-            __unitPrices[typeId_][supportedPayments[i]] = unitPrices_[i];
+            __unitPrices[typeId_][supportedPayments_[i]] = unitPrices_[i];
             unchecked {
                 ++i;
             }
@@ -96,7 +95,7 @@ contract Gacha is
         if (!__supportedPayments.get(token_.fillLast96Bits()))
             revert Gacha__InvalidPayment();
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId)) {
-            uint256 unitPrice = ITreasury(vault).priceOf(token_) *
+            uint256 unitPrice = IBKTreasury(vault).priceOf(token_) *
                 __unitPrices[type_][token_];
             if (unitPrice != value_) revert Gacha__InsufficientAmount();
         }
@@ -119,7 +118,8 @@ contract Gacha is
             IWithdrawableUpgradeable(vault).withdraw(
                 token_,
                 ticket.account,
-                value_
+                value_,
+                ""
             );
         else IBK721(token_).safeMint(ticket.account, value_);
 

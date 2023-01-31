@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/internal/FundForwarder.sol";
 
@@ -7,6 +7,8 @@ import "./interfaces/INotifyGate.sol";
 
 contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
     constructor(address vault_) payable FundForwarder(vault_) {}
+
+    function changeVault(address vault_) external override {}
 
     function notifyWithNative(bytes calldata message_) external payable {
         _safeNativeTransfer(vault, msg.value);

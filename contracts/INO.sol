@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
-import "./internal-upgradeable/BaseUpgradeable.sol";
+import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import "./interfaces/IINO.sol";
 import "./interfaces/IBK721.sol";
+import "./interfaces/IBKTreasury.sol";
 
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+import {
+    IERC20PermitUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/BitMap256.sol";
@@ -21,7 +23,7 @@ import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
 contract INO is
     IINO,
-    BaseUpgradeable,
+    ManagerUpgradeable,
     FundForwarderUpgradeable,
     ReentrancyGuardUpgradeable,
     MultiDelegatecallUpgradeable
@@ -45,14 +47,19 @@ contract INO is
     // buyer => campaignId => purchasedAmt
     mapping(bytes32 => mapping(uint256 => uint256)) private __purchasedAmt;
 
-    function init(
-        IAuthority authority_,
-        ITreasury treasury_
-    ) external initializer {
+    function initialize(IAuthority authority_) external initializer {
         __ReentrancyGuard_init_unchained();
         __MultiDelegatecall_init_unchained();
-        __Base_init_unchained(authority_, 0);
-        __FundForwarder_init_unchained(address(treasury_));
+        __Manager_init_unchained(authority_, 0);
+        __FundForwarder_init_unchained(
+            IFundForwarderUpgradeable(address(authority_)).vault()
+        );
+    }
+
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
     }
 
     function batchExecute(
@@ -113,7 +120,7 @@ contract INO is
         {
             address _vault = vault;
             // usd per token
-            uint256 unitPrice = ITreasury(_vault).priceOf(token_);
+            uint256 unitPrice = IBKTreasury(_vault).priceOf(token_);
             // amount tokens to usd
             uint256 usdPrice = value_.mulDivDown(unitPrice, 1 ether);
             // amount usd to pay
@@ -160,12 +167,6 @@ contract INO is
         bytes32 ptr = __campaigns[campaignId_];
         if (ptr == 0) return campaign_;
         campaign_ = abi.decode(ptr.read(), (Campaign));
-    }
-
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        _changeVault(address(treasury_));
     }
 
     uint256[47] private __gap;

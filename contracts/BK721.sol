@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721PermitUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
-import "./internal-upgradeable/BaseUpgradeable.sol";
+import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProtocolFeeUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK721.sol";
-import "./interfaces/ITreasury.sol";
+import "./interfaces/IBKTreasury.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/StringLib.sol";
 
 abstract contract BK721 is
     IBK721,
-    BaseUpgradeable,
+    ManagerUpgradeable,
     ProtocolFeeUpgradeable,
     ERC721PermitUpgradeable,
     FundForwarderUpgradeable,
@@ -35,6 +35,12 @@ abstract contract BK721 is
     bytes32 private _baseTokenURIPtr;
     mapping(uint256 => uint256) public typeIdTrackers;
 
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
+    }
+
     function setBaseURI(
         string calldata baseURI_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
@@ -50,7 +56,6 @@ abstract contract BK721 is
         if (block.timestamp > deadline_) revert BK721__Expired();
 
         address user = _msgSender();
-
         if (
             !_hasRole(
                 Roles.SIGNER_ROLE,
@@ -61,7 +66,7 @@ abstract contract BK721 is
                             user,
                             toId_,
                             deadline_,
-                            _useNonce(user), // resitance to reentrancy
+                            _useNonce(user.fillLast12Bytes()), // @dev resitance to reentrancy
                             keccak256(abi.encodePacked(fromIds_))
                         )
                     ),
@@ -83,22 +88,17 @@ abstract contract BK721 is
 
         if (_ownerOf[toId_].fromFirst20Bytes() != address(0))
             revert BK721__AlreadyMinted();
+
         __mintTransfer(user, toId_);
 
         emit Merged(fromIds_, toId_);
-    }
-
-    function updateTreasury(
-        ITreasury treasury_
-    ) external override onlyRole(Roles.OPERATOR_ROLE) {
-        _changeVault(address(treasury_));
     }
 
     function setFee(
         IERC20Upgradeable feeToken_,
         uint256 feeAmt_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        if (!ITreasury(vault).supportedPayment(address(feeToken_)))
+        if (!IBKTreasury(vault).supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
         _setRoyalty(feeToken_, uint96(feeAmt_));
         emit FeeUpdated(feeToken_, feeAmt_);
@@ -131,15 +131,15 @@ abstract contract BK721 is
         uint256 length_
     ) external onlyRole(Roles.MINTER_ROLE) returns (uint256[] memory tokenIds) {
         tokenIds = new uint256[](length_);
-        uint256 ptr = nextIdFromType(typeId_);
+        uint256 cursor = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                _mint(to_, tokenIds[i] = ptr);
-                ++ptr;
+                _mint(to_, tokenIds[i] = cursor);
+                ++cursor;
                 ++i;
             }
         }
-        typeIdTrackers[typeId_] = ptr;
+        typeIdTrackers[typeId_] = cursor;
         emit BatchMinted(to_, length_);
     }
 
@@ -149,15 +149,15 @@ abstract contract BK721 is
         uint256 length_
     ) external onlyRole(Roles.PROXY_ROLE) returns (uint256[] memory tokenIds) {
         tokenIds = new uint256[](length_);
-        uint256 ptr = nextIdFromType(typeId_);
+        uint256 cursor = nextIdFromType(typeId_);
         for (uint256 i; i < length_; ) {
             unchecked {
-                _safeMint(to_, tokenIds[i] = ptr);
-                ++ptr;
+                _safeMint(to_, tokenIds[i] = cursor);
+                ++cursor;
                 ++i;
             }
         }
-        typeIdTrackers[typeId_] = ptr;
+        typeIdTrackers[typeId_] = cursor;
         emit BatchMinted(to_, length_);
     }
 
@@ -220,13 +220,14 @@ abstract contract BK721 is
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_,
-        ITreasury treasury_,
         bytes32 version_
     ) internal onlyInitializing {
         __ERC721Permit_init(name_, symbol_);
-        __Base_init_unchained(authority_, 0);
+        __Manager_init_unchained(authority_, 0);
         __ERC721_init_unchained(name_, symbol_);
-        __FundForwarder_init_unchained(address(treasury_));
+        __FundForwarder_init_unchained(
+            IFundForwarderUpgradeable(address(authority_)).vault()
+        );
         __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
     }
 
@@ -237,8 +238,8 @@ abstract contract BK721 is
         bytes32 version_
     ) internal onlyInitializing {
         version = version_;
-        _setRoyalty(feeToken_, uint96(feeAmt_));
         _setBaseURI(baseURI_);
+        _setRoyalty(feeToken_, uint96(feeAmt_));
     }
 
     function _beforeTokenTransfer(
@@ -261,7 +262,7 @@ abstract contract BK721 is
         if (
             from_ != address(0) &&
             to_ != address(0) &&
-            !authority().hasRole(Roles.OPERATOR_ROLE, sender)
+            !_hasRole(Roles.OPERATOR_ROLE, sender)
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
             if (feeAmt == 0) return;
@@ -288,26 +289,24 @@ abstract contract BK721 is
 }
 
 interface IBKNFT {
-    function init(
+    function initialize(
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority authority_,
-        ITreasury treasury_
+        IAuthority authority_
     ) external;
 }
 
 contract BKNFT is IBKNFT, BK721 {
-    function init(
+    function initialize(
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
         uint256 feeAmt_,
         IERC20Upgradeable feeToken_,
-        IAuthority authority_,
-        ITreasury treasury_
+        IAuthority authority_
     ) external initializer {
         __BK_init(
             name_,
@@ -316,9 +315,10 @@ contract BKNFT is IBKNFT, BK721 {
             feeAmt_,
             feeToken_,
             authority_,
-            treasury_,
             /// @dev value is equal to keccak256("BKNFT_v1")
             0x379792d4af837d435deaf8f2b7ca3c489899f24f02d5309487fe8be0aa778cca
         );
     }
+
+    uint256[50] private __gap;
 }

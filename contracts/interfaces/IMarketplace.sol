@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
@@ -14,14 +14,12 @@ interface IMarketplace {
     error Marketplace__UnsupportedPayment();
 
     struct Seller {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
         uint256 tokenId;
         uint256 deadline;
         uint256 unitPrice;
         IERC20Upgradeable payment;
         IERC721PermitUpgradeable nft;
+        bytes signature;
     }
 
     struct Buyer {

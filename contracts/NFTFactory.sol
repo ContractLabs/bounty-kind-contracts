@@ -1,29 +1,34 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "oz-custom/contracts/internal/Cloner.sol";
 import "oz-custom/contracts/internal/FundForwarder.sol";
 import "oz-custom/contracts/internal/MultiDelegatecall.sol";
 
-import "./internal/Base.sol";
+import "oz-custom/contracts/presets/base/Manager.sol";
 
-import "./interfaces/ITreasury.sol";
+import "./interfaces/IBKTreasury.sol";
 import {IBKNFT} from "./BK721.sol";
 
-contract NFTFactory is Base, Cloner, FundForwarder, MultiDelegatecall {
+contract NFTFactory is Manager, Cloner, FundForwarder, MultiDelegatecall {
     bytes32 public constant VERSION =
         0xc42665b4953fdd2cb30dcf1befa0156911485f4e84e3f90b1360ddfb4fa2f766;
 
     constructor(
         address implement_,
-        IAuthority authority_,
-        ITreasury vault_
+        IAuthority authority_
     )
         payable
         Cloner(implement_)
-        FundForwarder(address(vault_))
-        Base(authority_, Roles.FACTORY_ROLE)
+        Manager(authority_, Roles.FACTORY_ROLE)
+        FundForwarder(IFundForwarder(address(authority_)).vault())
     {}
+
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
+    }
 
     function setImplement(
         address implement_
@@ -45,7 +50,7 @@ contract NFTFactory is Base, Cloner, FundForwarder, MultiDelegatecall {
         return
             _clone(
                 salt,
-                IBKNFT.init.selector,
+                IBKNFT.initialize.selector,
                 abi.encode(name_, symbol_, baseURI_, feeAmt_, feeToken_)
             );
     }
