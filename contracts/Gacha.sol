@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+
 import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
 import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import "./interfaces/IGacha.sol";
@@ -22,7 +23,7 @@ contract Gacha is
     ManagerUpgradeable,
     ProxyCheckerUpgradeable,
     TransferableUpgradeable,
-    FundForwarderUpgradeable,
+    BKFundForwarderUpgradeable,
     MultiDelegatecallUpgradeable
 {
     using Bytes32Address for *;
@@ -58,12 +59,12 @@ contract Gacha is
         address[] calldata supportedPayments_,
         uint96[] calldata unitPrices_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        uint256 length = supportedPayments_.length;
         uint256[] memory uintPayments;
         address[] memory _supportedPayments = supportedPayments_;
         assembly {
             uintPayments := _supportedPayments
         }
+        uint256 length = supportedPayments_.length;
         for (uint256 i; i < length; ) {
             __supportedPayments.set(uintPayments[i]);
             __unitPrices[typeId_][supportedPayments_[i]] = unitPrices_[i];
@@ -83,11 +84,11 @@ contract Gacha is
     }
 
     function redeemTicket(
-        uint256 id_,
-        uint256 type_,
         address user_,
         address token_,
-        uint256 value_
+        uint256 value_,
+        uint256 id_,
+        uint256 type_
     ) external onlyRole(Roles.PROXY_ROLE) {
         Ticket memory ticket = __tickets[id_];
         if (ticket.account != address(0) || ticket.isUsed)
@@ -95,7 +96,7 @@ contract Gacha is
         if (!__supportedPayments.get(token_.fillLast96Bits()))
             revert Gacha__InvalidPayment();
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId)) {
-            uint256 unitPrice = IBKTreasury(vault).priceOf(token_) *
+            uint256 unitPrice = IBKTreasury(vault()).priceOf(token_) *
                 __unitPrices[type_][token_];
             if (unitPrice != value_) revert Gacha__InsufficientAmount();
         }
@@ -115,11 +116,11 @@ contract Gacha is
         if (ticket.account == address(0)) revert Gacha__InvalidTicket();
         if (ticket.isUsed) revert Gacha__PurchasedTicket();
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
-            IWithdrawableUpgradeable(vault).withdraw(
+            IWithdrawableUpgradeable(vault()).withdraw(
                 token_,
                 ticket.account,
                 value_,
-                ""
+                "SAFE-WITHDRAW"
             );
         else IBK721(token_).safeMint(ticket.account, value_);
 

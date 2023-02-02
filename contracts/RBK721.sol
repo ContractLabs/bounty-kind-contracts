@@ -18,7 +18,7 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
-        uint256 feeAmt_,
+        uint96 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_
     ) external initializer {

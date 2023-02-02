@@ -1,17 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "oz-custom/contracts/internal/FundForwarder.sol";
+import "./internal/BKFundForwarder.sol";
+
+import "oz-custom/contracts/presets/base/Manager.sol";
+import "oz-custom/contracts/oz/security/ReentrancyGuard.sol";
 
 import "./interfaces/INotifyGate.sol";
+import "oz-custom/contracts/internal/interfaces/IWithdrawable.sol";
 
-contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
-    constructor(address vault_) payable FundForwarder(vault_) {}
+contract NotifyGate is
+    Manager,
+    INotifyGate,
+    ReentrancyGuard,
+    BKFundForwarder,
+    ERC721TokenReceiver
+{
+    constructor(
+        IAuthority authority_,
+        address vault_
+    ) payable ReentrancyGuard() FundForwarder(vault_) Manager(authority_, 0) {}
 
-    function changeVault(address vault_) external override {}
+    function changeVault(
+        address vault_
+    ) external override onlyRole(Roles.TREASURER_ROLE) {
+        _changeVault(vault_);
+    }
 
     function notifyWithNative(bytes calldata message_) external payable {
-        _safeNativeTransfer(vault, msg.value);
+        _safeNativeTransfer(vault(), msg.value);
         emit Notified(_msgSender(), message_, address(0), msg.value);
     }
 
@@ -22,7 +39,12 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
         bytes calldata message_
     ) external override returns (bytes4) {
         address nft = _msgSender();
-        IERC721(nft).safeTransferFrom(address(this), vault, tokenId_);
+        IERC721(nft).safeTransferFrom(
+            address(this),
+            vault(),
+            tokenId_,
+            safeTransferHeader()
+        );
 
         emit Notified(from_, message_, nft, tokenId_);
 
@@ -37,7 +59,7 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
         bytes32 r,
         bytes32 s,
         bytes calldata message_
-    ) external {
+    ) external nonReentrant {
         address user = _msgSender();
         if (token_.allowance(user, address(this)) < value_) {
             IERC20Permit(address(token_)).permit(
@@ -50,8 +72,21 @@ contract NotifyGate is INotifyGate, FundForwarder, ERC721TokenReceiver {
                 s
             );
         }
-        _safeERC20TransferFrom(token_, user, vault, value_);
+
+        _safeERC20TransferFrom(token_, user, vault(), value_);
 
         emit Notified(user, message_, address(token_), value_);
+    }
+
+    function _afterRecover(
+        address vault_,
+        address token_,
+        bytes memory value_
+    ) internal override {
+        IWithdrawable(vault_).notifyERC20Transfer(
+            token_,
+            abi.decode(value_, (uint256)),
+            safeRecoverHeader()
+        );
     }
 }

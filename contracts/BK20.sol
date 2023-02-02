@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {
+    BKFundForwarderUpgradeable,
+    IFundForwarderUpgradeable
+} from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+
 import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import {
     ERC20PermitUpgradeable
@@ -11,10 +16,6 @@ import {
     IAuthority,
     ManagerUpgradeable
 } from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
-import {
-    FundForwarderUpgradeable,
-    IFundForwarderUpgradeable
-} from "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK20.sol";
 import "oz-custom/contracts/presets-upgradeable/interfaces/ITreasury.sol";
@@ -24,7 +25,7 @@ contract BK20 is
     ManagerUpgradeable,
     ERC20PermitUpgradeable,
     ERC20BurnableUpgradeable,
-    FundForwarderUpgradeable
+    BKFundForwarderUpgradeable
 {
     ///@dev value is equal to keccak256("RBK20_v2")
     bytes32 public constant VERSION =
@@ -37,7 +38,7 @@ contract BK20 is
     ) external initializer {
         __ERC20Permit_init(name_);
         __Manager_init_unchained(authority_, 0);
-        __ERC20_init_unchained(name_, symbol_, 8);
+        __ERC20_init_unchained(name_, symbol_, 18);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
@@ -67,4 +68,6 @@ contract BK20 is
 
         super._beforeTokenTransfer(from, to, amount);
     }
+
+    uint256[50] private __gap;
 }

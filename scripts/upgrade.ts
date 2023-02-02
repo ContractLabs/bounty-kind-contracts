@@ -35,14 +35,17 @@ async function main(): Promise<void> {
     // await treasury.deployed();
     // console.log("Treasury upgraded to : ", await upgrades.erc1967.getImplementationAddress(treasury.address));
 
-    // const BK20: ContractFactory = await ethers.getContractFactory("BK20");
-    // const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
-    // await FFE.deployed();
-    // console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
+    // const Authority: ContractFactory = await ethers.getContractFactory("BKAuthority")
+    // const authority: Contract = await
 
-    // const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
-    // await YU.deployed();
-    // console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
+    const BK20: ContractFactory = await ethers.getContractFactory("BK20");
+    const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
+    await FFE.deployed();
+    console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
+
+    const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
+    await YU.deployed();
+    console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
 
     // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
     // const gacha: Contract = await upgrades.upgradeProxy(
@@ -66,10 +69,10 @@ async function main(): Promise<void> {
     // await marketplace.deployed();
     // console.log("Marketplace upgraded to : ", await upgrades.erc1967.getImplementationAddress(marketplace.address));
 
-    const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
-    const character: Contract = await upgrades.upgradeProxy(process.env.CHARACTER || "", RBK721);
-    await character.deployed();
-    console.log("RBK721 upgraded to : ", await upgrades.erc1967.getImplementationAddress(character.address));
+    // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
+    // const character: Contract = await upgrades.upgradeProxy(process.env.CHARACTER || "", RBK721);
+    // await character.deployed();
+    // console.log("RBK721 upgraded to : ", await upgrades.erc1967.getImplementationAddress(character.address));
 
     // const INO: ContractFactory = await ethers.getContractFactory("INO");
     // const ino: Contract = await upgrades.upgradeProxy(

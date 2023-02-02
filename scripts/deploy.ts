@@ -1,18 +1,42 @@
 import * as dotenv from "dotenv";
 import {Contract, ContractFactory} from "ethers";
+import {defaultAbiCoder} from "ethers/lib/utils";
 import {ethers, upgrades} from "hardhat";
 
 dotenv.config();
 
 async function main(): Promise<void> {
-    // const Governance: ContractFactory = await ethers.getContractFactory("GovernanceUpgradeable");
-    // const goverance: Contract = await upgrades.deployProxy(
-    //     Governance,
-    //     [],
-    //     { kind: "uups", initializer: "init" },
+    // const Authority: ContractFactory = await ethers.getContractFactory(
+    //     "BKAuthority",
     // );
-    // await goverance.deployed();
-    // console.log("Governance deployed to : ", goverance.address);
+    // const authority: Contract = await upgrades.deployProxy(
+    //     Authority,
+    //     [
+    //         "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6",
+    //         defaultAbiCoder.encode(
+    //             ["address"],
+    //             ["0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"],
+    //         ),
+    //         [
+    //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
+    //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
+    //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
+    //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
+    //         ],
+    //         [
+    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+    //             "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929",
+    //             "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07",
+    //             "0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a",
+    //         ],
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "initialize",
+    //     },
+    // );
+    // await authority.deployed();
+    // console.log("Authority deployed to : ", authority.address);
 
     // const Treasury: ContractFactory = await ethers.getContractFactory("TreasuryUpgradeable");
     // const treasury: Contract = await upgrades.deployProxy(
@@ -96,14 +120,12 @@ async function main(): Promise<void> {
     //     BK20,
     //     [
     //         process.env.AUTHORITY,
-    //         process.env.TREASURY,
     //         "Forbidden Fruit Energy",
-    //         "FFE",
-    //         18,
+    //         "FFE"
     //     ],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
     // );
     // await ffe.deployed();
@@ -111,16 +133,16 @@ async function main(): Promise<void> {
 
     // const yu: Contract = await upgrades.deployProxy(
     //     BK20,
-    //     [process.env.AUTHORITY, process.env.TREASURY, "YU", "YU", 18],
+    //     [process.env.AUTHORITY, "YU", "YU"],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
     // );
     // await yu.deployed();
     // console.log("YU deployed to: ", yu.address);
 
-    const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
+    // const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
     // const sphere: Contract = await upgrades.deployProxy(
     //     BKNFT,
     //     [
@@ -130,11 +152,10 @@ async function main(): Promise<void> {
     //         0,
     //         process.env.YU || "",
     //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || "",
     //     ],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
     // );
     // await sphere.deployed();
@@ -149,36 +170,34 @@ async function main(): Promise<void> {
     //         0,
     //         process.env.YU || "",
     //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || "",
     //     ],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
     // );
     // await item.deployed();
     // console.log("item deployed to: ", item.address);
 
-    const equipment: Contract = await upgrades.deployProxy(
-        BKNFT,
-        [
-            "Bountykind Equipment",
-            "NFTEquip",
-            "https://dev-game-api.w3w.app/api/nfts/metadata/",
-            0,
-            process.env.YU || "",
-            process.env.AUTHORITY || "",
-            process.env.TREASURY || "",
-        ],
-        {
-            kind: "uups",
-            initializer: "init",
-        },
-    );
-    await equipment.deployed();
-    console.log("equipment deployed to: ", equipment.address);
+    // const equipment: Contract = await upgrades.deployProxy(
+    //     BKNFT,
+    //     [
+    //         "Bountykind Equipment",
+    //         "NFTEquip",
+    //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
+    //         0,
+    //         process.env.YU || "",
+    //         process.env.AUTHORITY || "",
+    //     ],
+    //     {
+    //         kind: "uups",
+    //         initializer: "initialize",
+    //     },
+    // );
+    // await equipment.deployed();
+    // console.log("equipment deployed to: ", equipment.address);
 
-    // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721")
+    // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
     // const character: Contract = await upgrades.deployProxy(
     //     RBK721,
     //     [
@@ -188,13 +207,12 @@ async function main(): Promise<void> {
     //         0,
     //         process.env.YU || "",
     //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || "",
     //     ],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
-    // )
+    // );
     // await character.deployed();
     // console.log("character deployed to: ", character.address);
 
@@ -209,34 +227,37 @@ async function main(): Promise<void> {
     // await yu.deployed();
     // console.log("YU deployed to: ", yu.address);
 
-    // const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
+    // const Marketplace: ContractFactory = await ethers.getContractFactory(
+    //     "Marketplace",
+    // );
     // const marketplace: Contract = await upgrades.deployProxy(
     //     Marketplace,
     //     [
     //         0,
-    //         [sphere.address, item.address, character.address],
+    //         [
+    //             process.env.SPHERE,
+    //             process.env.ITEM,
+    //             process.env.CHARACTER,
+    //             process.env.SPHERE_NEW,
+    //         ],
     //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || ""
     //     ],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
+    //         initializer: "initialize",
     //     },
     // );
     // await marketplace.deployed();
     // console.log("Marketplace deployed to: ", marketplace.address);
 
-    // const Gacha : ContractFactory = await ethers.getContractFactory("Gacha");
+    // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
     // const gacha: Contract = await upgrades.deployProxy(
     //     Gacha,
-    //     [
-    //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || ""
-    //     ],
+    //     [process.env.AUTHORITY || ""],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
-    //         unsafeAllow: ['delegatecall']
+    //         initializer: "initialize",
+    //         unsafeAllow: ["delegatecall"],
     //     },
     // );
     // await gacha.deployed();
@@ -258,10 +279,13 @@ async function main(): Promise<void> {
     // await ino.deployed();
     // console.log("INO deployed to: ", ino.address);
 
-    // const CommandGate : ContractFactory = await ethers.getContractFactory("CommandGate");
+    // const CommandGate: ContractFactory = await ethers.getContractFactory(
+    //     "CommandGate",
+    // );
     // const commandGate: Contract = await CommandGate.deploy(
     //     process.env.AUTHORITY || "",
-    //     process.env.TREASURY || ""
+    //     process.env.TREASURY || "",
+    //     [],
     // );
     // await commandGate.deployed();
     // console.log("CommandGate deployed to: ", commandGate.address);
@@ -269,11 +293,20 @@ async function main(): Promise<void> {
     // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
     // const factory: Contract = await Factory.deploy(
     //     ethers.constants.AddressZero,
-    //     process.env.AUTHORITY || "",
-    //     process.env.TREASURY || ""
+    //     process.env.AUTHORITY || ""
     // );
     // await factory.deployed();
     // console.log("Factory deployed to: ", factory.address);
+
+    const NotifyGate: ContractFactory = await ethers.getContractFactory(
+        "NotifyGate",
+    );
+    const notifyGate: Contract = await NotifyGate.deploy(
+        process.env.AUTHORITY || "",
+        process.env.TREASURY || ""
+    );
+    await notifyGate.deployed();
+    console.log("NotifyGate deployed to: ", notifyGate.address);
 }
 
 main()

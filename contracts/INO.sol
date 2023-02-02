@@ -5,7 +5,7 @@ import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.s
 
 import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
+import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import "./interfaces/IINO.sol";
@@ -24,7 +24,7 @@ import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 contract INO is
     IINO,
     ManagerUpgradeable,
-    FundForwarderUpgradeable,
+    BKFundForwarderUpgradeable,
     ReentrancyGuardUpgradeable,
     MultiDelegatecallUpgradeable
 {
@@ -118,7 +118,7 @@ contract INO is
         }
 
         {
-            address _vault = vault;
+            address _vault = vault();
             // usd per token
             uint256 unitPrice = IBKTreasury(_vault).priceOf(token_);
             // amount tokens to usd

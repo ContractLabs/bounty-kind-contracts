@@ -5,7 +5,7 @@ import {
     Roles,
     Treasury,
     IAuthority
-} from "oz-custom/contracts/presets/Treasury.sol";
+} from "oz-custom/contracts/presets-upgradeable/Treasury.sol";
 
 import "./interfaces/IBKTreasury.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";

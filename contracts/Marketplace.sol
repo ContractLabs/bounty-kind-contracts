@@ -8,10 +8,11 @@ import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 
 import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
+import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
 
 import "./interfaces/IBKTreasury.sol";
 import "./interfaces/IMarketplace.sol";
+import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
@@ -20,7 +21,7 @@ contract Marketplace is
     ManagerUpgradeable,
     SignableUpgradeable,
     ProxyCheckerUpgradeable,
-    FundForwarderUpgradeable
+    BKFundForwarderUpgradeable
 {
     using Bytes32Address for *;
     using FixedPointMathLib for uint256;
@@ -95,6 +96,10 @@ contract Marketplace is
         );
     }
 
+    function nonces(address account_) external view returns (uint256) {
+        return _nonces[account_.fillLast12Bytes()];
+    }
+
     function isWhitelisted(address addr_) external view returns (bool) {
         return __whitelistedContracts.get(addr_.fillLast96Bits());
     }
@@ -122,7 +127,7 @@ contract Marketplace is
             sellerAddr_,
             buyerAddr_,
             seller_.tokenId,
-            ""
+            safeTransferHeader()
         );
     }
 
@@ -136,7 +141,7 @@ contract Marketplace is
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
 
-        if (!IBKTreasury(vault).supportedPayment(address(seller_.payment)))
+        if (!IBKTreasury(vault()).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
         if (address(seller_.payment) != address(0)) {
             if (
@@ -162,16 +167,24 @@ contract Marketplace is
                     percentageFraction
                 )
             );
-            if (_protocolFee != 0)
+            if (_protocolFee != 0) {
+                address _vault = vault();
+                uint256 received;
                 _safeERC20TransferFrom(
                     seller_.payment,
                     buyerAddr_,
-                    vault,
-                    seller_.unitPrice.mulDivDown(
+                    _vault,
+                    received = seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction
                     )
                 );
+                IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
+                    address(seller_.payment),
+                    received,
+                    safeTransferHeader()
+                );
+            }
 
             if (msg.value == 0) return;
             _safeNativeTransfer(buyerAddr_, msg.value);
@@ -185,7 +198,7 @@ contract Marketplace is
             );
             if (_protocolFee != 0)
                 _safeNativeTransfer(
-                    vault,
+                    vault(),
                     seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction

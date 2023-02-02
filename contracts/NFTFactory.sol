@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./internal/BKFundForwarder.sol";
+
 import "oz-custom/contracts/internal/Cloner.sol";
-import "oz-custom/contracts/internal/FundForwarder.sol";
 import "oz-custom/contracts/internal/MultiDelegatecall.sol";
 
 import "oz-custom/contracts/presets/base/Manager.sol";
@@ -10,7 +11,7 @@ import "oz-custom/contracts/presets/base/Manager.sol";
 import "./interfaces/IBKTreasury.sol";
 import {IBKNFT} from "./BK721.sol";
 
-contract NFTFactory is Manager, Cloner, FundForwarder, MultiDelegatecall {
+contract NFTFactory is Manager, Cloner, BKFundForwarder, MultiDelegatecall {
     bytes32 public constant VERSION =
         0xc42665b4953fdd2cb30dcf1befa0156911485f4e84e3f90b1360ddfb4fa2f766;
 

@@ -40,6 +40,8 @@ interface IMarketplace {
         uint256 unitPrice
     );
 
+    function nonces(address account_) external view returns (uint256);
+
     function setProtocolFee(uint256 feeFraction_) external;
 
     function redeem(

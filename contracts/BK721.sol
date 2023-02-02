@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721PermitUpgradeable.sol";
 import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
 import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 import "oz-custom/contracts/internal-upgradeable/ProtocolFeeUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 
 import "./interfaces/IBK721.sol";
 import "./interfaces/IBKTreasury.sol";
@@ -19,7 +20,7 @@ abstract contract BK721 is
     ManagerUpgradeable,
     ProtocolFeeUpgradeable,
     ERC721PermitUpgradeable,
-    FundForwarderUpgradeable,
+    BKFundForwarderUpgradeable,
     ERC721EnumerableUpgradeable
 {
     using SSTORE2 for *;
@@ -79,28 +80,27 @@ abstract contract BK721 is
         uint256 fromId;
         for (uint256 i; i < length; ) {
             fromId = fromIds_[i];
-            if (ownerOf(fromIds_[i]) != user) revert BK721__Unauthorized();
+            if (ownerOf(fromId) != user) revert BK721__Unauthorized();
             _burn(fromId);
             unchecked {
                 ++i;
             }
         }
 
-        if (_ownerOf[toId_].fromFirst20Bytes() != address(0))
-            revert BK721__AlreadyMinted();
+        if (_ownerOf[toId_] != 0) revert BK721__AlreadyMinted();
 
         __mintTransfer(user, toId_);
 
         emit Merged(fromIds_, toId_);
     }
 
-    function setFee(
+    function setRoyalty(
         IERC20Upgradeable feeToken_,
-        uint256 feeAmt_
+        uint96 feeAmt_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        if (!IBKTreasury(vault).supportedPayment(address(feeToken_)))
+        if (!IBKTreasury(vault()).supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
-        _setRoyalty(feeToken_, uint96(feeAmt_));
+        _setRoyalty(feeToken_, feeAmt_);
         emit FeeUpdated(feeToken_, feeAmt_);
     }
 
@@ -217,7 +217,7 @@ abstract contract BK721 is
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
-        uint256 feeAmt_,
+        uint96 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_,
         bytes32 version_
@@ -225,21 +225,20 @@ abstract contract BK721 is
         __ERC721Permit_init(name_, symbol_);
         __Manager_init_unchained(authority_, 0);
         __ERC721_init_unchained(name_, symbol_);
+        __ProtocolFee_init_unchained(feeToken_, feeAmt_);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
-        __BK_init_unchained(baseURI_, feeAmt_, feeToken_, version_);
+
+        __BK_init_unchained(baseURI_, version_);
     }
 
     function __BK_init_unchained(
         string calldata baseURI_,
-        uint256 feeAmt_,
-        IERC20Upgradeable feeToken_,
         bytes32 version_
     ) internal onlyInitializing {
         version = version_;
         _setBaseURI(baseURI_);
-        _setRoyalty(feeToken_, uint96(feeAmt_));
     }
 
     function _beforeTokenTransfer(
@@ -266,7 +265,14 @@ abstract contract BK721 is
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
             if (feeAmt == 0) return;
-            _safeTransferFrom(feeToken, sender, vault, feeAmt);
+            address _vault = vault();
+            _safeTransferFrom(feeToken, sender, _vault, feeAmt);
+            if (address(feeToken) != address(0))
+                IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
+                    address(feeToken),
+                    feeAmt,
+                    safeTransferHeader()
+                );
         }
     }
 
@@ -293,7 +299,7 @@ interface IBKNFT {
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
-        uint256 feeAmt_,
+        uint96 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_
     ) external;
@@ -304,7 +310,7 @@ contract BKNFT is IBKNFT, BK721 {
         string calldata name_,
         string calldata symbol_,
         string calldata baseURI_,
-        uint256 feeAmt_,
+        uint96 feeAmt_,
         IERC20Upgradeable feeToken_,
         IAuthority authority_
     ) external initializer {

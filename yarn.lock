@@ -1978,7 +1978,7 @@ __metadata:
     hardhat: ^2.12.6
     hardhat-contract-sizer: ^2.7.0
     hardhat-gas-reporter: ^1.0.9
-    oz-custom: 1.1.5-f-alpha
+    oz-custom: 1.1.5-f-alpha-9
     prettier: ^2.8.3
     prettier-plugin-solidity: ^1.1.1
     solhint: ^3.3.8
@@ -5824,9 +5824,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oz-custom@npm:1.1.5-f-alpha":
-  version: 1.1.5-f-alpha
-  resolution: "oz-custom@npm:1.1.5-f-alpha"
+"oz-custom@npm:1.1.5-f-alpha-9":
+  version: 1.1.5-f-alpha-9
+  resolution: "oz-custom@npm:1.1.5-f-alpha-9"
   dependencies:
     "@ethersproject/abi": ^5.7.0
     "@ethersproject/providers": ^5.7.2
@@ -5856,9 +5856,9 @@ __metadata:
     solidity-coverage: ^0.8.2
     ts-node: ^10.9.1
     typechain: ^8.1.1
-    typescript: ^4.9.4
+    typescript: ^4.9.5
     workspace: ^0.0.1-preview.1
-  checksum: 54195040be07292bb202b753ccf33805b54f8dcf68c2afe2e95e82f5f4e018322b37193d3b132f95c2f48cb805d5912a7a499d1fe90cc7046eafde2662699268
+  checksum: 7709d42863a408b50f21efb115445d3c271ba364e3100ecaaee233b2230d1a1b22d85a46e6535408d782999a2d7679f1def1b235282f2e4b17d0d99528b08f68
   languageName: node
   linkType: hard
 
@@ -7608,6 +7608,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:^4.9.5":
+  version: 4.9.5
+  resolution: "typescript@npm:4.9.5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: ee000bc26848147ad423b581bd250075662a354d84f0e06eb76d3b892328d8d4440b7487b5a83e851b12b255f55d71835b008a66cbf8f255a11e4400159237db
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@^4.9.4#~builtin<compat/typescript>":
   version: 4.9.4
   resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=701156"
@@ -7615,6 +7625,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 37f6e2c3c5e2aa5934b85b0fddbf32eeac8b1bacf3a5b51d01946936d03f5377fe86255d4e5a4ae628fd0cd553386355ad362c57f13b4635064400f3e8e05b9d
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^4.9.5#~builtin<compat/typescript>":
+  version: 4.9.5
+  resolution: "typescript@patch:typescript@npm%3A4.9.5#~builtin<compat/typescript>::version=4.9.5&hash=701156"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 2eee5c37cad4390385db5db5a8e81470e42e8f1401b0358d7390095d6f681b410f2c4a0c496c6ff9ebd775423c7785cdace7bcdad76c7bee283df3d9718c0f20
   languageName: node
   linkType: hard
 
