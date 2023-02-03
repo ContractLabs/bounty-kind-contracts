@@ -36,16 +36,16 @@ async function main(): Promise<void> {
     // console.log("Treasury upgraded to : ", await upgrades.erc1967.getImplementationAddress(treasury.address));
 
     // const Authority: ContractFactory = await ethers.getContractFactory("BKAuthority")
-    // const authority: Contract = await
+    // // const authority: Contract = await
 
     const BK20: ContractFactory = await ethers.getContractFactory("BK20");
     const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
     await FFE.deployed();
     console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
 
-    const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
-    await YU.deployed();
-    console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
+    // const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
+    // await YU.deployed();
+    // console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
 
     // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
     // const gacha: Contract = await upgrades.upgradeProxy(

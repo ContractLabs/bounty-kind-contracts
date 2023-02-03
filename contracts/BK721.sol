@@ -56,6 +56,8 @@ abstract contract BK721 is
     ) external {
         if (block.timestamp > deadline_) revert BK721__Expired();
 
+        if (_ownerOf[toId_] != 0) revert BK721__AlreadyMinted();
+
         address user = _msgSender();
         if (
             !_hasRole(
@@ -87,11 +89,9 @@ abstract contract BK721 is
             }
         }
 
-        if (_ownerOf[toId_] != 0) revert BK721__AlreadyMinted();
-
         __mintTransfer(user, toId_);
 
-        emit Merged(fromIds_, toId_);
+        emit Merged(user, fromIds_, toId_);
     }
 
     function setRoyalty(
@@ -100,8 +100,10 @@ abstract contract BK721 is
     ) external onlyRole(Roles.OPERATOR_ROLE) {
         if (!IBKTreasury(vault()).supportedPayment(address(feeToken_)))
             revert BK721__TokenNotSupported();
+
         _setRoyalty(feeToken_, feeAmt_);
-        emit FeeUpdated(feeToken_, feeAmt_);
+
+        emit ProtocolFeeUpdated(_msgSender(), feeToken_, feeAmt_);
     }
 
     function safeMint(
@@ -140,7 +142,7 @@ abstract contract BK721 is
             }
         }
         typeIdTrackers[typeId_] = cursor;
-        emit BatchMinted(to_, length_);
+        emit BatchMinted(_msgSender(), to_, length_);
     }
 
     function safeMintBatch(
@@ -158,7 +160,7 @@ abstract contract BK721 is
             }
         }
         typeIdTrackers[typeId_] = cursor;
-        emit BatchMinted(to_, length_);
+        emit BatchMinted(_msgSender(), to_, length_);
     }
 
     function baseURI() external view returns (string memory) {
@@ -174,7 +176,9 @@ abstract contract BK721 is
     }
 
     function nextIdFromType(uint256 typeId_) public view returns (uint256) {
-        return (typeId_ << 32) | (typeIdTrackers[typeId_] + 1);
+        unchecked {
+            return (typeId_ << 32) | (typeIdTrackers[typeId_] + 1);
+        }
     }
 
     function tokenURI(
@@ -265,14 +269,17 @@ abstract contract BK721 is
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
             if (feeAmt == 0) return;
+
             address _vault = vault();
             _safeTransferFrom(feeToken, sender, _vault, feeAmt);
             if (address(feeToken) != address(0))
-                IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
-                    address(feeToken),
-                    feeAmt,
-                    safeTransferHeader()
-                );
+                if (
+                    IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
+                        address(feeToken),
+                        feeAmt,
+                        safeTransferHeader()
+                    ) != IWithdrawableUpgradeable.notifyERC20Transfer.selector
+                ) revert BK721__ExecutionFailed();
         }
     }
 

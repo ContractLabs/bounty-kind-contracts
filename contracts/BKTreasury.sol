@@ -35,10 +35,16 @@ contract BKTreasury is Treasury, IBKTreasury {
         uint256 length = tokens_.length;
         if (length != prices_.length) revert BKTreasury__LengthMismatch();
 
+        assembly {
+            mstore(32, __priceOf.slot)
+        }
+
         for (uint256 i; i < length; ) {
-            __priceOf[tokens_[i]] = prices_[i];
-            unchecked {
-                ++i;
+            assembly {
+                let idx := shl(5, i)
+                mstore(0, calldataload(add(tokens_.offset, idx)))
+                sstore(keccak256(0, 64), calldataload(add(prices_.offset, idx)))
+                i := add(1, i)
             }
         }
 
@@ -48,13 +54,15 @@ contract BKTreasury is Treasury, IBKTreasury {
     function updatePayments(
         address[] calldata payments_,
         bool[] calldata statuses_
-    ) external onlyRole(Roles.TREASURER_ROLE) {
+    ) external onlyRole(Roles.TREASURER_ROLE) returns (bool[] memory results) {
         uint256 length = payments_.length;
         if (length != statuses_.length) revert BKTreasury__LengthMismatch();
 
+        results = new bool[](length);
         for (uint256 i; i < length; ) {
-            if (statuses_[i]) __supportedPayments.add(payments_[i]);
-            else __supportedPayments.remove(payments_[i]);
+            if (statuses_[i])
+                results[i] = __supportedPayments.add(payments_[i]);
+            else results[i] = __supportedPayments.remove(payments_[i]);
 
             unchecked {
                 ++i;
@@ -64,16 +72,14 @@ contract BKTreasury is Treasury, IBKTreasury {
         emit PaymentsUpdated(_msgSender(), payments_, statuses_);
     }
 
-    function priceOf(address token_) external view returns (uint256) {
+    function priceOf(address token_) external view returns (uint256 usdPrice) {
         if (token_ == address(0)) {
             AggregatorV3Interface _priceFeed = priceFeed;
             (, int256 usdUnit, , , ) = _priceFeed.latestRoundData();
-            return
-                (uint256(usdUnit) * 10 ** 18) / (10 ** _priceFeed.decimals());
+            return (uint256(usdUnit) * 1 ether) / (10 ** _priceFeed.decimals());
         }
-        uint256 usdPrice = __priceOf[token_];
-        if (usdPrice == 0) revert BKTreasury__UnsupportedToken();
-        return usdPrice;
+        if ((usdPrice = __priceOf[token_]) == 0)
+            revert BKTreasury__UnsupportedToken();
     }
 
     function supportedPayment(address token_) external view returns (bool) {

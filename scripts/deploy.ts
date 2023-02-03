@@ -119,7 +119,7 @@ async function main(): Promise<void> {
     // const ffe: Contract = await upgrades.deployProxy(
     //     BK20,
     //     [
-    //         process.env.AUTHORITY,
+    //         authority.address,
     //         "Forbidden Fruit Energy",
     //         "FFE"
     //     ],
@@ -133,7 +133,7 @@ async function main(): Promise<void> {
 
     // const yu: Contract = await upgrades.deployProxy(
     //     BK20,
-    //     [process.env.AUTHORITY, "YU", "YU"],
+    //     [authority.address, "YU", "YU"],
     //     {
     //         kind: "uups",
     //         initializer: "initialize",
@@ -150,8 +150,8 @@ async function main(): Promise<void> {
     //         "NFTSphere",
     //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
     //         0,
-    //         process.env.YU || "",
-    //         process.env.AUTHORITY || "",
+    //         yu.address || "",
+    //         authority.address || "",
     //     ],
     //     {
     //         kind: "uups",
@@ -168,8 +168,8 @@ async function main(): Promise<void> {
     //         "NFTItem",
     //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
     //         0,
-    //         process.env.YU || "",
-    //         process.env.AUTHORITY || "",
+    //         yu.address || "",
+    //         authority.address|| "",
     //     ],
     //     {
     //         kind: "uups",
@@ -186,8 +186,8 @@ async function main(): Promise<void> {
     //         "NFTEquip",
     //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
     //         0,
-    //         process.env.YU || "",
-    //         process.env.AUTHORITY || "",
+    //         yu.address || "",
+    //         authority.address|| "",
     //     ],
     //     {
     //         kind: "uups",
@@ -205,8 +205,8 @@ async function main(): Promise<void> {
     //         "NFTCharacter",
     //         "https://dev-game-api.w3w.app/api/nfts/metadata/",
     //         0,
-    //         process.env.YU || "",
-    //         process.env.AUTHORITY || "",
+    //         yu.address || "",
+    //         authority.address|| "",
     //     ],
     //     {
     //         kind: "uups",
@@ -216,17 +216,6 @@ async function main(): Promise<void> {
     // await character.deployed();
     // console.log("character deployed to: ", character.address);
 
-    // const yu: Contract = await upgrades.deployProxy(
-    //     BK20,
-    //     [process.env.AUTHORITY, process.env.TREASURY, "YU", "YU", 18],
-    //     {
-    //         kind: "uups",
-    //         initializer: "init",
-    //     },
-    // );
-    // await yu.deployed();
-    // console.log("YU deployed to: ", yu.address);
-
     // const Marketplace: ContractFactory = await ethers.getContractFactory(
     //     "Marketplace",
     // );
@@ -235,12 +224,12 @@ async function main(): Promise<void> {
     //     [
     //         0,
     //         [
-    //             process.env.SPHERE,
-    //             process.env.ITEM,
-    //             process.env.CHARACTER,
+    //             sphere.address,
+    //             item.address,
+    //             character.address,
     //             process.env.SPHERE_NEW,
     //         ],
-    //         process.env.AUTHORITY || "",
+    //         authority.address || "",
     //     ],
     //     {
     //         kind: "uups",
@@ -253,7 +242,7 @@ async function main(): Promise<void> {
     // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
     // const gacha: Contract = await upgrades.deployProxy(
     //     Gacha,
-    //     [process.env.AUTHORITY || ""],
+    //     [authority.address || ""],
     //     {
     //         kind: "uups",
     //         initializer: "initialize",
@@ -263,37 +252,34 @@ async function main(): Promise<void> {
     // await gacha.deployed();
     // console.log("Gacha deployed to: ", gacha.address);
 
-    // const INO : ContractFactory = await ethers.getContractFactory("INO");
+    // const INO: ContractFactory = await ethers.getContractFactory("INO");
     // const ino: Contract = await upgrades.deployProxy(
     //     INO,
-    //     [
-    //         process.env.AUTHORITY || "",
-    //         process.env.TREASURY || ""
-    //     ],
+    //     [authority.address || ""],
     //     {
     //         kind: "uups",
-    //         initializer: "init",
-    //         unsafeAllow: ['delegatecall']
+    //         initializer: "initialize",
+    //         unsafeAllow: ["delegatecall"],
     //     },
     // );
     // await ino.deployed();
     // console.log("INO deployed to: ", ino.address);
 
-    // const CommandGate: ContractFactory = await ethers.getContractFactory(
-    //     "CommandGate",
-    // );
-    // const commandGate: Contract = await CommandGate.deploy(
-    //     process.env.AUTHORITY || "",
-    //     process.env.TREASURY || "",
-    //     [],
-    // );
-    // await commandGate.deployed();
-    // console.log("CommandGate deployed to: ", commandGate.address);
+    const CommandGate: ContractFactory = await ethers.getContractFactory(
+        "CommandGate",
+    );
+    const commandGate: Contract = await CommandGate.deploy(
+        "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+        "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
+        [],
+    );
+    await commandGate.deployed();
+    console.log("CommandGate deployed to: ", commandGate.address);
 
     // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
     // const factory: Contract = await Factory.deploy(
     //     ethers.constants.AddressZero,
-    //     process.env.AUTHORITY || ""
+    //     authority.address || ""
     // );
     // await factory.deployed();
     // console.log("Factory deployed to: ", factory.address);
@@ -302,8 +288,8 @@ async function main(): Promise<void> {
         "NotifyGate",
     );
     const notifyGate: Contract = await NotifyGate.deploy(
-        process.env.AUTHORITY || "",
-        process.env.TREASURY || ""
+        "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+        "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
     );
     await notifyGate.deployed();
     console.log("NotifyGate deployed to: ", notifyGate.address);

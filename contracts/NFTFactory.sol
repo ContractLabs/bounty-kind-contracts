@@ -45,12 +45,11 @@ contract NFTFactory is Manager, Cloner, BKFundForwarder, MultiDelegatecall {
         uint256 feeAmt_,
         IERC20 feeToken_
     ) external onlyRole(Roles.OPERATOR_ROLE) returns (address) {
-        bytes32 salt = keccak256(
-            abi.encodePacked(name_, symbol_, address(this), VERSION)
-        );
         return
             _clone(
-                salt,
+                keccak256(
+                    abi.encodePacked(name_, symbol_, address(this), VERSION)
+                ),
                 IBKNFT.initialize.selector,
                 abi.encode(name_, symbol_, baseURI_, feeAmt_, feeToken_)
             );
@@ -60,9 +59,11 @@ contract NFTFactory is Manager, Cloner, BKFundForwarder, MultiDelegatecall {
         string calldata name_,
         string calldata symbol_
     ) external view returns (address, bool) {
-        bytes32 salt = keccak256(
-            abi.encodePacked(name_, symbol_, address(this), VERSION)
-        );
-        return _cloneOf(salt);
+        return
+            _cloneOf(
+                keccak256(
+                    abi.encodePacked(name_, symbol_, address(this), VERSION)
+                )
+            );
     }
 }

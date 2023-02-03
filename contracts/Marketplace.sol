@@ -179,11 +179,13 @@ contract Marketplace is
                         percentageFraction
                     )
                 );
-                IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
-                    address(seller_.payment),
-                    received,
-                    safeTransferHeader()
-                );
+                if (
+                    IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
+                        address(seller_.payment),
+                        received,
+                        safeTransferHeader()
+                    ) != IWithdrawableUpgradeable.notifyERC20Transfer.selector
+                ) revert Marketplace__ExecutionFailed();
             }
 
             if (msg.value == 0) return;

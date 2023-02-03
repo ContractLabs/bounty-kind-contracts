@@ -42,7 +42,15 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     ) external override whenNotPaused {
         if (block.timestamp > deadline_) revert RBK721__Expired();
 
-        UserInfo memory userInfo = _users[tokenId];
+        UserInfo memory userInfo; // = _users[tokenId];
+        bytes32 userInfoKey;
+        assembly {
+            mstore(0, tokenId)
+            mstore(32, _users.slot)
+            userInfoKey := keccak256(0, 64)
+            userInfo := sload(userInfoKey)
+        }
+
         if (userInfo.expires > block.timestamp && userInfo.user != address(0))
             revert RBK721__Rented();
         userInfo.user = _msgSender();
@@ -69,7 +77,9 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         unchecked {
             userInfo.expires = (block.timestamp + expires_).toUint96();
         }
-        _users[tokenId] = userInfo;
+        assembly {
+            sstore(userInfoKey, userInfo)
+        }
     }
 
     function setUser(
@@ -80,7 +90,15 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         if (!_isApprovedOrOwner(_msgSender(), tokenId_))
             revert Rentable__OnlyOwnerOrApproved();
 
-        UserInfo memory info = _users[tokenId_];
+        UserInfo memory info; // = _users[tokenId];
+        bytes32 userInfoKey;
+        assembly {
+            mstore(0, tokenId_)
+            mstore(32, _users.slot)
+            userInfoKey := keccak256(0, 64)
+            info := sload(userInfoKey)
+        }
+
         if (info.expires > block.timestamp && info.user != address(0))
             revert RBK721__Rented();
         info.user = user_;
@@ -88,7 +106,9 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
             info.expires = (block.timestamp + expires_).toUint96();
         }
 
-        _users[tokenId_] = info;
+        assembly {
+            sstore(userInfoKey, info)
+        }
 
         emit UserUpdated(tokenId_, user_, expires_);
     }

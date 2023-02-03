@@ -1978,7 +1978,7 @@ __metadata:
     hardhat: ^2.12.6
     hardhat-contract-sizer: ^2.7.0
     hardhat-gas-reporter: ^1.0.9
-    oz-custom: 1.1.5-f-alpha-9
+    oz-custom: 1.1.5-g-2
     prettier: ^2.8.3
     prettier-plugin-solidity: ^1.1.1
     solhint: ^3.3.8
@@ -5824,9 +5824,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oz-custom@npm:1.1.5-f-alpha-9":
-  version: 1.1.5-f-alpha-9
-  resolution: "oz-custom@npm:1.1.5-f-alpha-9"
+"oz-custom@npm:1.1.5-g-2":
+  version: 1.1.5-g-2
+  resolution: "oz-custom@npm:1.1.5-g-2"
   dependencies:
     "@ethersproject/abi": ^5.7.0
     "@ethersproject/providers": ^5.7.2
@@ -5858,7 +5858,7 @@ __metadata:
     typechain: ^8.1.1
     typescript: ^4.9.5
     workspace: ^0.0.1-preview.1
-  checksum: 7709d42863a408b50f21efb115445d3c271ba364e3100ecaaee233b2230d1a1b22d85a46e6535408d782999a2d7679f1def1b235282f2e4b17d0d99528b08f68
+  checksum: 298a844f6e26e5928647aa67b6e414dd10b022a049d16a559b947505694198f6b12dbaf371d8e98ef5f5b3ec131c63122896f04b6712b9bc732b011198b737c0
   languageName: node
   linkType: hard
 
