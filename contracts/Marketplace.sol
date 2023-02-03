@@ -67,33 +67,25 @@ contract Marketplace is
         uint256 feeFraction_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
         __setProtocolFee(feeFraction_);
-        emit ProtocolFeeUpdated(feeFraction_);
     }
 
     function redeem(
         uint256 deadline_,
         Buyer calldata buyer_,
-        Seller calldata seller_,
+        Seller calldata sellItem_,
         bytes calldata signature_
     ) external payable whenNotPaused {
         address buyer = _msgSender();
-        _checkBlacklist(buyer);
         _onlyEOA(buyer);
+        _checkBlacklist(buyer);
 
-        __checkSignature(buyer, seller_, deadline_, signature_);
+        __checkSignature(buyer, deadline_, sellItem_, signature_);
 
-        address seller = seller_.nft.ownerOf(seller_.tokenId);
-        __processPayment(buyer, seller, buyer_, seller_);
-        __transferItem(buyer, seller, seller_);
+        address seller = sellItem_.nft.ownerOf(sellItem_.tokenId);
+        __transferItem(buyer, seller, sellItem_);
+        __processPayment(buyer, seller, buyer_, sellItem_);
 
-        emit Redeemed(
-            buyer,
-            seller,
-            seller_.tokenId,
-            seller_.nft,
-            seller_.payment,
-            seller_.unitPrice
-        );
+        emit Redeemed(buyer, seller, sellItem_);
     }
 
     function nonces(address account_) external view returns (uint256) {
@@ -106,6 +98,7 @@ contract Marketplace is
 
     function __setProtocolFee(uint256 feeFraction_) private {
         protocolFee = feeFraction_;
+        emit ProtocolFeeUpdated(_msgSender(), feeFraction_);
     }
 
     function __transferItem(
@@ -115,6 +108,7 @@ contract Marketplace is
     ) private {
         if (!__whitelistedContracts.get(address(seller_.nft).fillLast96Bits()))
             revert Marketplace__UnsupportedNFT();
+
         if (seller_.nft.getApproved(seller_.tokenId) != address(this))
             seller_.nft.permit(
                 address(this),
@@ -214,25 +208,27 @@ contract Marketplace is
     function __whiteListContracts(
         address[] calldata supportedContracts_
     ) private {
-        uint256 length = supportedContracts_.length;
         uint256[] memory uintContracts;
         address[] memory supportedContracts = supportedContracts_;
         assembly {
             uintContracts := supportedContracts
         }
 
+        uint256 length = supportedContracts_.length;
         for (uint256 i; i < length; ) {
             __whitelistedContracts.set(uintContracts[i]);
             unchecked {
                 ++i;
             }
         }
+
+        emit TokensWhitelisted(_msgSender(), supportedContracts_);
     }
 
     function __checkSignature(
         address buyer,
-        Seller calldata seller_,
         uint256 deadline_,
+        Seller calldata sellItem,
         bytes calldata signature_
     ) private {
         if (block.timestamp > deadline_) revert Marketplace__Expired();
@@ -244,10 +240,10 @@ contract Marketplace is
                         abi.encode(
                             __PERMIT_TYPE_HASH,
                             buyer,
-                            seller_.nft,
-                            seller_.payment,
-                            seller_.unitPrice,
-                            seller_.tokenId,
+                            sellItem.nft,
+                            sellItem.payment,
+                            sellItem.unitPrice,
+                            sellItem.tokenId,
                             _useNonce(buyer.fillLast12Bytes()),
                             deadline_
                         )

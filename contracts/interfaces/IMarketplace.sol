@@ -30,16 +30,18 @@ interface IMarketplace {
         uint256 deadline;
     }
 
-    event ProtocolFeeUpdated(uint256 indexed feeFraction);
+    event ProtocolFeeUpdated(
+        address indexed operator,
+        uint256 indexed feeFraction
+    );
 
     event Redeemed(
         address indexed buyer,
         address indexed seller,
-        uint256 indexed tokenId,
-        IERC721PermitUpgradeable nft,
-        IERC20Upgradeable payment,
-        uint256 unitPrice
+        Seller sellerItem
     );
+
+    event TokensWhitelisted(address indexed operator, address[] tokens);
 
     function nonces(address account_) external view returns (uint256);
 

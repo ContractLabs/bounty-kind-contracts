@@ -21,7 +21,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
 
 const config: HardhatUserConfig = {
     solidity: {
-        version: "0.8.17",
+        version: "0.8.18",
         settings: {
             metadata: {
                 bytecodeHash: "none",

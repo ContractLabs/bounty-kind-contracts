@@ -59,28 +59,41 @@ contract Gacha is
         address[] calldata supportedPayments_,
         uint96[] calldata unitPrices_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        uint256[] memory uintPayments;
         address[] memory _supportedPayments = supportedPayments_;
+        uint256[] memory uintPayments;
         assembly {
             uintPayments := _supportedPayments
+            mstore(0, typeId_)
+            mstore(32, __unitPrices.slot)
+            mstore(32, keccak256(0, 64))
         }
         uint256 length = supportedPayments_.length;
         for (uint256 i; i < length; ) {
             __supportedPayments.set(uintPayments[i]);
-            __unitPrices[typeId_][supportedPayments_[i]] = unitPrices_[i];
-            unchecked {
-                ++i;
+            assembly {
+                let idxAlloc := shl(5, i)
+                mstore(
+                    0,
+                    calldataload(add(supportedPayments_.offset, idxAlloc))
+                )
+                sstore(
+                    keccak256(0, 64),
+                    calldataload(add(unitPrices_.offset, idxAlloc))
+                )
+                i := add(i, 1)
             }
         }
+
+        emit TicketPricesUpdated(
+            _msgSender(),
+            typeId_,
+            supportedPayments_,
+            unitPrices_
+        );
     }
 
     function supportedPayments(address payment_) external view returns (bool) {
-        uint256 payment;
-        assembly {
-            payment := payment_
-        }
-
-        return __supportedPayments.get(payment);
+        return __supportedPayments.get(payment_.fillLast96Bits());
     }
 
     function redeemTicket(
@@ -90,11 +103,21 @@ contract Gacha is
         uint256 id_,
         uint256 type_
     ) external onlyRole(Roles.PROXY_ROLE) {
-        Ticket memory ticket = __tickets[id_];
+        bytes32 ticketKey;
+        Ticket memory ticket;
+        assembly {
+            mstore(0x00, id_)
+            mstore(0x20, __tickets.slot)
+            ticketKey := keccak256(0, 64)
+            ticket := sload(ticketKey)
+        }
+
         if (ticket.account != address(0) || ticket.isUsed)
             revert Gacha__InvalidTicket();
+
         if (!__supportedPayments.get(token_.fillLast96Bits()))
             revert Gacha__InvalidPayment();
+
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId)) {
             uint256 unitPrice = IBKTreasury(vault()).priceOf(token_) *
                 __unitPrices[type_][token_];
@@ -102,9 +125,11 @@ contract Gacha is
         }
 
         ticket.account = user_;
-        __tickets[id_] = ticket;
+        assembly {
+            sstore(ticketKey, ticket)
+        }
 
-        emit Redeemed(id_, type_, user_);
+        emit Redeemed(user_, id_, type_);
     }
 
     function reward(
@@ -112,9 +137,25 @@ contract Gacha is
         uint256 ticketId_,
         uint256 value_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        Ticket memory ticket = __tickets[ticketId_];
+        bytes32 ticketKey;
+        Ticket memory ticket;
+        assembly {
+            mstore(0x00, ticketId_)
+            mstore(0x20, __tickets.slot)
+            ticketKey := keccak256(0, 64)
+            ticket := sload(ticketKey)
+        }
+
         if (ticket.account == address(0)) revert Gacha__InvalidTicket();
+
         if (ticket.isUsed) revert Gacha__PurchasedTicket();
+
+        ticket.isUsed = true;
+
+        assembly {
+            sstore(ticketKey, ticket)
+        }
+
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
             IWithdrawableUpgradeable(vault()).withdraw(
                 token_,
@@ -124,8 +165,6 @@ contract Gacha is
             );
         else IBK721(token_).safeMint(ticket.account, value_);
 
-        ticket.isUsed = true;
-        __tickets[ticketId_] = ticket;
-        emit Rewarded(ticketId_, token_, value_);
+        emit Rewarded(_msgSender(), ticketId_, token_, value_);
     }
 }

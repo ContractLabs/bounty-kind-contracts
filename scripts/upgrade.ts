@@ -38,31 +38,37 @@ async function main(): Promise<void> {
     // const Authority: ContractFactory = await ethers.getContractFactory("BKAuthority")
     // // const authority: Contract = await
 
-    const BK20: ContractFactory = await ethers.getContractFactory("BK20");
-    const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
-    await FFE.deployed();
-    console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
+    // const BK20: ContractFactory = await ethers.getContractFactory("BK20");
+    // const FFE: Contract = await upgrades.upgradeProxy(process.env.FFE || "", BK20);
+    // await FFE.deployed();
+    // console.log("FFE upgraded to : ", await upgrades.erc1967.getImplementationAddress(FFE.address));
 
     // const YU: Contract = await upgrades.upgradeProxy(process.env.YU || "", BK20);
     // await YU.deployed();
     // console.log("YU upgraded to : ", await upgrades.erc1967.getImplementationAddress(YU.address));
 
-    // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
-    // const gacha: Contract = await upgrades.upgradeProxy(
-    //     process.env.GACHA || "",
-    //     Gacha,
-    //     {unsafeAllow: ["delegatecall"]},
-    // );
-    // await gacha.deployed();
-    // console.log(
-    //     "Gacha upgraded to : ",
-    //     await upgrades.erc1967.getImplementationAddress(gacha.address),
-    // );
+    const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
+    const gacha: Contract = await upgrades.upgradeProxy(
+        process.env.GACHA || "",
+        Gacha,
+        {unsafeAllow: ["delegatecall"]},
+    );
+    await gacha.deployed();
+    console.log(
+        "Gacha upgraded to : ",
+        await upgrades.erc1967.getImplementationAddress(gacha.address),
+    );
 
     // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-    // const nft: Contract = await upgrades.upgradeProxy(process.env.ITEM || "", NFT);
+    // const nft: Contract = await upgrades.upgradeProxy(
+    //     process.env.EQUIPMENT || "",
+    //     NFT,
+    // );
     // await nft.deployed();
-    // console.log("NFT upgraded to : ", await upgrades.erc1967.getImplementationAddress(nft.address));
+    // console.log(
+    //     "NFT upgraded to : ",
+    //     await upgrades.erc1967.getImplementationAddress(nft.address),
+    // );
 
     // const Marketplace: ContractFactory = await ethers.getContractFactory("Marketplace");
     // const marketplace: Contract = await upgrades.upgradeProxy(process.env.MARKETPLACE || "", Marketplace);

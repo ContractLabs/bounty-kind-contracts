@@ -78,8 +78,8 @@ abstract contract BK721 is
             )
         ) revert BK721__InvalidSignature();
 
-        uint256 length = fromIds_.length;
         uint256 fromId;
+        uint256 length = fromIds_.length;
         for (uint256 i; i < length; ) {
             fromId = fromIds_[i];
             if (ownerOf(fromId) != user) revert BK721__Unauthorized();

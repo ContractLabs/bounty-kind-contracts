@@ -14,15 +14,23 @@ interface IGacha {
     }
 
     event Rewarded(
+        address indexed operator,
         uint256 indexed ticketId,
         address indexed token,
-        uint256 indexed value
+        uint256 value
     );
 
     event Redeemed(
+        address indexed account,
         uint256 indexed ticketId,
+        uint256 indexed typeId
+    );
+
+    event TicketPricesUpdated(
+        address indexed operator,
         uint256 indexed typeId,
-        address indexed user
+        address[] supportedPayments,
+        uint96[] unitPrices
     );
 
     function batchExecute(
