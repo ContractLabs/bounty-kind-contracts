@@ -49,6 +49,8 @@ interface IBK721 is IBKAsset {
         bytes calldata signature_
     ) external;
 
+    function nonces(address account_) external view returns (uint256);
+
     function nextIdFromType(uint256 typeId_) external view returns (uint256);
 
     function baseURI() external view returns (string memory);

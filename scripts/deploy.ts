@@ -265,16 +265,16 @@ async function main(): Promise<void> {
     // await ino.deployed();
     // console.log("INO deployed to: ", ino.address);
 
-    const CommandGate: ContractFactory = await ethers.getContractFactory(
-        "CommandGate",
-    );
-    const commandGate: Contract = await CommandGate.deploy(
-        "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
-        "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
-        [],
-    );
-    await commandGate.deployed();
-    console.log("CommandGate deployed to: ", commandGate.address);
+    // const CommandGate: ContractFactory = await ethers.getContractFactory(
+    //     "CommandGate",
+    // );
+    // const commandGate: Contract = await CommandGate.deploy(
+    //     "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+    //     "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
+    //     [],
+    // );
+    // await commandGate.deployed();
+    // console.log("CommandGate deployed to: ", commandGate.address);
 
     // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
     // const factory: Contract = await Factory.deploy(

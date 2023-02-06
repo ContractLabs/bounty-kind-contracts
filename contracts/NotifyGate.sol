@@ -73,7 +73,17 @@ contract NotifyGate is
             );
         }
 
-        _safeERC20TransferFrom(token_, user, vault(), value_);
+        address _vault = vault();
+
+        _safeERC20TransferFrom(token_, user, _vault, value_);
+
+        if (
+            IWithdrawable(_vault).notifyERC20Transfer(
+                address(token_),
+                value_,
+                safeTransferHeader()
+            ) != IWithdrawable.notifyERC20Transfer.selector
+        ) revert();
 
         emit Notified(user, message_, address(token_), value_);
     }

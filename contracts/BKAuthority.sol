@@ -35,10 +35,12 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
         return
             _deploy(
                 address(this).balance,
-                keccak256(abi.encode(priceFeed, address(this), VERSION)),
+                keccak256(
+                    abi.encode(admin_, priceFeed, address(this), VERSION)
+                ),
                 abi.encodePacked(
                     type(BKTreasury).creationCode,
-                    abi.encode(admin_, priceFeed, "BKGlobalTreasury")
+                    abi.encode(address(this), priceFeed, "BKGlobalTreasury")
                 )
             );
     }

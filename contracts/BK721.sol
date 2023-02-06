@@ -163,6 +163,10 @@ abstract contract BK721 is
         emit BatchMinted(_msgSender(), to_, length_);
     }
 
+    function nonces(address account_) external view returns (uint256) {
+        return _nonce(account_.fillLast12Bytes());
+    }
+
     function baseURI() external view returns (string memory) {
         return string(_baseTokenURIPtr.read());
     }
