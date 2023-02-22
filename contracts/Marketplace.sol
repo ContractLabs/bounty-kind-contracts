@@ -41,14 +41,20 @@ contract Marketplace is
         address[] calldata supportedContracts_,
         IAuthority authority_
     ) external initializer {
-        __setProtocolFee(feeFraction_);
-        __whiteListContracts(supportedContracts_);
-
         __Signable_init_unchained(type(Marketplace).name, "1");
         __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
+        __Marketplace_init_unchained(feeFraction_, supportedContracts_);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
+    }
+
+    function __Marketplace_init_unchained(
+        uint256 feeFraction_,
+        address[] calldata supportedContracts_
+    ) internal onlyInitializing {
+        __setProtocolFee(feeFraction_);
+        __whiteListContracts(supportedContracts_);
     }
 
     function changeVault(
@@ -106,21 +112,24 @@ contract Marketplace is
         address sellerAddr_,
         Seller calldata seller_
     ) private {
-        if (!__whitelistedContracts.get(address(seller_.nft).fillLast96Bits()))
+        uint256 tokenId = seller_.tokenId;
+        IERC721PermitUpgradeable nft = seller_.nft;
+
+        if (!__whitelistedContracts.get(address(nft).fillLast96Bits()))
             revert Marketplace__UnsupportedNFT();
 
-        if (seller_.nft.getApproved(seller_.tokenId) != address(this))
-            seller_.nft.permit(
+        if (nft.getApproved(tokenId) != address(this))
+            nft.permit(
                 address(this),
-                seller_.tokenId,
+                tokenId,
                 seller_.deadline,
                 seller_.signature
             );
 
-        seller_.nft.safeTransferFrom(
+        nft.safeTransferFrom(
             sellerAddr_,
             buyerAddr_,
-            seller_.tokenId,
+            tokenId,
             safeTransferHeader()
         );
     }
@@ -134,9 +143,11 @@ contract Marketplace is
         uint256 _protocolFee = protocolFee;
         uint256 percentageFraction = PERCENTAGE_FRACTION;
         uint256 receiveFraction = percentageFraction - _protocolFee;
+        address _vault = vault();
 
-        if (!IBKTreasury(vault()).supportedPayment(address(seller_.payment)))
+        if (!IBKTreasury(_vault).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
+
         if (address(seller_.payment) != address(0)) {
             if (
                 seller_.payment.allowance(buyerAddr_, address(this)) <
@@ -162,7 +173,6 @@ contract Marketplace is
                 )
             );
             if (_protocolFee != 0) {
-                address _vault = vault();
                 uint256 received;
                 _safeERC20TransferFrom(
                     seller_.payment,
@@ -185,6 +195,7 @@ contract Marketplace is
             if (msg.value == 0) return;
             _safeNativeTransfer(buyerAddr_, msg.value);
         } else {
+            uint256 refund = msg.value - seller_.unitPrice;
             _safeNativeTransfer(
                 sellerAddr_,
                 seller_.unitPrice.mulDivDown(
@@ -194,14 +205,15 @@ contract Marketplace is
             );
             if (_protocolFee != 0)
                 _safeNativeTransfer(
-                    vault(),
+                    _vault,
                     seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction
                     )
                 );
-            if (msg.value == seller_.unitPrice) return;
-            _safeNativeTransfer(buyerAddr_, msg.value - seller_.unitPrice);
+
+            if (refund == 0) return;
+            _safeNativeTransfer(buyerAddr_, refund);
         }
     }
 

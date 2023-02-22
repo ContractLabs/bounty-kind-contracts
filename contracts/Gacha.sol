@@ -103,14 +103,7 @@ contract Gacha is
         uint256 id_,
         uint256 type_
     ) external onlyRole(Roles.PROXY_ROLE) {
-        bytes32 ticketKey;
-        Ticket memory ticket;
-        assembly {
-            mstore(0x00, id_)
-            mstore(0x20, __tickets.slot)
-            ticketKey := keccak256(0, 64)
-            ticket := sload(ticketKey)
-        }
+        Ticket memory ticket = __tickets[id_];
 
         if (ticket.account != address(0) || ticket.isUsed)
             revert Gacha__InvalidTicket();
@@ -125,9 +118,7 @@ contract Gacha is
         }
 
         ticket.account = user_;
-        assembly {
-            sstore(ticketKey, ticket)
-        }
+        __tickets[id_] = ticket;
 
         emit Redeemed(user_, id_, type_);
     }
@@ -137,14 +128,7 @@ contract Gacha is
         uint256 ticketId_,
         uint256 value_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
-        bytes32 ticketKey;
-        Ticket memory ticket;
-        assembly {
-            mstore(0x00, ticketId_)
-            mstore(0x20, __tickets.slot)
-            ticketKey := keccak256(0, 64)
-            ticket := sload(ticketKey)
-        }
+        Ticket memory ticket = __tickets[ticketId_];
 
         if (ticket.account == address(0)) revert Gacha__InvalidTicket();
 
@@ -152,9 +136,7 @@ contract Gacha is
 
         ticket.isUsed = true;
 
-        assembly {
-            sstore(ticketKey, ticket)
-        }
+        __tickets[ticketId_] = ticket;
 
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
             IWithdrawableUpgradeable(vault()).withdraw(

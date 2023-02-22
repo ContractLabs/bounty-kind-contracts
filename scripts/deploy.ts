@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import {Contract, ContractFactory} from "ethers";
 import {defaultAbiCoder} from "ethers/lib/utils";
-import {ethers, upgrades} from "hardhat";
+import {ethers, upgrades, run} from "hardhat";
 
 dotenv.config();
 
@@ -13,10 +13,10 @@ async function main(): Promise<void> {
     //     Authority,
     //     [
     //         "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6",
-    //         defaultAbiCoder.encode(
-    //             ["address"],
-    //             ["0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"],
-    //         ),
+    // defaultAbiCoder.encode(
+    //     ["address"],
+    //     ["0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"],
+    // ),
     //         [
     //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
     //             "0x64470E5F5DD38e497194BbcAF8Daa7CA578926F6",
@@ -270,11 +270,20 @@ async function main(): Promise<void> {
     // );
     // const commandGate: Contract = await CommandGate.deploy(
     //     "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
-    //     "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
+    //     "0x80ff7A61C582A6371cA32Da8d8634992b3910765",
     //     [],
     // );
     // await commandGate.deployed();
     // console.log("CommandGate deployed to: ", commandGate.address);
+
+    // await run(`verify:verify`, {
+    //     address: commandGate.address,
+    //     constructorArguments: [
+    //         "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+    //         "0x80ff7A61C582A6371cA32Da8d8634992b3910765",
+    //         [],
+    //     ],
+    // });
 
     // const Factory : ContractFactory = await ethers.getContractFactory("NFTFactory");
     // const factory: Contract = await Factory.deploy(
@@ -284,15 +293,44 @@ async function main(): Promise<void> {
     // await factory.deployed();
     // console.log("Factory deployed to: ", factory.address);
 
-    const NotifyGate: ContractFactory = await ethers.getContractFactory(
-        "NotifyGate",
+    // const NotifyGate: ContractFactory = await ethers.getContractFactory(
+    //     "NotifyGate",
+    // );
+    // const notifyGate: Contract = await NotifyGate.deploy(
+    //     "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+    //     "0x2AD70C0cF809CC2810e239F74f9e2d119e6AdAb5",
+    // );
+    // await notifyGate.deployed();
+    // console.log("NotifyGate deployed to: ", notifyGate.address);
+
+    // await run(`verify:verify`, {
+    //     address: notifyGate.address,
+    //     constructorArguments: [
+    //         "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
+    //         "0x2AD70C0cF809CC2810e239F74f9e2d119e6AdAb5",
+    //     ],
+    // });
+
+    const data = defaultAbiCoder.encode(
+        ["address", "address[]"],
+        [
+            "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+            [
+                "0x5c0e6505a748f6aeaad1a474cb2866c22dd4a5b8",
+                "0x4a8d59baf30638fa00af210dac3b78c3f1ebce54",
+                "0x41d546e8cac3f583a5075d6444e14d46cff278bb",
+                "0x61661f30e9559492fa28f0ae78425d050080d5ca",
+                "0x52f5c2737b5df48a0f3ae38d6f4d125596562734",
+                "0x00d397a4694dec764858ab4babad076f540eda07",
+                "0x2117479b2414850b1182afc8de7a628face84a34",
+                "0x1f67c7a859dd3b399e4a5a7bb0d3e1a9d369b4f9",
+                "0x085de31179e75bc85bbf6fd9f033508a9ee0ded2",
+                "0x94DB90de01ecFbC2fA8f82443D1Ea0F4f09ccD18",
+                "0x5445018B3A8Ae30cd25c1D1aAFbe7455a45abDaB",
+            ],
+        ],
     );
-    const notifyGate: Contract = await NotifyGate.deploy(
-        "0x3005775740fA97131036b6aBfe86fc2acd70f7F0",
-        "0x12C412BF0A9355Da6c2E453638749B64c39721cc",
-    );
-    await notifyGate.deployed();
-    console.log("NotifyGate deployed to: ", notifyGate.address);
+    console.log({data});
 }
 
 main()

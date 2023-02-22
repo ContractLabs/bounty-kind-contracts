@@ -1,5 +1,6 @@
 import {Contract, ContractFactory} from "ethers";
 import {ethers, upgrades, network, run} from "hardhat";
+``;
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -82,21 +83,21 @@ async function main(): Promise<void> {
     //     address: YU.address,
     // });
 
-    const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
-    const gacha: Contract = await upgrades.upgradeProxy(
-        process.env.GACHA || "",
-        Gacha,
-        {unsafeAllow: ["delegatecall"]},
-    );
-    await gacha.deployed();
-    console.log(
-        "Gacha upgraded to : ",
-        await upgrades.erc1967.getImplementationAddress(gacha.address),
-    );
+    // const Gacha: ContractFactory = await ethers.getContractFactory("Gacha");
+    // const gacha: Contract = await upgrades.upgradeProxy(
+    //     process.env.GACHA || "",
+    //     Gacha,
+    //     {unsafeAllow: ["delegatecall"]},
+    // );
+    // await gacha.deployed();
+    // console.log(
+    //     "Gacha upgraded to : ",
+    //     await upgrades.erc1967.getImplementationAddress(gacha.address),
+    // );
 
-    await run(`verify:verify`, {
-        address: gacha.address,
-    });
+    // await run(`verify:verify`, {
+    //     address: gacha.address,
+    // });
 
     const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
     const equipment: Contract = await upgrades.upgradeProxy(
@@ -173,21 +174,21 @@ async function main(): Promise<void> {
         address: character.address,
     });
 
-    const INO: ContractFactory = await ethers.getContractFactory("INO");
-    const ino: Contract = await upgrades.upgradeProxy(
-        process.env.INO || "",
-        INO,
-        {unsafeAllow: ["delegatecall"]},
-    );
-    await ino.deployed();
-    console.log(
-        "INO upgraded to: ",
-        await upgrades.erc1967.getImplementationAddress(ino.address),
-    );
+    // const INO: ContractFactory = await ethers.getContractFactory("INO");
+    // const ino: Contract = await upgrades.upgradeProxy(
+    //     process.env.INO || "",
+    //     INO,
+    //     {unsafeAllow: ["delegatecall"]},
+    // );
+    // await ino.deployed();
+    // console.log(
+    //     "INO upgraded to: ",
+    //     await upgrades.erc1967.getImplementationAddress(ino.address),
+    // );
 
-    await run(`verify:verify`, {
-        address: ino.address,
-    });
+    // await run(`verify:verify`, {
+    //     address: process.env.INO,
+    // });
 }
 
 main()

@@ -5,9 +5,14 @@ import {BKTreasury} from "./BKTreasury.sol";
 import {
     Create2Deployer
 } from "oz-custom/contracts/internal/DeterministicDeployer.sol";
-import "oz-custom/contracts/presets-upgradeable/AuthorityUpgradeable.sol";
+import {
+    Roles,
+    AuthorityUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/AuthorityUpgradeable.sol";
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+import "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
 
 contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
     function initialize(
@@ -27,7 +32,7 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
     function _deployDefaultTreasury(
         address admin_,
         bytes memory data
-    ) internal override onlyInitializing returns (address) {
+    ) internal override returns (address) {
         AggregatorV3Interface priceFeed = abi.decode(
             data,
             (AggregatorV3Interface)

@@ -83,7 +83,7 @@ contract NotifyGate is
                 value_,
                 safeTransferHeader()
             ) != IWithdrawable.notifyERC20Transfer.selector
-        ) revert();
+        ) revert NofifyGate__ExecutionFailed();
 
         emit Notified(user, message_, address(token_), value_);
     }
@@ -93,10 +93,12 @@ contract NotifyGate is
         address token_,
         bytes memory value_
     ) internal override {
-        IWithdrawable(vault_).notifyERC20Transfer(
-            token_,
-            abi.decode(value_, (uint256)),
-            safeRecoverHeader()
-        );
+        if (
+            IWithdrawable(vault_).notifyERC20Transfer(
+                token_,
+                abi.decode(value_, (uint256)),
+                safeRecoverHeader()
+            ) != IWithdrawable.notifyERC20Transfer.selector
+        ) revert NofifyGate__ExecutionFailed();
     }
 }

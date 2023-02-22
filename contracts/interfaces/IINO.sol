@@ -67,10 +67,10 @@ interface IINO {
     ) external returns (bytes[] memory);
 
     function redeem(
-        uint256 ticketId_,
         address user_,
         address token_,
-        uint256 value_
+        uint256 value_,
+        uint256 ticketId_
     ) external;
 
     function setCampaign(

@@ -11,6 +11,8 @@ import {
 } from "oz-custom/contracts/oz/token/ERC721/ERC721.sol";
 
 interface INotifyGate {
+    error NofifyGate__ExecutionFailed();
+
     event Notified(
         address indexed sender,
         bytes indexed message,

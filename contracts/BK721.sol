@@ -34,6 +34,7 @@ abstract contract BK721 is
 
     bytes32 public version;
     bytes32 private _baseTokenURIPtr;
+    
     mapping(uint256 => uint256) public typeIdTrackers;
 
     function changeVault(
@@ -55,8 +56,6 @@ abstract contract BK721 is
         bytes calldata signature_
     ) external {
         if (block.timestamp > deadline_) revert BK721__Expired();
-
-        if (_ownerOf[toId_] != 0) revert BK721__AlreadyMinted();
 
         address user = _msgSender();
         if (
@@ -83,13 +82,18 @@ abstract contract BK721 is
         for (uint256 i; i < length; ) {
             fromId = fromIds_[i];
             if (ownerOf(fromId) != user) revert BK721__Unauthorized();
-            _burn(fromId);
+            if (fromId != toId_) _burn(fromId);
+
             unchecked {
                 ++i;
             }
         }
 
-        __mintTransfer(user, toId_);
+        address ownerOfToId = ownerOf(toId_);
+        if (ownerOfToId != address(0) && ownerOfToId != user)
+            revert BK721__Unauthorized();
+
+        if (ownerOfToId == address(0)) __mintTransfer(user, toId_);
 
         emit Merged(user, fromIds_, toId_);
     }
@@ -267,8 +271,8 @@ abstract contract BK721 is
         _checkBlacklist(to_);
 
         if (
-            from_ != address(0) &&
             to_ != address(0) &&
+            from_ != address(0) &&
             !_hasRole(Roles.OPERATOR_ROLE, sender)
         ) {
             (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();

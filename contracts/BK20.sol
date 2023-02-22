@@ -2,11 +2,14 @@
 pragma solidity ^0.8.17;
 
 import {
-    BKFundForwarderUpgradeable,
-    IFundForwarderUpgradeable
+    IFundForwarderUpgradeable,
+    BKFundForwarderUpgradeable
 } from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
 
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import {
+    IERC20Upgradeable,
+    ERC20BurnableUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import {
     ERC20PermitUpgradeable
 } from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
@@ -17,8 +20,10 @@ import {
     ManagerUpgradeable
 } from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "./interfaces/IBK20.sol";
-import "oz-custom/contracts/presets-upgradeable/interfaces/ITreasury.sol";
+import {IBK20} from "./interfaces/IBK20.sol";
+import {
+    ITreasury
+} from "oz-custom/contracts/presets-upgradeable/interfaces/ITreasury.sol";
 
 contract BK20 is
     IBK20,
@@ -54,7 +59,7 @@ contract BK20 is
         address to_,
         uint256 amount_
     ) external onlyRole(Roles.MINTER_ROLE) {
-        _mint(to_, amount_ * 10 ** decimals);
+        _mint(to_, amount_ * 1 ether);
     }
 
     function _beforeTokenTransfer(

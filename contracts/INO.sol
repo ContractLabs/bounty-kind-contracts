@@ -72,20 +72,20 @@ contract INO is
         uint64 campaignId_,
         uint32 amount_
     ) external pure returns (uint256) {
-        return (campaignId_ << 32) | (amount_ & 0xffffffff);
+        return (campaignId_ << 32) | (amount_ & ~uint32(0));
     }
 
     function redeem(
-        uint256 ticketId_,
         address user_,
         address token_,
-        uint256 value_
+        uint256 value_,
+        uint256 ticketId_
     ) external onlyRole(Roles.PROXY_ROLE) {
         Campaign memory _campaign;
         uint256 amount;
         // get rid of stack too deep
         {
-            uint256 campaignId = (ticketId_ >> 32) & ~uint64(0);
+            uint256 campaignId = (ticketId_ >> 32) & ~uint32(0);
             _campaign = abi.decode(__campaigns[campaignId].read(), (Campaign));
 
             if (
