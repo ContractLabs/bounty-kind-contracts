@@ -17,7 +17,7 @@ import {
 } from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
-import "oz-custom/contracts/libraries/BitMap256.sol";
+import "oz-custom/contracts/libraries/structs/BitMap256.sol";
 import "oz-custom/contracts/libraries/Bytes32Address.sol";
 import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 

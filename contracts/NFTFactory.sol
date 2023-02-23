@@ -9,6 +9,7 @@ import "oz-custom/contracts/internal/MultiDelegatecall.sol";
 import "oz-custom/contracts/presets/base/Manager.sol";
 
 import "./interfaces/IBKTreasury.sol";
+import "oz-custom/contracts/internal/interfaces/IWithdrawable.sol";
 import {IBKNFT} from "./BK721.sol";
 
 contract NFTFactory is Manager, Cloner, BKFundForwarder, MultiDelegatecall {
@@ -65,5 +66,21 @@ contract NFTFactory is Manager, Cloner, BKFundForwarder, MultiDelegatecall {
                     abi.encodePacked(name_, symbol_, address(this), VERSION)
                 )
             );
+    }
+
+    function _beforeRecover(bytes memory) internal pure override {}
+
+    function _afterRecover(
+        address vault_,
+        address token_,
+        bytes memory value_
+    ) internal override {
+        if (
+            IWithdrawable(vault_).notifyERC20Transfer(
+                token_,
+                abi.decode(value_, (uint256)),
+                safeRecoverHeader()
+            ) != IWithdrawable.notifyERC20Transfer.selector
+        ) revert();
     }
 }

@@ -9,12 +9,12 @@ trailingComma: all
 overrides:
   - files: "*.sol"
     options:
-      compiler: "0.8.17"
+      compiler: "0.8.18"
       tabWidth: 4
       printWidth: 80
       singleQuote: false
       bracketSpacing: false
-      explicitTypes: always
+      explicitTypes: "always"
   - files: "*.ts"
     options:
       tabWidth: 4

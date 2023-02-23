@@ -1416,6 +1416,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@uniswap/v2-core@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@uniswap/v2-core@npm:1.0.1"
+  checksum: eaa118fe45eac2e80b7468547ce2cde12bd3c8157555d2e40e0462a788c9506c6295247b511382da85e44a89ad92aff7bb3433b23bfbd2eeea23942ecd46e979
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:1, abbrev@npm:^1.0.0":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -1969,6 +1976,7 @@ __metadata:
     "@typechain/ethers-v5": ^10.2.0
     "@typechain/hardhat": ^6.1.5
     "@types/mocha": ^10.0.1
+    "@uniswap/v2-core": ^1.0.1
     chai: ^4.3.7
     cross-env: ^7.0.3
     crypto: ^1.0.1
@@ -1978,7 +1986,7 @@ __metadata:
     hardhat: ^2.12.6
     hardhat-contract-sizer: ^2.7.0
     hardhat-gas-reporter: ^1.0.9
-    oz-custom: 1.1.5-g-5
+    oz-custom: 1.1.7-beta-10
     prettier: ^2.8.3
     prettier-plugin-solidity: ^1.1.1
     solhint: ^3.3.8
@@ -5824,9 +5832,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oz-custom@npm:1.1.5-g-5":
-  version: 1.1.5-g-5
-  resolution: "oz-custom@npm:1.1.5-g-5"
+"oz-custom@npm:1.1.7-beta-10":
+  version: 1.1.7-beta-10
+  resolution: "oz-custom@npm:1.1.7-beta-10"
   dependencies:
     "@ethersproject/abi": ^5.7.0
     "@ethersproject/providers": ^5.7.2
@@ -5858,7 +5866,7 @@ __metadata:
     typechain: ^8.1.1
     typescript: ^4.9.5
     workspace: ^0.0.1-preview.1
-  checksum: 0e28d686852c68760c879ec8ba6ad911b1198f5d0cdb351415f21178762644750df1e1f4f24df35c0fda1756d20478fc879761f8cba2465e2011a6ab2b9fa1e9
+  checksum: 3dc2bf1f532d23fa63b332f3a7e8254cfaf402cfa7521d831959f5f95a290bff9315d081712c2a76ce5139b858913d5d2d9a35f88eab4a3d7b233616dae41df6
   languageName: node
   linkType: hard
 

@@ -28,7 +28,7 @@ contract NotifyGate is
     }
 
     function notifyWithNative(bytes calldata message_) external payable {
-        _safeNativeTransfer(vault(), msg.value);
+        _safeNativeTransfer(vault(), msg.value, safeTransferHeader());
         emit Notified(_msgSender(), message_, address(0), msg.value);
     }
 
@@ -86,6 +86,11 @@ contract NotifyGate is
         ) revert NofifyGate__ExecutionFailed();
 
         emit Notified(user, message_, address(token_), value_);
+    }
+
+    function _beforeRecover(bytes memory) internal view override {
+        _checkRole(Roles.OPERATOR_ROLE, _msgSender());
+        _requirePaused();
     }
 
     function _afterRecover(

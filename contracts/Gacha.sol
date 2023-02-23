@@ -21,7 +21,6 @@ import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgr
 contract Gacha is
     IGacha,
     ManagerUpgradeable,
-    ProxyCheckerUpgradeable,
     TransferableUpgradeable,
     BKFundForwarderUpgradeable,
     MultiDelegatecallUpgradeable

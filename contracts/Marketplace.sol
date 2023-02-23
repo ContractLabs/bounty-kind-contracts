@@ -20,7 +20,6 @@ contract Marketplace is
     IMarketplace,
     ManagerUpgradeable,
     SignableUpgradeable,
-    ProxyCheckerUpgradeable,
     BKFundForwarderUpgradeable
 {
     using Bytes32Address for *;
@@ -145,6 +144,8 @@ contract Marketplace is
         uint256 receiveFraction = percentageFraction - _protocolFee;
         address _vault = vault();
 
+        bytes memory emptyBytes = "";
+
         if (!IBKTreasury(_vault).supportedPayment(address(seller_.payment)))
             revert Marketplace__UnsupportedPayment();
 
@@ -193,15 +194,17 @@ contract Marketplace is
             }
 
             if (msg.value == 0) return;
-            _safeNativeTransfer(buyerAddr_, msg.value);
+            _safeNativeTransfer(buyerAddr_, msg.value, emptyBytes);
         } else {
             uint256 refund = msg.value - seller_.unitPrice;
+
             _safeNativeTransfer(
                 sellerAddr_,
                 seller_.unitPrice.mulDivDown(
                     receiveFraction,
                     percentageFraction
-                )
+                ),
+                emptyBytes
             );
             if (_protocolFee != 0)
                 _safeNativeTransfer(
@@ -209,11 +212,12 @@ contract Marketplace is
                     seller_.unitPrice.mulDivDown(
                         _protocolFee,
                         percentageFraction
-                    )
+                    ),
+                    emptyBytes
                 );
 
             if (refund == 0) return;
-            _safeNativeTransfer(buyerAddr_, refund);
+            _safeNativeTransfer(buyerAddr_, refund, emptyBytes);
         }
     }
 

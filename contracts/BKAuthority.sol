@@ -18,11 +18,11 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
     function initialize(
         address admin_,
         bytes calldata data_,
-        address[] calldata operators_,
-        bytes32[] calldata roles_
+        bytes32[] calldata roles_,
+        address[] calldata operators_
     ) external initializer {
         __BKAuthority_init_unchained();
-        __Authority_init(admin_, data_, operators_, roles_);
+        __Authority_init(admin_, data_, roles_, operators_);
     }
 
     function __BKAuthority_init_unchained() internal onlyInitializing {

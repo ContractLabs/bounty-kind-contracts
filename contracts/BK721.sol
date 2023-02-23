@@ -14,6 +14,7 @@ import "./interfaces/IBKTreasury.sol";
 
 import "oz-custom/contracts/libraries/SSTORE2.sol";
 import "oz-custom/contracts/libraries/StringLib.sol";
+import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 abstract contract BK721 is
     IBK721,
@@ -34,7 +35,7 @@ abstract contract BK721 is
 
     bytes32 public version;
     bytes32 private _baseTokenURIPtr;
-    
+
     mapping(uint256 => uint256) public typeIdTrackers;
 
     function changeVault(
@@ -99,7 +100,7 @@ abstract contract BK721 is
     }
 
     function setRoyalty(
-        IERC20Upgradeable feeToken_,
+        address feeToken_,
         uint96 feeAmt_
     ) external onlyRole(Roles.OPERATOR_ROLE) {
         if (!IBKTreasury(vault()).supportedPayment(address(feeToken_)))
@@ -168,7 +169,7 @@ abstract contract BK721 is
     }
 
     function nonces(address account_) external view returns (uint256) {
-        return _nonce(account_.fillLast12Bytes());
+        return _nonces[account_.fillLast12Bytes()];
     }
 
     function baseURI() external view returns (string memory) {
@@ -209,11 +210,7 @@ abstract contract BK721 is
         public
         view
         virtual
-        override(
-            ERC721Upgradeable,
-            IERC165Upgradeable,
-            ERC721EnumerableUpgradeable
-        )
+        override(ERC721PermitUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return
@@ -237,7 +234,7 @@ abstract contract BK721 is
         __ERC721Permit_init(name_, symbol_);
         __Manager_init_unchained(authority_, 0);
         __ERC721_init_unchained(name_, symbol_);
-        __ProtocolFee_init_unchained(feeToken_, feeAmt_);
+        __ProtocolFee_init_unchained(address(feeToken_), feeAmt_);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
@@ -275,16 +272,26 @@ abstract contract BK721 is
             from_ != address(0) &&
             !_hasRole(Roles.OPERATOR_ROLE, sender)
         ) {
-            (IERC20Upgradeable feeToken, uint256 feeAmt) = feeInfo();
-            if (feeAmt == 0) return;
+            FeeInfo memory _feeInfo = feeInfo;
+
+            address token = _feeInfo.token;
+            uint256 royalty = _feeInfo.royalty;
+
+            if (royalty == 0) return;
 
             address _vault = vault();
-            _safeTransferFrom(feeToken, sender, _vault, feeAmt);
-            if (address(feeToken) != address(0))
+            _safeTransferFrom(
+                token,
+                sender,
+                _vault,
+                royalty,
+                safeTransferHeader()
+            );
+            if (token != address(0))
                 if (
                     IWithdrawableUpgradeable(_vault).notifyERC20Transfer(
-                        address(feeToken),
-                        feeAmt,
+                        token,
+                        royalty,
                         safeTransferHeader()
                     ) != IWithdrawableUpgradeable.notifyERC20Transfer.selector
                 ) revert BK721__ExecutionFailed();
