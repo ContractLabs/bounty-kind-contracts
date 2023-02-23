@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "deploy:bscTest": "hardhat run --network bscTest scripts/deploy-mainnet.ts",
+    "deploy:bsc": "hardhat run --network bsc scripts/deploy-mainnet.ts",
     "deploy:goerli": "hardhat run --network goerli scripts/deploy.ts",
     "deploy:tomoTest": "hardhat run --network tomoTest scripts/deploy.ts",
     "upgrade:bscTest": "hardhat run --network bscTest scripts/upgrade.ts",
@@ -55,7 +56,7 @@
     "hardhat": "^2.12.6",
     "hardhat-contract-sizer": "^2.7.0",
     "hardhat-gas-reporter": "^1.0.9",
-    "oz-custom": "1.1.7-beta-10",
+    "oz-custom": "1.1.7-alpha-3",
     "prettier": "^2.8.3",
     "prettier-plugin-solidity": "^1.1.1",
     "solhint": "^3.3.8",

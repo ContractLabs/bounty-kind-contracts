@@ -33,21 +33,21 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
         address admin_,
         bytes memory data
     ) internal override returns (address) {
-        AggregatorV3Interface priceFeed = abi.decode(
-            data,
-            (AggregatorV3Interface)
-        );
-        return
-            _deploy(
-                address(this).balance,
-                keccak256(
-                    abi.encode(admin_, priceFeed, address(this), VERSION)
-                ),
-                abi.encodePacked(
-                    type(BKTreasury).creationCode,
-                    abi.encode(address(this), priceFeed, "BKGlobalTreasury")
-                )
-            );
+        // AggregatorV3Interface priceFeed = abi.decode(
+        //     data,
+        //     (AggregatorV3Interface)
+        // );
+        // return
+        //     _deploy(
+        //         address(this).balance,
+        //         keccak256(
+        //             abi.encode(admin_, priceFeed, address(this), VERSION)
+        //         ),
+        //         abi.encodePacked(
+        //             type(BKTreasury).creationCode,
+        //             abi.encode(address(this), priceFeed, "BKGlobalTreasury")
+        //         )
+        //     );
     }
 
     function safeRecoverHeader() public pure override returns (bytes memory) {

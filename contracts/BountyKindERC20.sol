@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.19;
 
 import {
     AccessControlEnumerable
@@ -70,22 +70,29 @@ contract BountyKindsERC20 is
         string memory symbol_,
         address admin_,
         address beneficiary_,
+        uint256 initialSupply_,
         IWNT wnt_,
         AggregatorV3Interface priceFeed_
-    ) payable Pausable() Taxable(beneficiary_) ERC20Permit(name_, symbol_, 18) {
+    ) payable Pausable() Taxable(beneficiary_) ERC20Permit(name_, symbol_) {
         wnt = wnt_;
         priceFeed = priceFeed_;
 
         address operator = _msgSender();
 
-        _grantRole(PAUSER_ROLE, operator);
-        _grantRole(MINTER_ROLE, operator);
-        _grantRole(OPERATOR_ROLE, operator);
+        bytes32 pauserRole = PAUSER_ROLE;
+        bytes32 minterRole = MINTER_ROLE;
+        bytes32 operatorRole = OPERATOR_ROLE;
 
-        _grantRole(PAUSER_ROLE, admin_);
-        _grantRole(MINTER_ROLE, admin_);
-        _grantRole(OPERATOR_ROLE, admin_);
+        _grantRole(pauserRole, operator);
+        _grantRole(minterRole, operator);
+        _grantRole(operatorRole, operator);
+
+        _grantRole(pauserRole, admin_);
+        _grantRole(minterRole, admin_);
+        _grantRole(operatorRole, admin_);
         _grantRole(DEFAULT_ADMIN_ROLE, admin_);
+
+        _mint(beneficiary_, initialSupply_ * 1 ether);
     }
 
     function setPool(
@@ -199,7 +206,7 @@ contract BountyKindsERC20 is
             isBlacklisted(_msgSender())
         ) revert BountyKindsERC20__Blacklisted();
 
-        if (_isTaxEnabled()) {
+        if (isTaxEnabled()) {
             uint256 _tax = tax(address(pool), amount_);
             IWNT _wnt = wnt;
 

@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
-import {ethers, upgrades, run} from "hardhat";
+import {ethers, run} from "hardhat";
 import {Contract, ContractFactory} from "ethers";
-import {defaultAbiCoder} from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -14,11 +13,12 @@ async function main(): Promise<void> {
         "FFE",
         "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
         "0x72f615888beC96b9AD244fe774fF789657126fe1",
-        "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
-        "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+        10_000_000,
+        "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
     );
     await ffe.deployed();
-    console.log("FFE deployed to: ", ffe.address);
+    
 
     await run(`verify:verify`, {
         address: ffe.address,
@@ -27,22 +27,39 @@ async function main(): Promise<void> {
             "FFE",
             "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
             "0x72f615888beC96b9AD244fe774fF789657126fe1",
-            "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
-            "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+            10_000_000,
+            "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
         ],
     });
 
-    // const yu: Contract = await BK20.deploy(
-    //     "BOUNTYKINDS YU",
-    //     "YU",
-    //     "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
-    //     "0x72f615888beC96b9AD244fe774fF789657126fe1",
-    //     250_000,
-    //     "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
-    //     "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
-    // );
-    // await yu.deployed();
-    // console.log("YU deployed to: ", yu.address);
+    const yu: Contract = await BK20.deploy(
+        "BOUNTYKINDS YU",
+        "YU",
+        "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
+        "0x72f615888beC96b9AD244fe774fF789657126fe1",
+        250_000,
+        "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
+    );
+    await yu.deployed();
+    
+
+    await run(`verify:verify`, {
+        address: yu.address,
+        constructorArguments: [
+            "BOUNTYKINDS YU",
+            "YU",
+            "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
+            "0x72f615888beC96b9AD244fe774fF789657126fe1",
+            250_000,
+            "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
+        ],
+    });
+
+    console.log("YU deployed to: ", yu.address);
+    console.log("FFE deployed to: ", ffe.address);
 }
 
 main()

@@ -21,27 +21,36 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
 
 const config: HardhatUserConfig = {
     solidity: {
-        version: "0.8.18",
+        version: "0.8.19",
         settings: {
             metadata: {
                 bytecodeHash: "none",
             },
             optimizer: {
                 enabled: true,
-                runs: 800,
+                runs: 1_000_000,
             },
         },
     },
     etherscan: {
         apiKey: {
+            bsc: process.env.TBSC_API_KEY || "",
             bscTestnet: process.env.TBSC_API_KEY || "",
             goerli: process.env.ETH_API_KEY || "",
         },
     },
     networks: {
         bscTest: {
-            url: "https://data-seed-prebsc-2-s3.binance.org:8545",
+            url: "https://data-seed-prebsc-1-s3.binance.org:8545",
             chainId: 97,
+            accounts:
+                process.env.PRIVATE_KEY !== undefined
+                    ? [process.env.PRIVATE_KEY]
+                    : [],
+        },
+        bsc: {
+            url: "https://bsc-dataseed2.binance.org",
+            chainId: 56,
             accounts:
                 process.env.PRIVATE_KEY !== undefined
                     ? [process.env.PRIVATE_KEY]
