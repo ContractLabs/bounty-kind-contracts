@@ -95,6 +95,7 @@ contract BountyKindsERC20 is
         _mint(beneficiary_, initialSupply_ * 1 ether);
     }
 
+    /// @inheritdoc IBountyKindsERC20
     function setPool(
         IUniswapV2Pair pool_
     ) external whenPaused onlyRole(OPERATOR_ROLE) {
@@ -126,10 +127,12 @@ contract BountyKindsERC20 is
         _setTaxBeneficiary(beneficiary_);
     }
 
+    /// @inheritdoc IBountyKindsERC20
     function mint(address to_, uint256 amount_) external onlyRole(MINTER_ROLE) {
         _mint(to_, amount_);
     }
 
+    /// @inheritdoc IBountyKindsERC20
     //  @dev minimal function to recover lost funds
     function execute(
         address target_,
@@ -154,10 +157,17 @@ contract BountyKindsERC20 is
         address pool_,
         uint256 amount_
     ) public view override returns (uint256) {
-        (uint256 res0, uint256 res1, ) = IUniswapV2Pair(pool_).getReserves();
+        uint256 tokenReserve;
+        uint256 nativeReserve;
+        if (IUniswapV2Pair(pool_).token1() == address(this))
+            (nativeReserve, tokenReserve, ) = IUniswapV2Pair(pool_)
+                .getReserves();
+        else
+            (tokenReserve, nativeReserve, ) = IUniswapV2Pair(pool_)
+                .getReserves();
 
         // amount token => amount native
-        uint256 amtNative = amount_.mulDivUp(res0, res1);
+        uint256 amtNative = amount_.mulDivUp(nativeReserve, tokenReserve);
         AggregatorV3Interface _priceFeed = priceFeed;
         (, int256 usd, , , ) = _priceFeed.latestRoundData();
         // amount native => amount usd
