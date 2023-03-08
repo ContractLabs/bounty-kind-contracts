@@ -9,7 +9,7 @@ test = 'contracts/tests'
 cache_path = 'forge-cache'
 gas_reports = ["*"]
 bytecode_hash = 'none'
-solc_version = '0.8.17'
+solc_version = '0.8.19'
 
 [profile.ci]
 verbosity = 4

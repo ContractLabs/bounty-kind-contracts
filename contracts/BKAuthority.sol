@@ -13,12 +13,11 @@ import {
 contract BKAuthority is AuthorityUpgradeable {
     function initialize(
         address admin_,
-        bytes calldata data_,
         bytes32[] calldata roles_,
         address[] calldata operators_
     ) external initializer {
         __BKAuthority_init_unchained();
-        __Authority_init(admin_, data_, roles_, operators_);
+        __Authority_init(admin_, "", roles_, operators_);
     }
 
     function __BKAuthority_init_unchained() internal onlyInitializing {
