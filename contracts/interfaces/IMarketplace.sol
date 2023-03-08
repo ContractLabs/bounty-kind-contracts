@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 import {
-    IERC20PermitUpgradeable
-} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+    IERC721PermitUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 
 interface IMarketplace {
     error Marketplace__Expired();
@@ -18,7 +16,7 @@ interface IMarketplace {
         uint256 tokenId;
         uint256 deadline;
         uint256 unitPrice;
-        IERC20Upgradeable payment;
+        address payment;
         IERC721PermitUpgradeable nft;
         bytes signature;
     }
@@ -46,6 +44,10 @@ interface IMarketplace {
     function nonces(address account_) external view returns (uint256);
 
     function setProtocolFee(uint256 feeFraction_) external;
+
+    function batchExecute(
+        bytes[] calldata data_
+    ) external payable returns (bytes[] memory);
 
     function redeem(
         uint256 deadline_,

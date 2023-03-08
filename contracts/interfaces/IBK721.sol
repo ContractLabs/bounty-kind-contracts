@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "./IBKAsset.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IBKAsset} from "./IBKAsset.sol";
 
 interface IBK721 is IBKAsset {
     error BK721__Expired();
-    error BK721__NotMinted();
     error BK721__Unauthorized();
-    error BK721__AlreadyMinted();
+    error BK721__LengthMismatch();
     error BK721__ExecutionFailed();
     error BK721__InvalidSignature();
     error BK721__TokenNotSupported();
@@ -19,6 +17,19 @@ interface IBK721 is IBKAsset {
         address indexed to,
         uint256 indexed amount
     );
+
+    event BatchTransfered(
+        address indexed operator,
+        address indexed from,
+        uint256 indexed nextId,
+        address[] ids
+    );
+
+    function safeTransferBatch(
+        address from_,
+        address[] calldata tos_,
+        uint256[] calldata tokenIds_
+    ) external;
 
     function mint(
         address to_,

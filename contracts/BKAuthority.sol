@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import {BKTreasury} from "./BKTreasury.sol";
-import {
-    Create2Deployer
-} from "oz-custom/contracts/internal/DeterministicDeployer.sol";
 import {
     Roles,
     AuthorityUpgradeable
 } from "oz-custom/contracts/presets-upgradeable/AuthorityUpgradeable.sol";
 
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {
+    IFundForwarderUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
 
-import "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
-
-contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
+contract BKAuthority is AuthorityUpgradeable {
     function initialize(
         address admin_,
         bytes calldata data_,
@@ -27,27 +23,6 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
 
     function __BKAuthority_init_unchained() internal onlyInitializing {
         _setRoleAdmin(Roles.MINTER_ROLE, Roles.OPERATOR_ROLE);
-    }
-
-    function _deployDefaultTreasury(
-        address admin_,
-        bytes memory data
-    ) internal override returns (address) {
-        // AggregatorV3Interface priceFeed = abi.decode(
-        //     data,
-        //     (AggregatorV3Interface)
-        // );
-        // return
-        //     _deploy(
-        //         address(this).balance,
-        //         keccak256(
-        //             abi.encode(admin_, priceFeed, address(this), VERSION)
-        //         ),
-        //         abi.encodePacked(
-        //             type(BKTreasury).creationCode,
-        //             abi.encode(address(this), priceFeed, "BKGlobalTreasury")
-        //         )
-        //     );
     }
 
     function safeRecoverHeader() public pure override returns (bytes memory) {
@@ -69,6 +44,17 @@ contract BKAuthority is Create2Deployer, AuthorityUpgradeable {
                 )
             );
     }
+
+    function _beforeRecover(
+        bytes memory
+    ) internal override onlyRole(Roles.OPERATOR_ROLE) whenPaused {}
+
+    function _afterRecover(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) internal override {}
 
     uint256[50] private __gap;
 }

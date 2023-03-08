@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import "./IBK721.sol";
 
@@ -9,9 +9,12 @@ interface IRBK721 is IBK721 {
     error RBK721__InvalidSignature();
 
     function setUser(
+        address user_,
         uint256 tokenId,
         uint64 expires_,
         uint256 deadline_,
         bytes calldata signature_
     ) external;
+
+    function rentNonce(address tokenId_) external view returns (uint256);
 }

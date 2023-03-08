@@ -1,25 +1,40 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {
+    ReentrancyGuardUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
+import {
+    Roles,
+    IAuthority,
+    ManagerUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
+import {
+    BKFundForwarderUpgradeable
+} from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+import {
+    MultiDelegatecallUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
-import "./interfaces/IINO.sol";
-import "./interfaces/IBK721.sol";
-import "./interfaces/IBKTreasury.sol";
+import {IINO} from "./interfaces/IINO.sol";
+import {IBK721} from "./interfaces/IBK721.sol";
+import {IBKTreasury} from "./interfaces/IBKTreasury.sol";
 
 import {
     IERC20PermitUpgradeable
-} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol";
 
-import "oz-custom/contracts/libraries/SSTORE2.sol";
-import "oz-custom/contracts/libraries/structs/BitMap256.sol";
-import "oz-custom/contracts/libraries/Bytes32Address.sol";
-import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
+import {
+    IFundForwarderUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
+
+import {SSTORE2} from "oz-custom/contracts/libraries/SSTORE2.sol";
+import {Bytes32Address} from "oz-custom/contracts/libraries/Bytes32Address.sol";
+import {
+    FixedPointMathLib
+} from "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
 contract INO is
     IINO,
@@ -30,7 +45,6 @@ contract INO is
 {
     using SSTORE2 for *;
     using Bytes32Address for *;
-    using BitMap256 for uint256;
     using FixedPointMathLib for *;
 
     bytes32 public constant VERSION =
@@ -72,7 +86,7 @@ contract INO is
         uint64 campaignId_,
         uint32 amount_
     ) external pure returns (uint256) {
-        return (campaignId_ << 32) | (amount_ & ~uint32(0));
+        return (campaignId_ << 32) | (amount_ & 0xffffffff);
     }
 
     function redeem(
@@ -85,7 +99,7 @@ contract INO is
         uint256 amount;
         // get rid of stack too deep
         {
-            uint256 campaignId = (ticketId_ >> 32) & ~uint32(0);
+            uint256 campaignId = (ticketId_ >> 32) & 0xffffffff;
             _campaign = abi.decode(__campaigns[campaignId].read(), (Campaign));
 
             if (
@@ -93,7 +107,7 @@ contract INO is
                 _campaign.end < block.timestamp
             ) revert INO__CampaignEndedOrNotYetStarted();
 
-            amount = ticketId_ & ~uint32(0);
+            amount = ticketId_ & 0xffffffff;
             __supplies[campaignId] -= amount;
             if (
                 (__purchasedAmt[user_.fillLast12Bytes()][
@@ -168,6 +182,17 @@ contract INO is
         if (ptr == 0) return campaign_;
         campaign_ = abi.decode(ptr.read(), (Campaign));
     }
+
+    function _beforeRecover(
+        bytes memory
+    ) internal override whenPaused onlyRole(Roles.OPERATOR_ROLE) {}
+
+    function _afterRecover(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) internal override {}
 
     uint256[47] private __gap;
 }

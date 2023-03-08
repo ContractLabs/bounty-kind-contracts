@@ -1,49 +1,62 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import {
     Roles,
-    Treasury,
-    IAuthority
-} from "oz-custom/contracts/presets-upgradeable/Treasury.sol";
+    IAuthority,
+    TreasuryUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/TreasuryUpgradeable.sol";
 
-import "./interfaces/IBKTreasury.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {IBKTreasury} from "./interfaces/IBKTreasury.sol";
+import {
+    AggregatorV3Interface
+} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-import "oz-custom/contracts/oz/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "oz-custom/contracts/oz/utils/structs/EnumerableSet.sol";
 
-contract BKTreasury is Treasury, IBKTreasury {
+contract BKTreasury is TreasuryUpgradeable, IBKTreasury {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    AggregatorV3Interface public immutable priceFeed;
+    AggregatorV3Interface public priceFeed;
 
     mapping(address => uint256) private __priceOf;
     EnumerableSet.AddressSet private __supportedPayments;
 
-    constructor(
+    function initialize(
         IAuthority authority_,
         AggregatorV3Interface priceFeed_,
-        string memory name_
-    ) payable Treasury(authority_, name_) {
+        string calldata name_
+    ) external initializer {
         priceFeed = priceFeed_;
+        __Treasury_init(authority_, name_);
     }
 
     function updatePrices(
         address[] calldata tokens_,
         uint256[] calldata prices_
     ) external onlyRole(Roles.TREASURER_ROLE) {
-        uint256 length = tokens_.length;
-        if (length != prices_.length) revert BKTreasury__LengthMismatch();
+        uint256 length;
 
         assembly {
-            mstore(32, __priceOf.slot)
+            mstore(0x20, __priceOf.slot)
+            length := tokens_.length
+            if iszero(eq(length, prices_.length)) {
+                //  revert BKTreasury__LengthMismatch()
+                mstore(0x00, 0x42b4607e)
+                revert(0x1c, 0x04)
+            }
         }
 
         for (uint256 i; i < length; ) {
             assembly {
                 let idx := shl(5, i)
-                mstore(0, calldataload(add(tokens_.offset, idx)))
-                sstore(keccak256(0, 64), calldataload(add(prices_.offset, idx)))
+                mstore(0x00, calldataload(add(tokens_.offset, idx)))
+                sstore(
+                    keccak256(0x00, 0x40),
+                    calldataload(add(prices_.offset, idx))
+                )
                 i := add(1, i)
             }
         }
@@ -60,9 +73,9 @@ contract BKTreasury is Treasury, IBKTreasury {
 
         results = new bool[](length);
         for (uint256 i; i < length; ) {
-            if (statuses_[i])
-                results[i] = __supportedPayments.add(payments_[i]);
-            else results[i] = __supportedPayments.remove(payments_[i]);
+            results[i] = statuses_[i]
+                ? __supportedPayments.add(payments_[i])
+                : __supportedPayments.remove(payments_[i]);
 
             unchecked {
                 ++i;
@@ -85,4 +98,6 @@ contract BKTreasury is Treasury, IBKTreasury {
     function supportedPayment(address token_) external view returns (bool) {
         return __supportedPayments.contains(token_);
     }
+
+    uint256[47] private __gap;
 }

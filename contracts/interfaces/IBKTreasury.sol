@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
-
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
+pragma solidity 0.8.19;
 
 interface IBKTreasury {
     error BKTreasury__LengthMismatch();
     error BKTreasury__UnsupportedToken();
+
     event PaymentsUpdated(
         address indexed operator,
         address[] payments,

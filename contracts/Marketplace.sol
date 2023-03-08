@@ -1,26 +1,62 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
+import {
+    BitMapsUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
-import "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
+import {
+    SignableUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
+import {
+    ProxyCheckerUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
 
-import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
+import {
+    Roles,
+    IAuthority,
+    ManagerUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+import {
+    BKFundForwarderUpgradeable
+} from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
 
-import "./interfaces/IBKTreasury.sol";
-import "./interfaces/IMarketplace.sol";
-import "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
+import {IBKTreasury} from "./interfaces/IBKTreasury.sol";
+import {IMarketplace} from "./interfaces/IMarketplace.sol";
+import {
+    IWithdrawableUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
 
-import "oz-custom/contracts/libraries/FixedPointMathLib.sol";
+import {
+    IFundForwarderUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
+
+import {
+    IERC721PermitUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
+
+import {
+    IERC20Upgradeable,
+    IERC20PermitUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol";
+
+import {
+    FixedPointMathLib
+} from "oz-custom/contracts/libraries/FixedPointMathLib.sol";
+
+import {
+    MultiDelegatecallUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
+
+import {Bytes32Address} from "oz-custom/contracts/libraries/Bytes32Address.sol";
 
 contract Marketplace is
     IMarketplace,
     ManagerUpgradeable,
     SignableUpgradeable,
-    BKFundForwarderUpgradeable
+    BKFundForwarderUpgradeable,
+    MultiDelegatecallUpgradeable
 {
     using Bytes32Address for *;
     using FixedPointMathLib for uint256;
@@ -37,9 +73,10 @@ contract Marketplace is
 
     function initialize(
         uint256 feeFraction_,
-        address[] calldata supportedContracts_,
-        IAuthority authority_
+        IAuthority authority_,
+        address[] calldata supportedContracts_
     ) external initializer {
+        __MultiDelegatecall_init_unchained();
         __Signable_init_unchained(type(Marketplace).name, "1");
         __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
         __Marketplace_init_unchained(feeFraction_, supportedContracts_);
@@ -54,6 +91,12 @@ contract Marketplace is
     ) internal onlyInitializing {
         __setProtocolFee(feeFraction_);
         __whiteListContracts(supportedContracts_);
+    }
+
+    function batchExecute(
+        bytes[] calldata data_
+    ) external payable returns (bytes[] memory) {
+        return _multiDelegatecall(data_);
     }
 
     function changeVault(
@@ -101,6 +144,17 @@ contract Marketplace is
         return __whitelistedContracts.get(addr_.fillLast96Bits());
     }
 
+    function _beforeRecover(
+        bytes memory
+    ) internal override whenPaused onlyRole(Roles.OPERATOR_ROLE) {}
+
+    function _afterRecover(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) internal override {}
+
     function __setProtocolFee(uint256 feeFraction_) private {
         protocolFee = feeFraction_;
         emit ProtocolFeeUpdated(_msgSender(), feeFraction_);
@@ -125,12 +179,7 @@ contract Marketplace is
                 seller_.signature
             );
 
-        nft.safeTransferFrom(
-            sellerAddr_,
-            buyerAddr_,
-            tokenId,
-            safeTransferHeader()
-        );
+        nft.safeTransferFrom(sellerAddr_, buyerAddr_, tokenId);
     }
 
     function __processPayment(
@@ -146,15 +195,17 @@ contract Marketplace is
 
         bytes memory emptyBytes = "";
 
-        if (!IBKTreasury(_vault).supportedPayment(address(seller_.payment)))
+        if (!IBKTreasury(_vault).supportedPayment(seller_.payment))
             revert Marketplace__UnsupportedPayment();
 
         if (address(seller_.payment) != address(0)) {
             if (
-                seller_.payment.allowance(buyerAddr_, address(this)) <
-                seller_.unitPrice
+                IERC20Upgradeable(seller_.payment).allowance(
+                    buyerAddr_,
+                    address(this)
+                ) < seller_.unitPrice
             )
-                IERC20PermitUpgradeable(address(seller_.payment)).permit(
+                IERC20PermitUpgradeable(seller_.payment).permit(
                     buyerAddr_,
                     address(this),
                     seller_.unitPrice,
@@ -165,7 +216,7 @@ contract Marketplace is
                 );
 
             _safeERC20TransferFrom(
-                seller_.payment,
+                IERC20Upgradeable(seller_.payment),
                 buyerAddr_,
                 sellerAddr_,
                 seller_.unitPrice.mulDivDown(
@@ -176,7 +227,7 @@ contract Marketplace is
             if (_protocolFee != 0) {
                 uint256 received;
                 _safeERC20TransferFrom(
-                    seller_.payment,
+                    IERC20Upgradeable(seller_.payment),
                     buyerAddr_,
                     _vault,
                     received = seller_.unitPrice.mulDivDown(

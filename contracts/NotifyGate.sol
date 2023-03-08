@@ -1,13 +1,35 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "./internal/BKFundForwarder.sol";
+import {FundForwarder, BKFundForwarder} from "./internal/BKFundForwarder.sol";
 
-import "oz-custom/contracts/presets/base/Manager.sol";
-import "oz-custom/contracts/oz/security/ReentrancyGuard.sol";
+import {
+    Roles,
+    Manager,
+    IAuthority
+} from "oz-custom/contracts/presets/base/Manager.sol";
+import {
+    ReentrancyGuard
+} from "oz-custom/contracts/oz/security/ReentrancyGuard.sol";
 
-import "./interfaces/INotifyGate.sol";
-import "oz-custom/contracts/internal/interfaces/IWithdrawable.sol";
+import {INotifyGate} from "./interfaces/INotifyGate.sol";
+import {
+    IWithdrawable
+} from "oz-custom/contracts/internal/interfaces/IWithdrawable.sol";
+
+import {
+    IFundForwarder
+} from "oz-custom/contracts/internal/interfaces/IFundForwarder.sol";
+
+import {
+    IERC20,
+    IERC20Permit
+} from "oz-custom/contracts/oz/token/ERC20/extensions/IERC20Permit.sol";
+
+import {
+    IERC721,
+    ERC721TokenReceiver
+} from "oz-custom/contracts/oz/token/ERC721/ERC721.sol";
 
 contract NotifyGate is
     Manager,
@@ -17,9 +39,10 @@ contract NotifyGate is
     ERC721TokenReceiver
 {
     constructor(
-        IAuthority authority_,
-        address vault_
-    ) payable ReentrancyGuard() FundForwarder(vault_) Manager(authority_, 0) {}
+        IAuthority authority_
+    ) payable ReentrancyGuard() Manager(authority_, 0) {
+        _changeVault(IFundForwarder(address(authority_)).vault());
+    }
 
     function changeVault(
         address vault_
@@ -28,7 +51,7 @@ contract NotifyGate is
     }
 
     function notifyWithNative(bytes calldata message_) external payable {
-        _safeNativeTransfer(vault(), msg.value, safeTransferHeader());
+        _safeNativeTransfer(vault(), msg.value, "");
         emit Notified(_msgSender(), message_, address(0), msg.value);
     }
 
@@ -88,22 +111,14 @@ contract NotifyGate is
         emit Notified(user, message_, address(token_), value_);
     }
 
-    function _beforeRecover(bytes memory) internal view override {
-        _checkRole(Roles.OPERATOR_ROLE, _msgSender());
-        _requirePaused();
-    }
+    function _beforeRecover(
+        bytes memory
+    ) internal override whenPaused onlyRole(Roles.OPERATOR_ROLE) {}
 
     function _afterRecover(
-        address vault_,
-        address token_,
-        bytes memory value_
-    ) internal override {
-        if (
-            IWithdrawable(vault_).notifyERC20Transfer(
-                token_,
-                abi.decode(value_, (uint256)),
-                safeRecoverHeader()
-            ) != IWithdrawable.notifyERC20Transfer.selector
-        ) revert NofifyGate__ExecutionFailed();
-    }
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) internal override {}
 }

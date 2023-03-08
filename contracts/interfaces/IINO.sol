@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
-
-import "oz-custom/contracts/oz-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+pragma solidity 0.8.19;
 
 interface IINO {
     error INO__Unauthorized();

@@ -1,22 +1,44 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
+import {
+    ERC165CheckerUpgradeable,
+    BKFundForwarderUpgradeable
+} from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
 
-import "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
+import {
+    Roles,
+    IAuthority,
+    ManagerUpgradeable
+} from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
-import "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
-import "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
+import {
+    TransferableUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
+import {
+    ProxyCheckerUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/ProxyCheckerUpgradeable.sol";
+import {
+    MultiDelegatecallUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
-import "./interfaces/IGacha.sol";
-import "./interfaces/IBK721.sol";
-import "./interfaces/IBKTreasury.sol";
-import "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
+import {IGacha} from "./interfaces/IGacha.sol";
+import {IBK721} from "./interfaces/IBK721.sol";
+import {IBKTreasury} from "./interfaces/IBKTreasury.sol";
+import {
+    IWithdrawableUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IWithdrawableUpgradeable.sol";
+import {
+    IFundForwarderUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/interfaces/IFundForwarderUpgradeable.sol";
+import {
+    IERC721Upgradeable
+} from "oz-custom/contracts/oz-upgradeable/token/ERC721/extensions/IERC721PermitUpgradeable.sol";
 
-import "oz-custom/contracts/libraries/Bytes32Address.sol";
-import "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
-import "oz-custom/contracts/oz-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
+import {Bytes32Address} from "oz-custom/contracts/libraries/Bytes32Address.sol";
+import {
+    BitMapsUpgradeable
+} from "oz-custom/contracts/oz-upgradeable/utils/structs/BitMapsUpgradeable.sol";
 
 contract Gacha is
     IGacha,
@@ -62,24 +84,14 @@ contract Gacha is
         uint256[] memory uintPayments;
         assembly {
             uintPayments := _supportedPayments
-            mstore(0, typeId_)
-            mstore(32, __unitPrices.slot)
-            mstore(32, keccak256(0, 64))
         }
         uint256 length = supportedPayments_.length;
         for (uint256 i; i < length; ) {
             __supportedPayments.set(uintPayments[i]);
-            assembly {
-                let idxAlloc := shl(5, i)
-                mstore(
-                    0,
-                    calldataload(add(supportedPayments_.offset, idxAlloc))
-                )
-                sstore(
-                    keccak256(0, 64),
-                    calldataload(add(unitPrices_.offset, idxAlloc))
-                )
-                i := add(i, 1)
+            __unitPrices[typeId_][supportedPayments_[i]] = unitPrices_[i];
+
+            unchecked {
+                ++i;
             }
         }
 
@@ -130,22 +142,31 @@ contract Gacha is
         Ticket memory ticket = __tickets[ticketId_];
 
         if (ticket.account == address(0)) revert Gacha__InvalidTicket();
-
         if (ticket.isUsed) revert Gacha__PurchasedTicket();
 
         ticket.isUsed = true;
 
         __tickets[ticketId_] = ticket;
 
-        if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
+        if (token_.supportsInterface(type(IERC721Upgradeable).interfaceId))
+            IBK721(token_).safeMint(ticket.account, value_);
+        else
             IWithdrawableUpgradeable(vault()).withdraw(
                 token_,
                 ticket.account,
                 value_,
-                "SAFE-WITHDRAW"
+                ""
             );
-        else IBK721(token_).safeMint(ticket.account, value_);
 
         emit Rewarded(_msgSender(), ticketId_, token_, value_);
     }
+
+    function _beforeRecover(bytes memory) internal override whenPaused {}
+
+    function _afterRecover(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) internal override {}
 }

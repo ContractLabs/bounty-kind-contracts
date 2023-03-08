@@ -311,26 +311,38 @@ async function main(): Promise<void> {
     //     ],
     // });
 
-    const data = defaultAbiCoder.encode(
-        ["address", "address[]"],
-        [
-            "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
-            [
-                "0x5c0e6505a748f6aeaad1a474cb2866c22dd4a5b8",
-                "0x4a8d59baf30638fa00af210dac3b78c3f1ebce54",
-                "0x41d546e8cac3f583a5075d6444e14d46cff278bb",
-                "0x61661f30e9559492fa28f0ae78425d050080d5ca",
-                "0x52f5c2737b5df48a0f3ae38d6f4d125596562734",
-                "0x00d397a4694dec764858ab4babad076f540eda07",
-                "0x2117479b2414850b1182afc8de7a628face84a34",
-                "0x1f67c7a859dd3b399e4a5a7bb0d3e1a9d369b4f9",
-                "0x085de31179e75bc85bbf6fd9f033508a9ee0ded2",
-                "0x94DB90de01ecFbC2fA8f82443D1Ea0F4f09ccD18",
-                "0x5445018B3A8Ae30cd25c1D1aAFbe7455a45abDaB",
-            ],
-        ],
+    // const data = defaultAbiCoder.encode(
+    //     ["address", "address[]"],
+    //     [
+    //         "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+    //         [
+    //             "0x5c0e6505a748f6aeaad1a474cb2866c22dd4a5b8",
+    //             "0x4a8d59baf30638fa00af210dac3b78c3f1ebce54",
+    //             "0x41d546e8cac3f583a5075d6444e14d46cff278bb",
+    //             "0x61661f30e9559492fa28f0ae78425d050080d5ca",
+    //             "0x52f5c2737b5df48a0f3ae38d6f4d125596562734",
+    //             "0x00d397a4694dec764858ab4babad076f540eda07",
+    //             "0x2117479b2414850b1182afc8de7a628face84a34",
+    //             "0x1f67c7a859dd3b399e4a5a7bb0d3e1a9d369b4f9",
+    //             "0x085de31179e75bc85bbf6fd9f033508a9ee0ded2",
+    //             "0x94DB90de01ecFbC2fA8f82443D1Ea0F4f09ccD18",
+    //             "0x5445018B3A8Ae30cd25c1D1aAFbe7455a45abDaB",
+    //         ],
+    //     ],
+    // );
+    // console.log({data});
+
+    const Multicall: ContractFactory = await ethers.getContractFactory(
+        "Multicall",
     );
-    console.log({data});
+    const multicall: Contract = await Multicall.deploy();
+    await multicall.deployed();
+    console.log("Multicall deployed to: ", multicall.address);
+
+    await run(`verify:verify`, {
+        address: multicall.address,
+        constructorArguments: [],
+    });
 }
 
 main()
