@@ -161,6 +161,6 @@ contract UniversalCommandGateTest is Test {
         Asset memory asset = Asset(semiNFT, 1, operator, 0, "", abi.encode(4));
 
         vm.prank(operator);
-        semiNFT.safeTransferFrom(operator, gate, 1, 4, )
+        // semiNFT.safeTransferFrom(operator, gate, 1, 4, )
     }
 }

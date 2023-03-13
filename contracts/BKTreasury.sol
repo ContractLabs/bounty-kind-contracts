@@ -99,5 +99,9 @@ contract BKTreasury is TreasuryUpgradeable, IBKTreasury {
         return __supportedPayments.contains(token_);
     }
 
+    function viewSupportedPayments() external view returns (address[] memory) {
+        return __supportedPayments.values();
+    }
+
     uint256[47] private __gap;
 }

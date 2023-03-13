@@ -45,8 +45,8 @@ abstract contract BK721 is
     ERC721EnumerableUpgradeable
 {
     using SSTORE2 for *;
+    using StringLib for *;
     using Bytes32Address for *;
-    using StringLib for uint256;
 
     ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
     bytes32 private constant __MERGE_TYPE_HASH =
@@ -170,7 +170,7 @@ abstract contract BK721 is
             emit BatchTransfered(
                 _msgSender(),
                 from_,
-                i < length - 1 ? tokenIds_[i + 1] : 0,
+                i < length - 1 ? tokenIds_[i] : 0,
                 tos_
             );
         }
@@ -242,7 +242,7 @@ abstract contract BK721 is
             string(
                 abi.encodePacked(
                     __baseTokenURIPtr.read(),
-                    address(this),
+                    address(this).toHexString(),
                     "/",
                     tokenId.toString()
                 )

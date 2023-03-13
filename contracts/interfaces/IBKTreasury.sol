@@ -16,7 +16,9 @@ interface IBKTreasury {
         uint256[] prices
     );
 
+    function priceOf(address token_) external view returns (uint256);
+
     function supportedPayment(address token_) external view returns (bool);
 
-    function priceOf(address token_) external view returns (uint256);
+    function viewSupportedPayments() external view returns (address[] memory);
 }

@@ -77,10 +77,6 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         }
     }
 
-    function rentNonce(address tokenId_) external view returns (uint256) {
-        return _nonces[keccak256(abi.encode(tokenId_))];
-    }
-
     function setUser(
         uint256 tokenId_,
         address user_,
