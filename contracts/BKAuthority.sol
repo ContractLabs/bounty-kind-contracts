@@ -21,11 +21,26 @@ contract BKAuthority is AuthorityUpgradeable, BKFundForwarderUpgradeable {
         address[] calldata operators_
     ) external initializer {
         __BKAuthority_init_unchained();
-        __Authority_init(admin_, "", roles_, operators_);
+        __Authority_init(admin_, roles_, operators_);
     }
 
     function __BKAuthority_init_unchained() internal onlyInitializing {
         _setRoleAdmin(Roles.MINTER_ROLE, Roles.OPERATOR_ROLE);
+    }
+
+    function _grantRole(bytes32 role_, address account_) internal override {
+        if (
+            !(role_ == Roles.PROXY_ROLE ||
+                role_ == Roles.SIGNER_ROLE ||
+                role_ == Roles.PAUSER_ROLE ||
+                role_ == Roles.MINTER_ROLE ||
+                role_ == Roles.OPERATOR_ROLE ||
+                role_ == Roles.UPGRADER_ROLE ||
+                role_ == Roles.TREASURER_ROLE ||
+                role_ == DEFAULT_ADMIN_ROLE)
+        ) revert AccessControl__Unauthorized();
+
+        super._grantRole(role_, account_);
     }
 
     function _beforeRecover(

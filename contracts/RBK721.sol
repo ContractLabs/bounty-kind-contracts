@@ -42,7 +42,7 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
                     tokenId,
                     expires_,
                     deadline_,
-                    _useNonce(keccak256(abi.encode(tokenId)))
+                    _useNonce(bytes32(tokenId))
                 )
             ),
             signature_

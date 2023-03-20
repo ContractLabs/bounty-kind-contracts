@@ -34,7 +34,6 @@ abstract contract BKFundForwarder is FundForwarder {
 
     function _checkValidAddress(address vault_) internal view override {
         super._checkValidAddress(vault_);
-        _onlyProxy(vault_);
         if (!vault_.supportsInterface(type(ITreasury).interfaceId))
             revert FundForwarder__InvalidArgument();
     }

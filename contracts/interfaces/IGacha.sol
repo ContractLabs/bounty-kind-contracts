@@ -2,10 +2,12 @@
 pragma solidity 0.8.19;
 
 interface IGacha {
+    error Gacha__Expired();
     error Gacha__Unauthorized();
     error Gacha__InvalidTicket();
     error Gacha__InvalidPayment();
     error Gacha__PurchasedTicket();
+    error Gacha__InvalidSignature();
     error Gacha__InsufficientAmount();
 
     struct Ticket {
@@ -51,5 +53,13 @@ interface IGacha {
         uint256 type_
     ) external;
 
-    function reward(address token_, uint256 ticketId_, uint256 value_) external;
+    function claimReward(
+        address token_,
+        uint256 ticketId_,
+        uint256 value_,
+        uint256 deadline_,
+        bytes calldata signature_
+    ) external;
+
+    function nonces(uint256 ticketId_) external view returns (uint256);
 }

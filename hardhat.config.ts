@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
             },
             optimizer: {
                 enabled: true,
-                runs: 1_000_000,
+                runs: 1_000,
             },
         },
     },
@@ -41,7 +41,7 @@ const config: HardhatUserConfig = {
     },
     networks: {
         bscTest: {
-            url: "https://data-seed-prebsc-1-s3.binance.org:8545",
+            url: "https://bsc-testnet.public.blastapi.io",
             chainId: 97,
             accounts:
                 process.env.PRIVATE_KEY !== undefined

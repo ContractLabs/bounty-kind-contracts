@@ -25,9 +25,9 @@ contract BKTreasury is TreasuryUpgradeable, IBKTreasury {
     EnumerableSet.AddressSet private __supportedPayments;
 
     function initialize(
+        string calldata name_,
         IAuthority authority_,
-        AggregatorV3Interface priceFeed_,
-        string calldata name_
+        AggregatorV3Interface priceFeed_
     ) external initializer {
         priceFeed = priceFeed_;
         __Treasury_init(authority_, name_);
@@ -37,27 +37,14 @@ contract BKTreasury is TreasuryUpgradeable, IBKTreasury {
         address[] calldata tokens_,
         uint256[] calldata prices_
     ) external onlyRole(Roles.TREASURER_ROLE) {
-        uint256 length;
-
-        assembly {
-            mstore(0x20, __priceOf.slot)
-            length := tokens_.length
-            if iszero(eq(length, prices_.length)) {
-                //  revert BKTreasury__LengthMismatch()
-                mstore(0x00, 0x42b4607e)
-                revert(0x1c, 0x04)
-            }
-        }
+        uint256 length = tokens_.length;
+        if (length != prices_.length) revert BKTreasury__LengthMismatch();
 
         for (uint256 i; i < length; ) {
-            assembly {
-                let idx := shl(5, i)
-                mstore(0x00, calldataload(add(tokens_.offset, idx)))
-                sstore(
-                    keccak256(0x00, 0x40),
-                    calldataload(add(prices_.offset, idx))
-                )
-                i := add(1, i)
+            __priceOf[tokens_[i]] = prices_[i];
+            __supportedPayments.add(tokens_[i]);
+            unchecked {
+                ++i;
             }
         }
 

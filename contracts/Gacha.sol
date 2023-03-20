@@ -13,6 +13,9 @@ import {
 } from "oz-custom/contracts/presets-upgradeable/base/ManagerUpgradeable.sol";
 
 import {
+    SignableUpgradeable
+} from "oz-custom/contracts/internal-upgradeable/SignableUpgradeable.sol";
+import {
     TransferableUpgradeable
 } from "oz-custom/contracts/internal-upgradeable/TransferableUpgradeable.sol";
 import {
@@ -45,11 +48,16 @@ contract Gacha is
     ManagerUpgradeable,
     TransferableUpgradeable,
     BKFundForwarderUpgradeable,
-    MultiDelegatecallUpgradeable
+    MultiDelegatecallUpgradeable,
+    SignableUpgradeable
 {
     using Bytes32Address for *;
     using ERC165CheckerUpgradeable for address;
     using BitMapsUpgradeable for BitMapsUpgradeable.BitMap;
+
+    /// @dev value is equal to keccak256("Claim(address token,uint256 ticketId,uint256 value,uint256 deadline,uint256 nonce)")
+    bytes32 private constant __CLAIM_TYPE_HASH =
+        0xff5122c8134d613571bf8ae24cff90116c8242a568b8dbe337419081fa1403bb;
 
     mapping(uint256 => Ticket) private __tickets;
     BitMapsUpgradeable.BitMap private __supportedPayments;
@@ -57,6 +65,7 @@ contract Gacha is
 
     function initialize(IAuthority authority_) external initializer {
         __MultiDelegatecall_init_unchained();
+        __Signable_init_unchained(type(Gacha).name, "1");
         __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
@@ -65,7 +74,7 @@ contract Gacha is
 
     function batchExecute(
         bytes[] calldata data_
-    ) external returns (bytes[] memory) {
+    ) external onlyRole(Roles.OPERATOR_ROLE) returns (bytes[] memory) {
         return _multiDelegatecall(data_);
     }
 
@@ -134,11 +143,33 @@ contract Gacha is
         emit Redeemed(user_, id_, type_);
     }
 
-    function reward(
+    function claimReward(
         address token_,
         uint256 ticketId_,
-        uint256 value_
-    ) external onlyRole(Roles.OPERATOR_ROLE) {
+        uint256 value_,
+        uint256 deadline_,
+        bytes calldata signature_
+    ) external whenNotPaused {
+        if (deadline_ < block.timestamp) revert Gacha__Expired();
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    keccak256(
+                        abi.encode(
+                            __CLAIM_TYPE_HASH,
+                            token_,
+                            ticketId_,
+                            value_,
+                            deadline_,
+                            _useNonce(bytes32(ticketId_))
+                        )
+                    ),
+                    signature_
+                )
+            )
+        ) revert Gacha__InvalidSignature();
+
         Ticket memory ticket = __tickets[ticketId_];
 
         if (ticket.account == address(0)) revert Gacha__InvalidTicket();
@@ -159,6 +190,10 @@ contract Gacha is
             );
 
         emit Rewarded(_msgSender(), ticketId_, token_, value_);
+    }
+
+    function nonces(uint256 ticketId_) external view returns (uint256) {
+        return _nonces[bytes32(ticketId_)];
     }
 
     function _beforeRecover(bytes memory) internal override whenPaused {}

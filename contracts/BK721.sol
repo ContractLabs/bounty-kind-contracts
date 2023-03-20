@@ -48,13 +48,67 @@ abstract contract BK721 is
     using StringLib for *;
     using Bytes32Address for *;
 
-    ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
-    bytes32 private constant __MERGE_TYPE_HASH =
-        0x085ba72701c4339ed5b893f5421cabf9405901f059ff0c12083eb0b1df6bc19a;
-
     bytes32 private __baseTokenURIPtr;
 
     mapping(uint256 => uint256) public typeIdTrackers;
+
+    mapping(address => mapping(uint248 => uint256)) private __nonceBitMaps;
+
+    function redeemBulk(
+        uint256 nonce_,
+        uint256 amount_,
+        uint256 typeId_,
+        address claimer_,
+        uint256 deadline_,
+        bytes calldata signature_
+    ) external {
+        if (deadline_ < block.timestamp) revert BK721__Expired();
+        _requireNotPaused();
+
+        address sender = _msgSender();
+
+        address[] memory addrs = new address[](2);
+        addrs[0] = claimer_;
+        addrs[1] = sender;
+
+        _checkBlacklistMulti(addrs);
+
+        _invalidateNonce(sender, claimer_, nonce_);
+
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    keccak256(
+                        abi.encode(
+                            ///@dev value is equal to keccak256("Redeem(address claimer,uint256 typeId,uint256 amount,uint256 nonce,uint256 deadline)")
+                            0x77ef6871868b6364332f0081c63b10b340f7531a5d1010a6bd3356568ffcf11d,
+                            claimer_,
+                            typeId_,
+                            amount_,
+                            // @dev resitance to reentrancy
+                            nonce_,
+                            deadline_
+                        )
+                    ),
+                    signature_
+                )
+            )
+        ) revert BK721__InvalidSignature();
+
+        uint256 cursor = nextIdFromType(typeId_);
+        for (uint256 i; i < amount_; ) {
+            unchecked {
+                cursor += i;
+                _mint(claimer_, cursor);
+                ++i;
+            }
+        }
+
+        typeIdTrackers[typeId_] = cursor;
+
+        emit Redeemded(sender, claimer_, typeId_, amount_);
+    }
 
     function changeVault(
         address vault_
@@ -83,7 +137,8 @@ abstract contract BK721 is
                 _recoverSigner(
                     keccak256(
                         abi.encode(
-                            __MERGE_TYPE_HASH,
+                            ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
+                            0x085ba72701c4339ed5b893f5421cabf9405901f059ff0c12083eb0b1df6bc19a,
                             user,
                             toId_,
                             deadline_,
@@ -150,7 +205,7 @@ abstract contract BK721 is
         }
     }
 
-    function safeTransferBatch(
+    function transferBatch(
         address from_,
         address[] calldata tos_,
         uint256[] calldata tokenIds_
@@ -160,7 +215,7 @@ abstract contract BK721 is
 
         uint256 i;
         while (i < length && gasleft() > 250_000) {
-            safeTransferFrom(from_, tos_[i], tokenIds_[i]);
+            transferFrom(from_, tos_[i], tokenIds_[i]);
             unchecked {
                 ++i;
             }
@@ -170,28 +225,27 @@ abstract contract BK721 is
             emit BatchTransfered(
                 _msgSender(),
                 from_,
-                i < length - 1 ? tokenIds_[i] : 0,
-                tos_
+                i < length - 1 ? tokenIds_[i] : 0
             );
         }
     }
 
     function mintBatch(
-        address to_,
         uint256 typeId_,
-        uint256 length_
-    ) external onlyRole(Roles.MINTER_ROLE) returns (uint256[] memory tokenIds) {
-        tokenIds = new uint256[](length_);
+        address[] calldata tos_
+    ) external onlyRole(Roles.MINTER_ROLE) {
+        uint256 length = tos_.length;
         uint256 cursor = nextIdFromType(typeId_);
-        for (uint256 i; i < length_; ) {
+        for (uint256 i; i < length; ) {
             unchecked {
-                _mint(to_, tokenIds[i] = cursor);
+                _mint(tos_[i], cursor);
                 ++cursor;
                 ++i;
             }
         }
+
         typeIdTrackers[typeId_] = cursor;
-        emit BatchMinted(_msgSender(), to_, length_);
+        emit BatchMinted(_msgSender(), length, tos_);
     }
 
     function safeMintBatch(
@@ -208,12 +262,76 @@ abstract contract BK721 is
                 ++i;
             }
         }
-        typeIdTrackers[typeId_] = cursor;
-        emit BatchMinted(_msgSender(), to_, length_);
+
+        address sender = _msgSender();
+        assembly {
+            mstore(0x00, typeId_)
+            mstore(0x20, typeIdTrackers.slot)
+            sstore(keccak256(0x00, 0x40), cursor)
+
+            log4(
+                0x00,
+                0x00,
+                /// @dev value is equal to keccak256("BatchTransfered(address,address,uint256)")
+                0xef50f834ec47321b2a791fa7e4f6ccb0ea5fb5852c73a68f7ce1ab9b759d609d,
+                sender,
+                to_,
+                length_
+            )
+        }
     }
 
     function nonces(address account_) external view returns (uint256) {
         return _nonces[account_.fillLast12Bytes()];
+    }
+
+    function nonceBitMaps(
+        address account_,
+        uint256 nonce_
+    ) external view returns (uint256 bitmap, bool isDirtied) {
+        assembly {
+            mstore(0x00, account_)
+            mstore(0x20, __nonceBitMaps.slot)
+            mstore(0x20, keccak256(0x00, 0x40))
+            mstore(
+                0x00,
+                and(
+                    shr(8, nonce_),
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+            )
+
+            bitmap := sload(keccak256(0x00, 0x40))
+            isDirtied := iszero(iszero(and(bitmap, shl(and(nonce_, 0xff), 1))))
+        }
+    }
+
+    function invalidateNonce(
+        address account_,
+        uint248 wordPos_,
+        uint256 mask_
+    ) external onlyRole(Roles.OPERATOR_ROLE) {
+        _requirePaused();
+
+        assembly {
+            mstore(0x00, account_)
+            mstore(0x20, __nonceBitMaps.slot)
+            mstore(0x20, keccak256(0x00, 0x40))
+            mstore(0x00, wordPos_)
+            let key := keccak256(0x00, 0x40)
+            let bitmap := sload(key)
+            sstore(key, or(bitmap, mask_))
+
+            log4(
+                0x00,
+                0x20,
+                /// @dev value is equal to keccak256("NonceUsed(address,address,uint256,uint248)")
+                0x0df261ec91401191ee6858fdd0e1c4334f5faa334b5db219ea5847b0122164a8,
+                caller(),
+                account_,
+                mask_
+            )
+        }
     }
 
     function baseURI() external view returns (string memory) {
@@ -229,15 +347,21 @@ abstract contract BK721 is
         index = tokenId_ & 0xffffffff;
     }
 
-    function nextIdFromType(uint256 typeId_) public view returns (uint256) {
-        unchecked {
-            return (typeId_ << 32) | (typeIdTrackers[typeId_] + 1);
+    function nextIdFromType(
+        uint256 typeId_
+    ) public view returns (uint256 nextId) {
+        assembly {
+            mstore(0x00, typeId_)
+            mstore(0x20, typeIdTrackers.slot)
+
+            nextId := or(shl(32, typeId_), add(1, sload(keccak256(0x00, 0x40))))
         }
     }
 
     function tokenURI(
         uint256 tokenId
     ) public view override returns (string memory) {
+        ownerOf(tokenId);
         return
             string(
                 abi.encodePacked(
@@ -273,6 +397,41 @@ abstract contract BK721 is
         __baseTokenURIPtr = bytes(baseURI_).write();
     }
 
+    function _invalidateNonce(
+        address sender_,
+        address account_,
+        uint256 nonce_
+    ) internal {
+        assembly {
+            mstore(0x00, account_)
+            mstore(0x20, __nonceBitMaps.slot)
+            mstore(0x20, keccak256(0x00, 0x40))
+            let wordPos := and(
+                shr(8, nonce_),
+                0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+            )
+            mstore(0x00, wordPos)
+            let key := keccak256(0x00, 0x40)
+            let bitmap := sload(key)
+            let bitPosMask := shl(and(nonce_, 0xff), 1)
+            if iszero(iszero(and(bitmap, bitPosMask))) {
+                mstore(0x00, 0x716c4752)
+                revert(0x1c, 0x04)
+            }
+            sstore(key, or(bitmap, bitPosMask))
+
+            log4(
+                0x00,
+                0x20,
+                /// @dev value is equal to keccak256("NonceUsed(address,address,uint256,uint248)")
+                0x0df261ec91401191ee6858fdd0e1c4334f5faa334b5db219ea5847b0122164a8,
+                sender_,
+                account_,
+                bitPosMask
+            )
+        }
+    }
+
     function __BK_init(
         string calldata name_,
         string calldata symbol_,
@@ -281,14 +440,13 @@ abstract contract BK721 is
         address feeToken_,
         IAuthority authority_
     ) internal onlyInitializing {
+        __BK_init_unchained(baseURI_);
         __ERC721Permit_init(name_, symbol_);
         __Manager_init_unchained(authority_, 0);
         __ProtocolFee_init_unchained(feeToken_, feeAmt_);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
-
-        __BK_init_unchained(baseURI_);
     }
 
     function __BK_init_unchained(
@@ -313,9 +471,9 @@ abstract contract BK721 is
         address sender = _msgSender();
 
         address[] memory addrs = new address[](3);
-        addrs[0] = sender;
-        addrs[1] = from_;
-        addrs[2] = to_;
+        addrs[0] = to_;
+        addrs[1] = sender;
+        addrs[2] = from_;
 
         _checkBlacklistMulti(addrs);
 
@@ -354,12 +512,6 @@ abstract contract BK721 is
         _transfer(address(this), to_, tokenId_);
     }
 
-    function __safeMintTransfer(address to_, uint256 tokenId_) private {
-        address sender = _msgSender();
-        _safeMint(sender, tokenId_);
-        _transfer(sender, to_, tokenId_);
-    }
-
     function _baseURI() internal view virtual override returns (string memory) {
         return string(__baseTokenURIPtr.read());
     }
@@ -375,7 +527,7 @@ abstract contract BK721 is
         bytes memory
     ) internal override {}
 
-    uint256[48] private __gap;
+    uint256[47] private __gap;
 }
 
 interface IBKNFT {
