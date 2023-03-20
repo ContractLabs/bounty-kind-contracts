@@ -99,8 +99,8 @@ abstract contract BK721 is
         uint256 cursor = nextIdFromType(typeId_);
         for (uint256 i; i < amount_; ) {
             unchecked {
-                cursor += i;
                 _mint(claimer_, cursor);
+                ++cursor;
                 ++i;
             }
         }
