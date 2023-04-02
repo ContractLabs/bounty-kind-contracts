@@ -59,10 +59,6 @@ interface IINO {
         uint32 amount_
     ) external pure returns (uint256);
 
-    function batchExecute(
-        bytes[] calldata data_
-    ) external returns (bytes[] memory);
-
     function redeem(
         address user_,
         address token_,

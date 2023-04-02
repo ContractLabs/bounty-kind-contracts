@@ -35,10 +35,6 @@ interface IGacha {
         uint96[] unitPrices
     );
 
-    function batchExecute(
-        bytes[] calldata data_
-    ) external returns (bytes[] memory);
-
     function updateTicketPrice(
         uint256 typeId_,
         address[] calldata supportedPayments,

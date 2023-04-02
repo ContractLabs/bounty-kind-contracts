@@ -45,18 +45,13 @@ import {
     FixedPointMathLib
 } from "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
-import {
-    MultiDelegatecallUpgradeable
-} from "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
-
 import {Bytes32Address} from "oz-custom/contracts/libraries/Bytes32Address.sol";
 
 contract Marketplace is
     IMarketplace,
     ManagerUpgradeable,
     SignableUpgradeable,
-    BKFundForwarderUpgradeable,
-    MultiDelegatecallUpgradeable
+    BKFundForwarderUpgradeable
 {
     using Bytes32Address for *;
     using FixedPointMathLib for uint256;
@@ -76,7 +71,6 @@ contract Marketplace is
         IAuthority authority_,
         address[] calldata supportedContracts_
     ) external initializer {
-        __MultiDelegatecall_init_unchained();
         __Signable_init_unchained(type(Marketplace).name, "1");
         __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
         __Marketplace_init_unchained(feeFraction_, supportedContracts_);
@@ -91,12 +85,6 @@ contract Marketplace is
     ) internal onlyInitializing {
         __setProtocolFee(feeFraction_);
         __whiteListContracts(supportedContracts_);
-    }
-
-    function batchExecute(
-        bytes[] calldata data_
-    ) external payable returns (bytes[] memory) {
-        return _multiDelegatecall(data_);
     }
 
     function changeVault(

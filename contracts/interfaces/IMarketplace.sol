@@ -45,10 +45,6 @@ interface IMarketplace {
 
     function setProtocolFee(uint256 feeFraction_) external;
 
-    function batchExecute(
-        bytes[] calldata data_
-    ) external payable returns (bytes[] memory);
-
     function redeem(
         uint256 deadline_,
         Buyer calldata buyer_,

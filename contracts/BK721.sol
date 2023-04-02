@@ -244,7 +244,9 @@ abstract contract BK721 is
             }
         }
 
-        typeIdTrackers[typeId_] = cursor;
+        unchecked {
+            typeIdTrackers[typeId_] = cursor - 1;
+        }
         emit BatchMinted(_msgSender(), length, tos_);
     }
 
@@ -267,7 +269,7 @@ abstract contract BK721 is
         assembly {
             mstore(0x00, typeId_)
             mstore(0x20, typeIdTrackers.slot)
-            sstore(keccak256(0x00, 0x40), cursor)
+            sstore(keccak256(0x00, 0x40), sub(cursor, 1))
 
             log4(
                 0x00,

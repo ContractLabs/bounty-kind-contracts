@@ -1,6 +1,5 @@
 import {Contract, ContractFactory} from "ethers";
 import {ethers, upgrades, network, run} from "hardhat";
-``;
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -20,17 +19,17 @@ async function main(): Promise<void> {
     //     constructorArguments: [],
     // });
 
-    const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-    const sphere: Contract = await upgrades.upgradeProxy(
-        "0xd44286A97d2Ae881DA5764fdBA1E8A318Fd6A64c",
-        BKNFT,
-    );
-    await sphere.deployed();
-    console.log("Sphere upgraded to : ", sphere.address);
-    await run(`verify:verify`, {
-        address: sphere.address,
-        constructorArguments: [],
-    });
+    // const BKNFT: ContractFactory = await ethers.getContractFactory("BKNFT");
+    // const sphere: Contract = await upgrades.upgradeProxy(
+    //     "0xd44286A97d2Ae881DA5764fdBA1E8A318Fd6A64c",
+    //     BKNFT,
+    // );
+    // await sphere.deployed();
+    // console.log("Sphere upgraded to : ", sphere.address);
+    // await run(`verify:verify`, {
+    //     address: sphere.address,
+    //     constructorArguments: [],
+    // });
     // const Business: ContractFactory = await ethers.getContractFactory("BusinessUpgradeable");
     // const business: Contract = await upgrades.upgradeProxy(
     //     "0xf6D3B4Fbd90715976587b2058ABeA5F2D0cB517f",
@@ -107,18 +106,18 @@ async function main(): Promise<void> {
     //     address: gacha.address,
     // });
     // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-    // const equipment: Contract = await upgrades.upgradeProxy(
-    //     process.env.EQUIPMENT || "",
-    //     NFT,
-    // );
-    // await equipment.deployed();
-    // console.log(
-    //     "equipment upgraded to : ",
-    //     await upgrades.erc1967.getImplementationAddress(equipment.address),
-    // );
-    // await run(`verify:verify`, {
-    //     address: equipment.address,
-    // });
+    const emperors: Contract = await upgrades.upgradeProxy(
+        "0x2D6D7B294EDA91cDc07f542dfdd3117A546C0554",
+        NFT,
+    );
+    await emperors.deployed();
+    console.log(
+        "emperors upgraded to : ",
+        await upgrades.erc1967.getImplementationAddress(emperors.address),
+    );
+    await run(`verify:verify`, {
+        address: emperors.address,
+    });
     // const item: Contract = await upgrades.upgradeProxy(
     //     process.env.ITEM || "",
     //     NFT,
@@ -157,10 +156,10 @@ async function main(): Promise<void> {
     // );
     // await run(`verify:verify`, {
     //     address: marketplace.address,
-    // });
+    // });` 
     // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
     // const character: Contract = await upgrades.upgradeProxy(
-    //     process.env.CHARACTER || "",
+    //     "0x412dEa263e6531645235931dC104dD3DB1Ec7923",
     //     RBK721,
     // );
     // await character.deployed();

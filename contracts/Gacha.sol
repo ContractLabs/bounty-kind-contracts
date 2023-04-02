@@ -46,10 +46,9 @@ import {
 contract Gacha is
     IGacha,
     ManagerUpgradeable,
+    SignableUpgradeable,
     TransferableUpgradeable,
-    BKFundForwarderUpgradeable,
-    MultiDelegatecallUpgradeable,
-    SignableUpgradeable
+    BKFundForwarderUpgradeable
 {
     using Bytes32Address for *;
     using ERC165CheckerUpgradeable for address;
@@ -64,18 +63,11 @@ contract Gacha is
     mapping(uint256 => mapping(address => uint96)) private __unitPrices;
 
     function initialize(IAuthority authority_) external initializer {
-        __MultiDelegatecall_init_unchained();
         __Signable_init_unchained(type(Gacha).name, "1");
         __Manager_init_unchained(authority_, Roles.TREASURER_ROLE);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
         );
-    }
-
-    function batchExecute(
-        bytes[] calldata data_
-    ) external onlyRole(Roles.OPERATOR_ROLE) returns (bytes[] memory) {
-        return _multiDelegatecall(data_);
     }
 
     function changeVault(
@@ -134,7 +126,7 @@ contract Gacha is
         if (!token_.supportsInterface(type(IERC721Upgradeable).interfaceId)) {
             uint256 unitPrice = IBKTreasury(vault()).priceOf(token_) *
                 __unitPrices[type_][token_];
-            if (unitPrice != value_) revert Gacha__InsufficientAmount();
+            if (unitPrice > value_) revert Gacha__InsufficientAmount();
         }
 
         ticket.account = user_;
@@ -172,8 +164,8 @@ contract Gacha is
 
         Ticket memory ticket = __tickets[ticketId_];
 
-        if (ticket.account == address(0)) revert Gacha__InvalidTicket();
         if (ticket.isUsed) revert Gacha__PurchasedTicket();
+        if (ticket.account == address(0)) revert Gacha__InvalidTicket();
 
         ticket.isUsed = true;
 
@@ -204,4 +196,6 @@ contract Gacha is
         uint256,
         bytes memory
     ) internal override {}
+
+    uint256[47] private __gap;
 }

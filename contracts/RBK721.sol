@@ -29,24 +29,28 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         uint256 deadline_,
         bytes calldata signature_
     ) external whenNotPaused {
-        address owner = ownerOf(tokenId);
+        ownerOf(tokenId);
         if (block.timestamp > deadline_) revert RBK721__Expired();
 
-        _verify(
-            owner,
-            keccak256(
-                abi.encode(
-                    ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
-                    0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078,
-                    user_,
-                    tokenId,
-                    expires_,
-                    deadline_,
-                    _useNonce(bytes32(tokenId))
+        if (
+            !_hasRole(
+                Roles.SIGNER_ROLE,
+                _recoverSigner(
+                    keccak256(
+                        abi.encode(
+                            ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
+                            0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078,
+                            user_,
+                            tokenId,
+                            expires_,
+                            deadline_,
+                            _useNonce(bytes32(tokenId))
+                        )
+                    ),
+                    signature_
                 )
-            ),
-            signature_
-        );
+            )
+        ) revert BK721__InvalidSignature();
 
         assembly {
             mstore(0x00, tokenId)
@@ -54,7 +58,9 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
             let key := keccak256(0x00, 0x40)
             let data := sload(key)
 
-            if iszero(and(data, 0xffffffffffffffffffffffffffffffffffffffff)) {
+            if iszero(
+                iszero(and(data, 0xffffffffffffffffffffffffffffffffffffffff))
+            ) {
                 mstore(0x00, 0xb5a13506)
                 revert(0x1c, 0x04)
             }
@@ -101,4 +107,6 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
     ) internal override(BK721, ERC721RentableUpgradeable) {
         super._beforeTokenTransfer(from_, to_, tokenId_, batchSize_);
     }
+
+    uint256[50] private __gap;
 }

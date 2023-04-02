@@ -2,10 +2,6 @@
 pragma solidity 0.8.19;
 
 import {
-    ReentrancyGuardUpgradeable
-} from "oz-custom/contracts/oz-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-import {
     Roles,
     IAuthority,
     ManagerUpgradeable
@@ -14,9 +10,6 @@ import {
 import {
     BKFundForwarderUpgradeable
 } from "./internal-upgradeable/BKFundForwarderUpgradeable.sol";
-import {
-    MultiDelegatecallUpgradeable
-} from "oz-custom/contracts/internal-upgradeable/MultiDelegatecallUpgradeable.sol";
 
 import {IINO} from "./interfaces/IINO.sol";
 import {IBK721} from "./interfaces/IBK721.sol";
@@ -36,13 +29,7 @@ import {
     FixedPointMathLib
 } from "oz-custom/contracts/libraries/FixedPointMathLib.sol";
 
-contract INO is
-    IINO,
-    ManagerUpgradeable,
-    BKFundForwarderUpgradeable,
-    ReentrancyGuardUpgradeable,
-    MultiDelegatecallUpgradeable
-{
+contract INO is IINO, ManagerUpgradeable, BKFundForwarderUpgradeable {
     using SSTORE2 for *;
     using Bytes32Address for *;
     using FixedPointMathLib for *;
@@ -62,8 +49,6 @@ contract INO is
     mapping(bytes32 => mapping(uint256 => uint256)) private __purchasedAmt;
 
     function initialize(IAuthority authority_) external initializer {
-        __ReentrancyGuard_init_unchained();
-        __MultiDelegatecall_init_unchained();
         __Manager_init_unchained(authority_, 0);
         __FundForwarder_init_unchained(
             IFundForwarderUpgradeable(address(authority_)).vault()
@@ -74,12 +59,6 @@ contract INO is
         address vault_
     ) external override onlyRole(Roles.TREASURER_ROLE) {
         _changeVault(vault_);
-    }
-
-    function batchExecute(
-        bytes[] calldata data_
-    ) external returns (bytes[] memory) {
-        return _multiDelegatecall(data_);
     }
 
     function ticketId(
