@@ -11,6 +11,14 @@ interface IBK721 is IBKAsset {
     error BK721__InvalidSignature();
     error BK721__TokenNotSupported();
 
+    event Exchanged(
+        address indexed sender,
+        IBK721 indexed forNFT,
+        uint256 indexed forTypeId,
+        uint256 forAmount,
+        uint256[] senderNFTIds
+    );
+
     event Merged(address indexed account, uint256[] from, uint256 to);
 
     event Redeemded(
@@ -31,6 +39,16 @@ interface IBK721 is IBKAsset {
         address indexed from,
         uint256 indexed nextId
     );
+
+    function exchangeAssets(
+        IBK721 forNFT_,
+        uint256 forAmount_,
+        uint256 forTypeId_,
+        uint256 nonce_,
+        uint256 deadline_,
+        uint256[] calldata myIds_,
+        bytes calldata signature_
+    ) external returns (uint256[] memory forIds);
 
     function redeemBulk(
         uint256 nonce_,
@@ -54,14 +72,14 @@ interface IBK721 is IBKAsset {
 
     function safeMint(
         address to_,
-        uint256 tokenId_
+        uint256 typeId_
     ) external returns (uint256 tokenId);
 
     function mintBatch(uint256 typeId_, address[] calldata tos_) external;
 
     function safeMintBatch(
         address to_,
-        uint256 fromId_,
+        uint256 typeId_,
         uint256 length_
     ) external returns (uint256[] memory tokenIds);
 

@@ -54,6 +54,78 @@ abstract contract BK721 is
 
     mapping(address => mapping(uint248 => uint256)) private __nonceBitMaps;
 
+    modifier whenUseSignature(uint256 deadline_) {
+        _checkExpiry(deadline_);
+        _;
+    }
+
+    function exchangeAssets(
+        IBK721 forNFT_,
+        uint256 forAmount_,
+        uint256 forTypeId_,
+        uint256 nonce_,
+        uint256 deadline_,
+        uint256[] calldata myIds_,
+        bytes calldata signature_
+    )
+        external
+        whenNotPaused
+        whenUseSignature(deadline_)
+        returns (uint256[] memory forIds)
+    {
+        address sender = _msgSender();
+        /// @dev get rid of stack too deep
+        {
+            address[] memory addrs = new address[](1);
+            addrs[0] = sender;
+            _checkBlacklistMulti(addrs);
+        }
+
+        address _vault = vault();
+        IBK721 forNFT = forNFT_;
+        uint256 forTypeId = forTypeId_;
+        uint256 forAmount = forAmount_;
+        /// @dev get rid of stack too deep
+        {
+            bytes memory data = abi.encodePacked(myIds_);
+            uint256 nonce = nonce_;
+            uint256 deadline = deadline_;
+            data = abi.encode(
+                /// @dev value is equal to keccak256("Exchange(address forNFT,uint256 forAmount,uint256 forTypeId,address sendTo,uint256 nonce,uint256 deadline,uint256[] myIds,uint256[] forIds)")
+                0x24d730265f8777029809e061ce409613cfe605e29123ffd1d10a3d34105ebe61,
+                forNFT,
+                forAmount,
+                forTypeId,
+                _vault,
+                nonce,
+                deadline,
+                data
+            );
+            _invalidateNonce(sender, sender, nonce);
+            _verifySig(keccak256(data), signature_);
+        }
+
+        /// @dev get rid of stack too deep
+        {
+            emit Exchanged(sender, forNFT, forTypeId, forAmount, myIds_);
+            uint256 length = myIds_.length;
+            bytes memory _safeTransferHeader = safeTransferHeader();
+            uint256 myId;
+            for (uint256 i; i < length; ) {
+                myId = myIds_[i];
+
+                if (ownerOf(myId) != sender) revert BK721__Unauthorized();
+                _safeTransferFrom(sender, _vault, myId, _safeTransferHeader);
+
+                unchecked {
+                    ++i;
+                }
+            }
+
+            forIds = forNFT.safeMintBatch(sender, forTypeId, forAmount);
+        }
+    }
+
     function redeemBulk(
         uint256 nonce_,
         uint256 amount_,
@@ -61,10 +133,7 @@ abstract contract BK721 is
         address claimer_,
         uint256 deadline_,
         bytes calldata signature_
-    ) external {
-        if (deadline_ < block.timestamp) revert BK721__Expired();
-        _requireNotPaused();
-
+    ) external whenNotPaused whenUseSignature(deadline_) {
         address sender = _msgSender();
 
         address[] memory addrs = new address[](2);
@@ -75,26 +144,21 @@ abstract contract BK721 is
 
         _invalidateNonce(sender, claimer_, nonce_);
 
-        if (
-            !_hasRole(
-                Roles.SIGNER_ROLE,
-                _recoverSigner(
-                    keccak256(
-                        abi.encode(
-                            ///@dev value is equal to keccak256("Redeem(address claimer,uint256 typeId,uint256 amount,uint256 nonce,uint256 deadline)")
-                            0x77ef6871868b6364332f0081c63b10b340f7531a5d1010a6bd3356568ffcf11d,
-                            claimer_,
-                            typeId_,
-                            amount_,
-                            // @dev resitance to reentrancy
-                            nonce_,
-                            deadline_
-                        )
-                    ),
-                    signature_
+        _verifySig(
+            keccak256(
+                abi.encode(
+                    ///@dev value is equal to keccak256("Redeem(address claimer,uint256 typeId,uint256 amount,uint256 nonce,uint256 deadline)")
+                    0x77ef6871868b6364332f0081c63b10b340f7531a5d1010a6bd3356568ffcf11d,
+                    claimer_,
+                    typeId_,
+                    amount_,
+                    // @dev resitance to reentrancy
+                    nonce_,
+                    deadline_
                 )
-            )
-        ) revert BK721__InvalidSignature();
+            ),
+            signature_
+        );
 
         uint256 cursor = nextIdFromType(typeId_);
         for (uint256 i; i < amount_; ) {
@@ -105,7 +169,7 @@ abstract contract BK721 is
             }
         }
 
-        typeIdTrackers[typeId_] = cursor;
+        _setTypeIdTrackers(typeId_, cursor);
 
         emit Redeemded(sender, claimer_, typeId_, amount_);
     }
@@ -127,29 +191,22 @@ abstract contract BK721 is
         uint256 toId_,
         uint256 deadline_,
         bytes calldata signature_
-    ) external {
-        if (block.timestamp > deadline_) revert BK721__Expired();
-
+    ) external whenUseSignature(deadline_) {
         address user = _msgSender();
-        if (
-            !_hasRole(
-                Roles.SIGNER_ROLE,
-                _recoverSigner(
-                    keccak256(
-                        abi.encode(
-                            ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
-                            0x085ba72701c4339ed5b893f5421cabf9405901f059ff0c12083eb0b1df6bc19a,
-                            user,
-                            toId_,
-                            deadline_,
-                            _useNonce(user.fillLast12Bytes()), // @dev resitance to reentrancy
-                            keccak256(abi.encodePacked(fromIds_))
-                        )
-                    ),
-                    signature_
+        _verifySig(
+            keccak256(
+                abi.encode(
+                    ///@dev value is equal to keccak256("Swap(address user,uint256 toId,uint256 deadline,uint256 nonce,uint256[] fromIds)")
+                    0x085ba72701c4339ed5b893f5421cabf9405901f059ff0c12083eb0b1df6bc19a,
+                    user,
+                    toId_,
+                    deadline_,
+                    _useNonce(user.fillLast12Bytes()), // @dev resitance to reentrancy
+                    keccak256(abi.encodePacked(fromIds_))
                 )
-            )
-        ) revert BK721__InvalidSignature();
+            ),
+            signature_
+        );
 
         uint256 fromId;
         uint256 length = fromIds_.length;
@@ -167,7 +224,7 @@ abstract contract BK721 is
         if (!(ownerOfToId == address(0) || ownerOfToId == user))
             revert BK721__Unauthorized();
 
-        if (ownerOfToId == address(0)) __mintTransfer(user, toId_);
+        if (ownerOfToId == address(0)) _mintTransfer(user, toId_);
 
         emit Merged(user, fromIds_, toId_);
     }
@@ -188,11 +245,39 @@ abstract contract BK721 is
         address to_,
         uint256 typeId_
     ) external onlyRole(Roles.PROXY_ROLE) returns (uint256 tokenId) {
-        unchecked {
-            _safeMint(
+        _safeMint(to_, tokenId = _useTypeIdTrackers(typeId_));
+    }
+
+    function safeMintBatch(
+        address to_,
+        uint256 typeId_,
+        uint256 length_
+    ) external onlyRole(Roles.PROXY_ROLE) returns (uint256[] memory tokenIds) {
+        tokenIds = new uint256[](length_);
+        uint256 cursor = nextIdFromType(typeId_);
+        for (uint256 i; i < length_; ) {
+            unchecked {
+                _safeMint(to_, tokenIds[i] = cursor);
+                ++cursor;
+                ++i;
+            }
+        }
+
+        address sender = _msgSender();
+        assembly {
+            mstore(0x00, typeId_)
+            mstore(0x20, typeIdTrackers.slot)
+            sstore(keccak256(0x00, 0x40), sub(cursor, 1))
+
+            log4(
+                0x00,
+                0x00,
+                /// @dev value is equal to keccak256("BatchTransfered(address,address,uint256)")
+                0xef50f834ec47321b2a791fa7e4f6ccb0ea5fb5852c73a68f7ce1ab9b759d609d,
+                sender,
                 to_,
-                tokenId = (typeId_ << 32) | typeIdTrackers[typeId_]++
-            );
+                length_
+            )
         }
     }
 
@@ -200,9 +285,7 @@ abstract contract BK721 is
         address to_,
         uint256 typeId_
     ) external onlyRole(Roles.MINTER_ROLE) returns (uint256 tokenId) {
-        unchecked {
-            _mint(to_, tokenId = (typeId_ << 32) | typeIdTrackers[typeId_]++);
-        }
+        _mint(to_, tokenId = _useTypeIdTrackers(typeId_));
     }
 
     function transferBatch(
@@ -245,12 +328,13 @@ abstract contract BK721 is
         }
 
         unchecked {
-            typeIdTrackers[typeId_] = cursor - 1;
+            _setTypeIdTrackers(typeId_, cursor - 1);
         }
+
         emit BatchMinted(_msgSender(), length, tos_);
     }
 
-    function safeMintBatch(
+    function safeMint(
         address to_,
         uint256 typeId_,
         uint256 length_
@@ -283,8 +367,12 @@ abstract contract BK721 is
         }
     }
 
-    function nonces(address account_) external view returns (uint256) {
-        return _nonces[account_.fillLast12Bytes()];
+    function nonces(address account_) external view returns (uint256 nonce) {
+        assembly {
+            mstore(0x00, account_)
+            mstore(0x20, _nonces.slot)
+            nonce := sload(keccak256(0x00, 0x40))
+        }
     }
 
     function nonceBitMaps(
@@ -312,9 +400,7 @@ abstract contract BK721 is
         address account_,
         uint248 wordPos_,
         uint256 mask_
-    ) external onlyRole(Roles.OPERATOR_ROLE) {
-        _requirePaused();
-
+    ) external onlyRole(Roles.OPERATOR_ROLE) whenPaused {
         assembly {
             mstore(0x00, account_)
             mstore(0x20, __nonceBitMaps.slot)
@@ -457,6 +543,20 @@ abstract contract BK721 is
         _setBaseURI(baseURI_);
     }
 
+    function _useTypeIdTrackers(
+        uint256 typeId_
+    ) internal returns (uint256 tokenId) {
+        assembly {
+            mstore(0x00, typeId_)
+            mstore(0x20, typeIdTrackers.slot)
+            let key := keccak256(0x00, 0x40)
+            let typeIdTracker := sload(key)
+            tokenId := or(shl(32, typeId_), typeIdTracker)
+
+            sstore(key, add(1, typeIdTracker))
+        }
+    }
+
     function _beforeTokenTransfer(
         address from_,
         address to_,
@@ -509,9 +609,34 @@ abstract contract BK721 is
         revert BK721__ExecutionFailed();
     }
 
-    function __mintTransfer(address to_, uint256 tokenId_) private {
+    function _setTypeIdTrackers(uint256 typeId_, uint256 value_) internal {
+        assembly {
+            mstore(0x00, typeId_)
+            mstore(0x20, typeIdTrackers.slot)
+            sstore(keccak256(0x00, 0x40), value_)
+        }
+    }
+
+    function _mintTransfer(address to_, uint256 tokenId_) private {
         _mint(address(this), tokenId_);
         _transfer(address(this), to_, tokenId_);
+    }
+
+    function _verifySig(
+        bytes32 digest_,
+        bytes calldata signature_
+    ) internal view {
+        if (!_hasRole(Roles.SIGNER_ROLE, _recoverSigner(digest_, signature_)))
+            revert BK721__InvalidSignature();
+    }
+
+    function _checkExpiry(uint256 deadline_) internal view {
+        assembly {
+            if lt(deadline_, timestamp()) {
+                mstore(0x00, 0xc5d24601)
+                revert(0x1c, 0x04)
+            }
+        }
     }
 
     function _baseURI() internal view virtual override returns (string memory) {

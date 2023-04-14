@@ -106,18 +106,18 @@ async function main(): Promise<void> {
     //     address: gacha.address,
     // });
     // const NFT: ContractFactory = await ethers.getContractFactory("BKNFT");
-    const emperors: Contract = await upgrades.upgradeProxy(
-        "0x2D6D7B294EDA91cDc07f542dfdd3117A546C0554",
-        NFT,
-    );
-    await emperors.deployed();
-    console.log(
-        "emperors upgraded to : ",
-        await upgrades.erc1967.getImplementationAddress(emperors.address),
-    );
-    await run(`verify:verify`, {
-        address: emperors.address,
-    });
+    // const emperors: Contract = await upgrades.upgradeProxy(
+    //     "0x2D6D7B294EDA91cDc07f542dfdd3117A546C0554",
+    //     NFT,
+    // );
+    // await emperors.deployed();
+    // console.log(
+    //     "emperors upgraded to : ",
+    //     await upgrades.erc1967.getImplementationAddress(emperors.address),
+    // );
+    // await run(`verify:verify`, {
+    //     address: emperors.address,
+    // });
     // const item: Contract = await upgrades.upgradeProxy(
     //     process.env.ITEM || "",
     //     NFT,
@@ -157,19 +157,19 @@ async function main(): Promise<void> {
     // await run(`verify:verify`, {
     //     address: marketplace.address,
     // });` 
-    // const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
-    // const character: Contract = await upgrades.upgradeProxy(
-    //     "0x412dEa263e6531645235931dC104dD3DB1Ec7923",
-    //     RBK721,
-    // );
-    // await character.deployed();
-    // console.log(
-    //     "RBK721 upgraded to : ",
-    //     await upgrades.erc1967.getImplementationAddress(character.address),
-    // );
-    // await run(`verify:verify`, {
-    //     address: character.address,
-    // });
+    const RBK721: ContractFactory = await ethers.getContractFactory("RBK721");
+    const character: Contract = await upgrades.upgradeProxy(
+        "0x412dEa263e6531645235931dC104dD3DB1Ec7923",
+        RBK721,
+    );
+    await character.deployed();
+    console.log(
+        "RBK721 upgraded to : ",
+        await upgrades.erc1967.getImplementationAddress(character.address),
+    );
+    await run(`verify:verify`, {
+        address: character.address,
+    });
     // const INO: ContractFactory = await ethers.getContractFactory("INO");
     // const ino: Contract = await upgrades.upgradeProxy(
     //     process.env.INO || "",

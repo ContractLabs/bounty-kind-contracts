@@ -28,29 +28,23 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
         uint64 expires_,
         uint256 deadline_,
         bytes calldata signature_
-    ) external whenNotPaused {
+    ) external whenNotPaused whenUseSignature(deadline_) {
         ownerOf(tokenId);
-        if (block.timestamp > deadline_) revert RBK721__Expired();
 
-        if (
-            !_hasRole(
-                Roles.SIGNER_ROLE,
-                _recoverSigner(
-                    keccak256(
-                        abi.encode(
-                            ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
-                            0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078,
-                            user_,
-                            tokenId,
-                            expires_,
-                            deadline_,
-                            _useNonce(bytes32(tokenId))
-                        )
-                    ),
-                    signature_
+        _verifySig(
+            keccak256(
+                abi.encode(
+                    ///@dev value is equal to keccak256("Permit(address user,uint256 tokenId,uint256 expires,uint256 deadline,uint256 nonce)")
+                    0x791d178915e3bc91599d5bc6c1eab516b25cb66fc0b46b415e2018109bbaa078,
+                    user_,
+                    tokenId,
+                    expires_,
+                    deadline_,
+                    _useNonce(bytes32(tokenId))
                 )
-            )
-        ) revert BK721__InvalidSignature();
+            ),
+            signature_
+        );
 
         assembly {
             mstore(0x00, tokenId)
