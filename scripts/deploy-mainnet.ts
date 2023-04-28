@@ -33,66 +33,66 @@ async function main(): Promise<void> {
         kind: "uups",
         initializer: "initialize",
     };
-    // const authority = await deployAndVerify(
-    //     "BKAuthority",
-    //     [
-    //         "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
-    //         [
-    //             // MINTER_ROLE
-    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    //             "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+    const authority = await deployAndVerify(
+        "BKAuthority",
+        [
+            "0xc065ee0cab9ecbd0b80f3a3cc219acce441573c6",
+            [
+                // MINTER_ROLE
+                "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+                "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+                "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+                "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+                "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
 
-    //             // OPERATOR_ROLE
-    //             "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929",
-    //             "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929",
+                // OPERATOR_ROLE
+                "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929",
+                "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929",
 
-    //             // PAUSER_ROLE
-    //             "0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a",
+                // PAUSER_ROLE
+                "0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a",
 
-    //             // SIGNER_ROLE
-    //             "0xe2f4eaae4a9751e85a3e4a7b9587827a877f29914755229b07a7b2da98285f70",
+                // SIGNER_ROLE
+                "0xe2f4eaae4a9751e85a3e4a7b9587827a877f29914755229b07a7b2da98285f70",
 
-    //             // TREASURER_ROLE
-    //             "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07",
-    //             "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07",
+                // TREASURER_ROLE
+                "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07",
+                "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07",
 
-    //             // UPGRADER_ROLE
-    //             "0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3",
-    //             "0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3",
-    //         ],
-    //         [
-    //             // MINTER_ROLE
-    //             "0xa71002059e5a330d2adfcad8879ef0e36a241398",
-    //             "0x30f51950bfa636edeaa6639f0359852889777f4f",
-    //             "0xba16a39747dbcf4cc7f9eb9146af433e0e1b669b",
-    //             "0x0eee4c91c19e2aeec604665031e7cc21489ac743",
-    //             "0x267839d63f9d651569b5a3e4656f40eba778a59b",
+                // UPGRADER_ROLE
+                "0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3",
+                "0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3",
+            ],
+            [
+                // MINTER_ROLE
+                "0xa71002059e5a330d2adfcad8879ef0e36a241398",
+                "0x30f51950bfa636edeaa6639f0359852889777f4f",
+                "0xba16a39747dbcf4cc7f9eb9146af433e0e1b669b",
+                "0x0eee4c91c19e2aeec604665031e7cc21489ac743",
+                "0x267839d63f9d651569b5a3e4656f40eba778a59b",
 
-    //             // OPERATOR_ROLE
-    //             "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
-    //             "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
+                // OPERATOR_ROLE
+                "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
+                "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
 
-    //             // PAUSER_ROLE
-    //             "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
+                // PAUSER_ROLE
+                "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
 
-    //             // SIGNER_ROLE
-    //             "0x8076cac201f11867f7490d6def88621b0439ee11",
+                // SIGNER_ROLE
+                "0x8076cac201f11867f7490d6def88621b0439ee11",
 
-    //             // TREASURER_ROLE
-    //             "0x7caf7b77e2cb50fe152575a448362bb229975d45",
-    //             "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
+                // TREASURER_ROLE
+                "0x7caf7b77e2cb50fe152575a448362bb229975d45",
+                "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
 
-    //             // UPGRADER_ROLE
-    //             "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
-    //             "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
-    //         ],
-    //     ],
-    //     true,
-    //     proxyOption
-    // );
+                // UPGRADER_ROLE
+                "0xcFa0D80130aE8Aa5532CE3c57bC42d66669Cf150",
+                "0x3F579e98e794B870aF2E53115DC8F9C4B2A1bDA6", // test
+            ],
+        ],
+        true,
+        proxyOption
+    );
 
     // const treasury = await deployAndVerify(
     //     "BKTreasury",

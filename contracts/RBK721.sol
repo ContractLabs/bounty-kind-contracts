@@ -52,12 +52,6 @@ contract RBK721 is BK721, IRBK721, ERC721RentableUpgradeable {
             let key := keccak256(0x00, 0x40)
             let data := sload(key)
 
-            if iszero(
-                iszero(and(data, 0xffffffffffffffffffffffffffffffffffffffff))
-            ) {
-                mstore(0x00, 0xb5a13506)
-                revert(0x1c, 0x04)
-            }
             if gt(shr(data, 160), timestamp()) {
                 mstore(0x00, 0xb5a13506)
                 revert(0x1c, 0x04)

@@ -4,13 +4,39 @@ pragma solidity 0.8.19;
 import {IBKAsset} from "./IBKAsset.sol";
 
 interface IBK721 is IBKAsset {
+    /**
+     * @dev Throws if the exchange request has already expired.
+     */
     error BK721__Expired();
+    /**
+     * @dev Throws if the exchange request is not authorized.
+     */
     error BK721__Unauthorized();
+    /**
+     * @dev Throws if the length of an array does not match the expected length.
+     */
     error BK721__LengthMismatch();
+    /**
+     * @dev Throws if an execution fails.
+     */
     error BK721__ExecutionFailed();
+    /**
+     * @dev Throws if the signature is invalid.
+     */
     error BK721__InvalidSignature();
+    /**
+     * @dev Throws if the token is not supported.
+     */
     error BK721__TokenNotSupported();
 
+    /**
+     * @dev Emitted when tokens are exchanged between two users.
+     * @param sender The address of the sender.
+     * @param forNFT The instance of IBK721.
+     * @param forTypeId The type ID of the token.
+     * @param forAmount The amount of tokens being exchanged.
+     * @param senderNFTIds The token IDs being transferred.
+     */
     event Exchanged(
         address indexed sender,
         IBK721 indexed forNFT,
@@ -19,8 +45,21 @@ interface IBK721 is IBKAsset {
         uint256[] senderNFTIds
     );
 
+    /**
+     * @dev Emitted when two or more NFTs are merged into a single NFT.
+     * @param account The account to which the NFT is merged.
+     * @param from The token IDs being merged.
+     * @param to The token ID of the resulting merged NFT.
+     */
     event Merged(address indexed account, uint256[] from, uint256 to);
 
+    /**
+     * @dev Emitted when tokens are redeemed by a user.
+     * @param operator The address of the operator redeeming the tokens.
+     * @param claimer The address of the user claiming the tokens.
+     * @param typeId The type ID of the token.
+     * @param amount The amount of tokens being redeemed.
+     */
     event Redeemded(
         address indexed operator,
         address indexed claimer,
@@ -28,12 +67,24 @@ interface IBK721 is IBKAsset {
         uint256 amount
     );
 
+    /**
+     * @dev Emitted when tokens are minted in bulk by an operator.
+     * @param operator The address of the operator minting the tokens.
+     * @param amount The amount of tokens being minted.
+     * @param tos The addresses of the users receiving the tokens.
+     */
     event BatchMinted(
         address indexed operator,
         uint256 indexed amount,
         address[] tos
     );
 
+    /**
+     * @dev Emitted when tokens are transferred in bulk from one user to multiple users.
+     * @param operator The address of the operator performing the transfer.
+     * @param from The address of the user transferring the tokens.
+     * @param nextId The next available token ID.
+     */
     event BatchTransfered(
         address indexed operator,
         address indexed from,
