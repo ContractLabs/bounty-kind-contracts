@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {
+    IFundForwarderUpgradeable,
     FundForwarderUpgradeable
 } from "oz-custom/contracts/internal-upgradeable/FundForwarderUpgradeable.sol";
 

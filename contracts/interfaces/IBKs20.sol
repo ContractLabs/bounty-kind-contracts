@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {
+    IUniswapV2Pair
+} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+
 /**
  *@title IBountyKindsERC20
  *@dev This interface defines the methods and events for a contract that manages a ERC20 token and allows executing calls to external contracts.
  */
-interface IBK20 {
+interface IBKs20 {
     error BountyKindsERC20__Blacklisted();
     error BountyKindsERC20__InvalidArguments();
 
@@ -31,6 +35,24 @@ interface IBK20 {
         bytes callData,
         bytes returnData
     );
+
+    /**
+     * @dev Emitted when the Uniswap V2 pair is updated.
+     * @param operator The address of the operator that updated the Uniswap V2 pair.
+     * @param poolOld The old Uniswap V2 pair address.
+     * @param poolNew The new Uniswap V2 pair address.
+     */
+    event PoolSet(
+        address indexed operator,
+        IUniswapV2Pair indexed poolOld,
+        IUniswapV2Pair indexed poolNew
+    );
+
+    /**
+     * @dev Sets the Uniswap V2 pair address.
+     * @param pool_ The address of the new Uniswap V2 pair.
+     */
+    function setPool(IUniswapV2Pair pool_) external;
 
     /**
      * @dev Mints tokens to the specified address.
